@@ -1,5 +1,5 @@
 <?php /** @var \App\Models\Entity $entity
- * @var \App\Models\Inventory $inventory */?>
+ * @var \App\Models\Inventory $item */?>
 @extends('layouts.' . ($ajax ? 'ajax' : 'app'), [
     'title' => trans('entities/inventories.show.title', ['name' => $entity->name]),
     'description' => '',
@@ -32,6 +32,7 @@
                             <th>{{ __('crud.fields.item') }}</th>
                             <th>{{ __('entities/inventories.fields.position') }}</th>
                             <th>{{ __('entities/inventories.fields.amount') }}</th>
+                            <th>{{ __('entities/inventories.fields.description') }}</th>
                             @if (Auth::check())
                             <th>{{ __('crud.fields.visibility') }}</th>
                                 @can('update', $entity->child)
@@ -59,10 +60,13 @@
                                     </a>
                                 </td>
                                 <td>
-                                    <?=$item->position?>
+                                    {{ $item->position }}
                                 </td>
                                 <td>
-                                    <?=$item->amount?>
+                                    {{ $item->amount }}
+                                </td>
+                                <td>
+                                    {{ $item->description }}
                                 </td>
                                 @if (Auth::check())
                                     <td>
@@ -70,9 +74,9 @@
                                     </td>
                                     @can('update', $entity->child)
                                     <td class="text-right">
-                                        <a href="{{ route('entities.inventories.edit', ['entity' => $entity, 'inventory' => $item]) }}"
+                                        <a href="{{ route('entities.inventories.edit', ['entity' => $entity, 'inventory' => $item->id]) }}"
                                            data-toggle="ajax-modal" data-target="#entity-modal"
-                                           data-url="{{ route('entities.inventories.edit', ['entity' => $entity, 'inventory' => $item]) }}"
+                                           data-url="{{ route('entities.inventories.edit', ['entity' => $entity, 'inventory' => $item->id]) }}"
                                            title="{{ __('crud.edit') }}" class="btn btn-primary btn-xs">
                                             <i class="fa fa-edit"></i>
                                         </a>

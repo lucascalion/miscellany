@@ -3047,6 +3047,38 @@ td.breakable {
   height: 36px;
 }
 
+.entity-form .nav-tabs-custom {
+  min-height: 0;
+  background-color: unset;
+}
+
+.entity-form ul.nav {
+  z-index: 2;
+  min-height: 40px;
+  overflow: hidden;
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
+  border-bottom-color: #fff;
+}
+
+.entity-form ul.nav li {
+  background-color: #f5f8fa;
+  margin-right: 2px;
+}
+
+.shortcut {
+  margin-left: 14px;
+  color: #8f98a3;
+}
+
+.entity-form-save {
+  padding-right: 0;
+}
+
+.entity-form-save .dropdown-menu li a {
+  padding: 10px 14px;
+}
+
 @media (max-width: 787px) {
   .nav-stacked > li {
     display: block;

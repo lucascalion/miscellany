@@ -1,10 +1,15 @@
+<?php
+/** @var \App\Models\Organisation $model */
+?>
 <div class="box box-flat">
     <div class="box-body">
         <h2 class="page-header with-border">
             {{ __('organisations.show.tabs.members') }}
         </h2>
 
-        <p class="help-block">{{ __('organisations.members.helpers.direct_members') }}</p>
+        <p class="help-block">
+            {{ __('organisations.members.helpers.direct_members') }}
+        </p>
 
         <table id="organisation-characters" class="table table-hover">
             <tbody><tr>

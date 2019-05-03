@@ -22,6 +22,7 @@ $(document).ready(function() {
     $('[data-toggle="popover"]').popover();
 
     initSelect2();
+    initCheckboxSwitch();
 
     // Open select2 dropdowns on focus. Don't add this in initSelect2 since we only need this
     // binded once.
@@ -194,6 +195,7 @@ $(document).ready(function() {
 
         // Also re-bind select2 elements on modal show
         initSelect2();
+        initCheckboxSwitch();
         initAjaxPagination();
 
         // Handle when opening the entity-creator ui
@@ -201,6 +203,13 @@ $(document).ready(function() {
 
     });
 });
+
+/**
+ * Init the toggle elements
+ */
+function initCheckboxSwitch() {
+    //$('[data-toggle="switch"]').bootstrapSwitch();
+}
 
 /**
  * Select2 is used for all the fancy dropdowns
@@ -338,6 +347,9 @@ function resetSubmitButton(id) {
     newEntitySaveButton.text(newEntitySaveButton.data('text')).prop('disabled', false);
 }
 
+/**
+ * Quick Entity Creator UI
+ */
 function entityCreatorUI() {
     $('[data-toggle="entity-creator"]').on('click', function(e) {
         e.preventDefault();
@@ -352,6 +364,7 @@ function entityCreatorUI() {
             loader.addClass('hidden');
             selection.html(data).removeClass('hidden');
             initSelect2();
+            initEntityCreatorDuplicateName();
             window.initCategories();
 
             $('#entity-creator-form').on('submit', function(e) {
@@ -383,6 +396,23 @@ function entityCreatorUI() {
         });
 
         return false;
+    });
+}
+
+function initEntityCreatorDuplicateName() {
+    $('#entity-creator-selection input[name="name"]').focusout(function(e) {
+        var entityCreatorDuplicateWarning = $('#entity-creator-selection .duplicate-entity-warning');
+        entityCreatorDuplicateWarning.hide();
+        // Check if an entity of the same type already exists, and warn when it does.
+        $.ajax(
+            $(this).data('live') + '?q=' + $(this).val() + '&type=' + $(this).data('type')
+        ).done(function (res) {
+            if (res.length > 0) {
+                entityCreatorDuplicateWarning.fadeIn();
+            } else {
+                entityCreatorDuplicateWarning.hide();
+            }
+        });
     });
 }
 

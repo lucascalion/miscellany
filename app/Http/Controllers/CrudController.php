@@ -92,13 +92,17 @@ class CrudController extends Controller
         $nestedView = method_exists($this, 'tree');
         $route = $this->route;
 
-        $models = $model
+        $base = $model
             ->preparedWith()
             ->search(request()->get('search'))
-            ->filter($this->filterService->filters())
             ->acl()
             ->order($this->filterService->order())
-            ->paginate();
+        ;
+        $unfilteredCount = $base->count();
+        $base = $base->filter($this->filterService->filters());
+        $filteredCount =  $base->count();
+        $models = $base->paginate();
+
         return view('cruds.index', compact(
             'models',
             'name',
@@ -107,7 +111,9 @@ class CrudController extends Controller
             'filters',
             'filterService',
             'nestedView',
-            'route'
+            'route',
+            'filteredCount',
+            'unfilteredCount'
         ));
     }
 
@@ -135,7 +141,7 @@ class CrudController extends Controller
         }
         $params['ajax'] = request()->ajax();
 
-        return view('cruds.create', array_merge(['name' => $this->view], $params));
+        return view('cruds.forms.create', array_merge(['name' => $this->view], $params));
     }
 
     /**
@@ -237,7 +243,7 @@ class CrudController extends Controller
         $name = $this->view;
         $ajax = request()->ajax();
 
-        return view('cruds.edit', compact('model', 'name', 'ajax'));
+        return view('cruds.forms.edit', compact('model', 'name', 'ajax'));
     }
 
     /**

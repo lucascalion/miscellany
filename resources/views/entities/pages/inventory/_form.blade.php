@@ -31,9 +31,14 @@
         <div class="hidden">
             <datalist id="position-list">
                 @foreach (\App\Models\Inventory::positionList() as $name)
-                    <option value="{{ $name }}">{{ $name }}</option>
+                    <option value="{{ e($name) }}">{{ e($name) }}</option>
                 @endforeach
             </datalist>
+        </div>
+
+        <div class="form-group">
+            <label>{{ trans('entities/inventories.fields.description') }}</label>
+            {!! Form::text('description', null, ['placeholder' => trans('entities/inventories.placeholders.description'), 'class' => 'form-control', 'maxlength' => 191]) !!}
         </div>
 
         <div class="row">
