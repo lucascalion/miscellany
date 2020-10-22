@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\CampaignUser;
 use App\User;
+use Carbon\Carbon;
 
 class UserService
 {
@@ -17,6 +18,11 @@ class UserService
         if ($user->last_campaign_id) {
             // The user should be part of the last campaign
             $campaign = $user->lastCampaign;
+
+            // No campaign yet
+            if (empty($campaign)) {
+                return redirect()->route('home');
+            }
 
             $member = CampaignUser::where('campaign_id', $campaign->id)
                 ->where('user_id', $user->id)

@@ -1,66 +1,102 @@
 <?php
-/** @var \App\Models\Organisation $model */
+/**
+ * @var \App\Models\Organisation $model
+ * @var \App\Models\OrganisationMember $relation
+ */
+$filters = [];
+if (request()->has('organisation_id')) {
+    $filters['organisation_id'] = request()->get('organisation_id');
+}
+$hasOrg = request()->has('organisation_id');
 ?>
-<div class="box box-flat">
+<div class="box box-solid">
     <div class="box-body">
         <h2 class="page-header with-border">
-            {{ __('organisations.show.tabs.members') }}
+            {{ __('organisations.fields.members') }}
         </h2>
 
         <p class="help-block">
-            {{ __('organisations.members.helpers.direct_members') }}
+            {{ __('organisations.members.helpers.members') }}
         </p>
+
+        <div class="row export-hidden">
+            <div class="col-md-6">
+                @include('cruds.datagrids.sorters.simple-sorter')
+            </div>
+            <div class="col-md-6 text-right">
+                @if ($hasOrg)
+                    <a href="{{ route('organisations.members', $model) }}" class="btn btn-default btn-sm">
+                        <i class="fa fa-filter"></i> {{ __('crud.filters.all') }} ({{ $model->allMembers()->has('character')->count() }})
+                    </a>
+                @else
+                    <a href="{{ route('organisations.members', [$model, 'organisation_id' => $model->id]) }}" class="btn btn-default btn-sm">
+                        <i class="fa fa-filter"></i> {{ __('crud.filters.direct') }} ({{ $model->members()->has('character')->count() }})
+                    </a>
+                @endif
+            </div>
+        </div>
 
         <table id="organisation-characters" class="table table-hover">
             <tbody><tr>
                 <th class="avatar"><br></th>
                 <th>{{ __('characters.fields.name') }}</th>
                 @if ($campaign->enabled('locations'))
-                <th>{{ __('characters.fields.location') }}</th>
+                <th class="hidden-sm hidden-xs">{{ __('characters.fields.location') }}</th>
                 @endif
+                @if (!$hasOrg)<th>{{ __('organisations.members.fields.organisation') }}</th>@endif
                 <th>{{ __('organisations.members.fields.role') }}</th>
-                <th>{{ __('characters.fields.age') }}</th>
                 @if ($campaign->enabled('races'))
-                <th>{{ __('characters.fields.race') }}</th>
+                <th class="hidden-sm hidden-xs">{{ __('characters.fields.race') }}</th>
                 @endif
-                <th>{{ __('characters.fields.sex') }}</th>
                 <th>{{ __('characters.fields.is_dead') }}</th>
-                <th><br /></th>
+                <th></th>
                 <th class="text-right">
                     @can('member', $model)
                         <a href="{{ route('organisations.organisation_members.create', ['organisation' => $model->id]) }}" class="btn btn-primary btn-sm"
                            data-toggle="ajax-modal" data-target="#entity-modal" data-url="{{ route('organisations.organisation_members.create', $model->id) }}">
-                            <i class="fa fa-plus"></i> {{ __('organisations.members.actions.add') }}
+                            <i class="fa fa-plus"></i> <span class="hidden-sm hidden-xs">{{ __('organisations.members.actions.add') }}</span>
                         </a>
                     @endcan
                 </th>
             </tr>
-            <?php $r = $model->members()->acl()->has('character')->with('character', 'character.location')->paginate();?>
-            @foreach ($r->sortBy('character.name') as $relation)
+            <?php $r = $model->allMembers()
+                ->filter($filters)
+                ->has('character')
+                ->with([
+                    'character', 'character.race', 'character.location', 'character.family', 'organisation',
+                    'character.entity', 'character.entity.tags'
+                ])
+                ->simpleSort($datagridSorter)
+                ->paginate();?>
+            @foreach ($r as $relation)
                 <tr>
                     <td>
-                        <a class="entity-image" style="background-image: url('{{ $relation->character->getImageUrl(true) }}');" title="{{ $relation->character->name }}" href="{{ route('characters.show', $relation->character->id) }}"></a>
+                        <a class="entity-image" style="background-image: url('{{ $relation->character->getImageUrl(40) }}');" title="{{ $relation->character->name }}" href="{{ route('characters.show', $relation->character->id) }}"></a>
                     </td>
                     <td>
-                        <a href="{{ route('characters.show', $relation->character->id) }}" data-toggle="tooltip" title="{{ $relation->character->tooltip() }}">{{ $relation->character->name }}</a>
+                        {!! $relation->character->tooltipedLink() !!}<br />
+                        <i>{{ $relation->character->title }}</i>
                     </td>
                     @if ($campaign->enabled('locations'))
-                    <td>
+                    <td class="hidden-sm hidden-xs">
                         @if ($relation->character->location)
-                            <a href="{{ route('locations.show', $relation->character->location_id) }}" data-toggle="tooltip" title="{{ $relation->character->location->tooltip() }}">{{ $relation->character->location->name }}</a>
+                            {!! $relation->character->location->tooltipedLink() !!}
                         @endif
                     </td>
                     @endif
+                    @if (!$hasOrg)
+                    <td>
+                        {!! $relation->organisation->tooltipedLink() !!}
+                    </td>
+                    @endif
                     <td>{{ $relation->role }}</td>
-                    <td>{{ $relation->character->age }}</td>
                     @if ($campaign->enabled('races'))
-                        <td>
+                        <td class="hidden-sm hidden-xs">
                             @if ($relation->character->race)
-                                <a href="{{ route('races.show', $relation->character->race_id) }}" data-toggle="tooltip" title="{{ $relation->character->race->tooltip() }}">{{ $relation->character->race->name }}</a>
+                                {!! $relation->character->race->tooltipedLink() !!}
                             @endif
                         </td>
                     @endif
-                    <td>{{ $relation->character->sex }}</td>
                     <td>@if ($relation->character->is_dead)<span class="ra ra-skull"></span>@endif</td>
                     <td>
                         @if (Auth::check() && Auth::user()->isAdmin())
@@ -71,9 +107,9 @@
                     </td>
                     <td class="text-right">
                         @can('member', $model)
-                            <a href="{{ route('organisations.organisation_members.edit', ['organisation' => $model, 'organisationMember' => $relation]) }}"
-                               class="btn btn-xs btn-primary" data-toggle="ajax-modal" data-target="#entity-modal" 
-                               data-url="{{ route('organisations.organisation_members.edit', ['organisation' => $model, 'organisationMember' => $relation]) }}"
+                            <a href="{{ route('organisations.organisation_members.edit', [$model, $relation]) }}"
+                               class="btn btn-xs btn-primary" data-toggle="ajax-modal" data-target="#entity-modal"
+                               data-url="{{ route('organisations.organisation_members.edit', [$model, $relation]) }}"
                                title=" {{ __('crud.edit') }}"
                             >
                                 <i class="fa fa-edit"></i>

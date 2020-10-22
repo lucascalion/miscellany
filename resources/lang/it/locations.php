@@ -21,6 +21,9 @@ return [
         'description'   => 'Eventi accaduti nel luogo',
         'title'         => 'Eventi del Luogo :name',
     ],
+    'families'      => [
+        'title' => 'Famiglie del Luogo :name',
+    ],
     'fields'        => [
         'characters'        => 'Personaggi',
         'image'             => 'Immagine',
@@ -33,10 +36,13 @@ return [
         'type'              => 'Tipo',
     ],
     'helpers'       => [
-        'characters'    => 'Visualizza tutti i personaggi in questo luogo e nei luoghi discendenti, o semplicemente quelli che si trovano qui.',
-        'descendants'   => 'La lista contiene tutti i luoghi discendenti di questo luogo, non solo quelli direttamente sotto di esso.',
-        'map'           => 'Aggiungere una mappa ad un luogo ti permetterà di aggiungere "Punti" sulla mappa collecandoli ad altre Entità nella campagna.',
-        'nested'        => 'Quando ci si trova nella Vista Nidificata puoi visualizzare la gerarchia dei tuoi luoghi. I luoghi senza padri saranno mostrati per impostazione predefinita. I luoghi con dei figli invece potranno essere premuti per mostrare questi figli. Si potrà continuare ad espandere la gerarchia fino a quando non ci saranno più luoghi da mostrare.',
+        'characters'        => 'Visualizza tutti i personaggi in questo luogo e nei luoghi discendenti, o semplicemente quelli che si trovano qui.',
+        'descendants'       => 'La lista contiene tutti i luoghi discendenti di questo luogo, non solo quelli direttamente sotto di esso.',
+        'families'          => 'I luoghi possono essere dimora di potenti famiglie.',
+        'map'               => 'Aggiungere una mappa ad un luogo ti permetterà di aggiungere "Punti" sulla mappa collecandoli ad altre Entità nella campagna.',
+        'map_deprecated'    => 'Le mappe sono ora una categoria a sé stante! Questa nuova funzionalità è attualmente disponibile in accesso anticipato a :boosted. Questa interfaccia non sarà più disponibile quando la nuova categoria sarà disponibile per tutti, ma sarai ancora in grado di modificare vecchie mappe in questa interfaccia.',
+        'nested'            => 'Quando ci si trova nella Vista Nidificata puoi visualizzare la gerarchia dei tuoi luoghi. I luoghi senza padri saranno mostrati per impostazione predefinita. I luoghi con dei figli invece potranno essere premuti per mostrare questi figli. Si potrà continuare ad espandere la gerarchia fino a quando non ci saranno più luoghi da mostrare.',
+        'organisations'     => 'Visualizza tutte le organizzazioni in questo luogo e nei suoi luoghi figlio o solamente quelle direttamente presenti qui.',
     ],
     'hints'         => [
         'is_map_private'    => 'Una mappa privata sarà visibile solamente ai membri del ruolo "Proprietario" della campagna.',
@@ -64,16 +70,17 @@ return [
     ],
     'map'           => [
         'actions'   => [
-            'admin_mode'    => 'Abilita la Modalità Modifica',
-            'big'           => 'Vista Completa',
-            'download'      => 'Scarica',
-            'points'        => 'Modifica i Punti',
-            'toggle_hide'   => 'Nascondi i Punti',
-            'toggle_show'   => 'Mostra i Punti',
-            'view_mode'     => 'Torna alla visualizzazione',
-            'zoom_in'       => 'Zoom In',
-            'zoom_out'      => 'Zoom Out',
-            'zoom_reset'    => 'Reimposta lo Zoom',
+            'admin_mode'        => 'Abilita la Modalità Modifica',
+            'big'               => 'Vista Completa',
+            'confirm_delete'    => 'Sei sicuro di voler rimuovere questo punto della mappa?',
+            'download'          => 'Scarica',
+            'points'            => 'Modifica i Punti',
+            'toggle_hide'       => 'Nascondi i Punti',
+            'toggle_show'       => 'Mostra i Punti',
+            'view_mode'         => 'Torna alla visualizzazione',
+            'zoom_in'           => 'Zoom In',
+            'zoom_out'          => 'Zoom Out',
+            'zoom_reset'        => 'Reimposta lo Zoom',
         ],
         'helper'    => 'Clicca sulla mappa per aggiungere un nuovo punto ad un luogo, o clicca su un punto esistente per modificarlo o cancellarlo.',
         'helpers'   => [
@@ -82,12 +89,14 @@ return [
             'label' => 'Questo punto è un\'etichetta. Niente di più, niente di meno.',
             'view'  => 'Premi su un qualsiasi punto della mappa per vederne i dettagli. Utilizza Ctrl+Zoom per aumentare o diminuire lo zoom della mappa.',
         ],
+        'legend'    => 'Legenda',
         'modal'     => [
             'submit'    => 'Aggiungi',
             'title'     => 'Bersaglio del nuovo punto',
         ],
         'no_map'    => 'Per favore aggiungi una mappa del luogo',
         'points'    => [
+            'empty_label'   => 'Punto Senza Nome',
             'fields'        => [
                 'axis_x'    => 'Asse X',
                 'axis_y'    => 'Asse Y',
@@ -112,6 +121,8 @@ return [
                 'bridge'        => 'Ponte',
                 'campfire'      => 'Fuco da campo',
                 'candle'        => 'Candela',
+                'capitol'       => 'Campidoglio',
+                'castle-emblem' => 'Castello',
                 'cat'           => 'Gatto',
                 'cheese'        => 'Formaggio',
                 'cog'           => 'Ingranaggio',
@@ -151,6 +162,7 @@ return [
                 'tombstone'     => 'Lapide',
                 'torch'         => 'Torcia',
                 'tower'         => 'Torre',
+                'vase'          => 'Vaso',
                 'water-drop'    => 'Acqua',
                 'wooden-sign'   => 'Cartello di Legno',
                 'wrench'        => 'Chiave Inglese',
@@ -164,6 +176,7 @@ return [
             'return'        => 'Indietro verso :name',
             'shapes'        => [
                 'circle'    => 'Cerchio',
+                'custom'    => 'Personalizzato',
                 'square'    => 'Quadrato',
             ],
             'sizes'         => [
@@ -181,6 +194,9 @@ return [
             'title'         => 'Punti della Mappa del Luogo :name',
         ],
         'success'   => 'Punto della Mappa salvato.',
+    ],
+    'maps'          => [
+        'title' => 'Mappe del luogo :name',
     ],
     'organisations' => [
         'description'   => 'Organizzazioni situate nel luogo.',
@@ -203,11 +219,13 @@ return [
         'tabs'          => [
             'characters'    => 'Personaggi',
             'events'        => 'Eventi',
+            'families'      => 'Famiglie',
             'information'   => 'Informazioni',
             'items'         => 'Oggetti',
             'journals'      => 'Pagine del diario',
             'locations'     => 'Luoghi',
             'map'           => 'Mappa',
+            'maps'          => 'Mappe',
             'menu'          => 'Menu',
             'organisations' => 'Organizzazioni',
             'quests'        => 'Missioni',

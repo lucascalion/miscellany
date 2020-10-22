@@ -2,12 +2,27 @@
 
 namespace App\Models;
 
+use App\Traits\VisibilityTrait;
+
+/**
+ * Class CalendarEvent
+ * @package App\Models
+ *
+ * @property int $id
+ * @property int $event_id
+ * @property int $calendar_id
+ * @property int $length
+ * @property string $date
+ * @property string $visibility
+ *
+ * @property Calendar $calendar
+ */
 class CalendarEvent extends MiscModel
 {
     /**
      * Traits
      */
-    //use VisibleTrait;
+    use VisibilityTrait;
 
     /**
      * @var string
@@ -21,6 +36,7 @@ class CalendarEvent extends MiscModel
         'calendar_id',
         'event_id',
         'date',
+        'visibility',
     ];
 
     /**

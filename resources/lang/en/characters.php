@@ -3,6 +3,7 @@
 return [
     'actions'       => [
         'add_appearance'    => 'Add an appearance',
+        'add_organisation'  => 'Add an organisation',
         'add_personality'   => 'Add a personality',
     ],
     'conversations' => [
@@ -33,6 +34,7 @@ return [
         'image'                     => 'Image',
         'is_dead'                   => 'Dead',
         'is_personality_visible'    => 'Personality visible',
+        'life'                      => 'Life',
         'location'                  => 'Location',
         'name'                      => 'Name',
         'physical'                  => 'Physical',
@@ -44,12 +46,13 @@ return [
         'type'                      => 'Type',
     ],
     'helpers'       => [
-        'free'  => 'Where did the "Free" field go? If this character had one, it\'s been moved over to the new Notes tab!',
+        'age'   => 'You can link this entity with a calendar of your campaign to automatically calculate their age instead. :more.',
     ],
     'hints'         => [
-        'hide_personality'          => 'This tab can be hidden from non "Admin" users by disabling the "Personality Visible" option when editing this character.',
         'is_dead'                   => 'This character is dead',
-        'is_personality_visible'    => 'You can hide the whole personality section from non "Admin" users.',
+        'is_personality_visible'    => 'Uncheck this option to hide the whole personality section from non Admin users.',
+        'personality_visible'       => 'Personality traits of this character are visible to all.',
+        'personality_not_visible'   => 'Personality traits of this character are currently only visible to Admin users.',
     ],
     'index'         => [
         'actions'       => [
@@ -82,7 +85,7 @@ return [
             'success'       => 'Character added to organisation.',
             'title'         => 'New Organisation for :name',
         ],
-        'description'   => 'Organisations the character is part of.',
+        'description'   => 'Organisations the character is a part of.',
         'destroy'       => [
             'success'   => 'Character organisation removed.',
         ],
@@ -105,9 +108,9 @@ return [
         'age'               => 'Age',
         'appearance_entry'  => 'Description',
         'appearance_name'   => 'Hair, Eyes, Skin, Height',
-        'family'            => 'Please select a character',
+        'family'            => 'Select a character',
         'image'             => 'Image',
-        'location'          => 'Please select a location',
+        'location'          => 'Select a location',
         'name'              => 'Name',
         'personality_entry' => 'Details',
         'personality_name'  => 'Goals, Mannerisms, Fears, Bonds',
@@ -119,7 +122,7 @@ return [
         'type'              => 'NPC, Player Character, Deity',
     ],
     'quests'        => [
-        'description'   => 'Quests a character are part of.',
+        'description'   => 'Quests a character is a part of.',
         'helpers'       => [
             'quest_giver'   => 'Quests that the character is a quest giver of.',
             'quest_member'  => 'Quests that the character is a member of.',

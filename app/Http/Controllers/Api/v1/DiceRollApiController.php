@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Models\Campaign;
 use App\Models\DiceRoll;
 use App\Http\Requests\StoreDiceRoll as Request;
-use App\Http\Resources\DiceRoll as Resource;
-use App\Http\Resources\DiceRollCollection as Collection;
+use App\Http\Resources\DiceRollResource as Resource;
 
 class DiceRollApiController extends ApiController
 {
@@ -18,13 +17,12 @@ class DiceRollApiController extends ApiController
     public function index(Campaign $campaign)
     {
         $this->authorize('access', $campaign);
-        return new Collection($campaign
+        return Resource::collection($campaign
             ->diceRolls()
             ->with([
                 'entity', 'entity.tags', 'entity.notes', 'entity.files',
                 'entity.events', 'entity.relationships', 'entity.attributes'
             ])
-            ->acl()
             ->lastSync(request()->get('lastSync'))
             ->paginate());
     }
@@ -52,6 +50,7 @@ class DiceRollApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('create', DiceRoll::class);
         $model = DiceRoll::create($request->all());
+        $this->crudSave($model);
         return new Resource($model);
     }
 
@@ -66,6 +65,7 @@ class DiceRollApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('update', $diceRoll);
         $diceRoll->update($request->all());
+        $this->crudSave($diceRoll);
 
         return new Resource($diceRoll);
     }

@@ -43,7 +43,7 @@
             <div class="col-xs-8">
                 <div class="checkbox">
                     <label>
-                        <input type="checkbox" name="remember" {{ old('remember') ? 'checked' : '' }}>
+                        <input type="checkbox" class="minimal" name="remember" {{ old('remember') ? 'checked' : '' }}>
                         {{ trans('auth.login.remember_me') }}
                     </label>
                 </div>
@@ -62,6 +62,7 @@
         </div>
     </form>
 
+@if(config('auth.register_enabled'))
     <div class="row">
         <div class="col-md-12">
             <div class="social-auth-links text-center">
@@ -80,15 +81,33 @@
                 </a>
             </div>
         </div>
-        <div class="col-md-6 text-center">
-            <a class="btn btn-link" href="{{ route('password.request') }}">
-                {{ trans('auth.login.password_forgotten') }}
-            </a>
+    </div>
+@endif
+    <div class="row">
+        <div class="hidden-xs hidden-sm">
+            <div class="col-md-6">
+                <a class="btn btn-link" href="{{ route('password.request') }}">
+                    {{ trans('auth.login.password_forgotten') }}
+                </a>
+            </div>@if(config('auth.register_enabled'))
+            <div class="col-md-6 text-right">
+                <a class="btn btn-link" href="{{ route('register') }}">
+                    {{ trans('auth.login.new_account') }}
+                </a>
+            </div>@endif
         </div>
-        <div class="col-md-6 text-center">
-            <a class="btn btn-link" href="{{ route('register') }}">
-                {{ trans('auth.login.new_account') }}
-            </a>
+        <div class="visible-xs visible-sm">
+
+            <div class="col-md-12 text-center">
+                <a class="btn btn-link" href="{{ route('password.request') }}">
+                    {{ trans('auth.login.password_forgotten') }}
+                </a>
+            </div>@if(config('auth.register_enabled'))
+            <div class="col-md-12 text-center">
+                <a class="btn btn-link" href="{{ route('register') }}">
+                    {{ trans('auth.login.new_account') }}
+                </a>
+            </div>@endif
         </div>
     </div>
 @endsection

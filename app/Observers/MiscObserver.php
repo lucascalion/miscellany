@@ -3,15 +3,13 @@
 namespace App\Observers;
 
 use App\Facades\CampaignLocalization;
-use App\Jobs\EntityMentionJob;
-use App\Models\AttributeTemplate;
-use App\Models\CalendarEvent;
+use App\Facades\EntityCache;
+use App\Facades\Mentions;
 use App\Models\Entity;
-use App\Models\EntityEvent;
 use App\Models\MiscModel;
 use App\Services\EntityMappingService;
 use App\Services\ImageService;
-use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 
 abstract class MiscObserver
 {
@@ -40,8 +38,9 @@ abstract class MiscObserver
      */
     public function saving(MiscModel $model)
     {
-        $model->slug = str_slug($model->name, '');
+        $model->slug = Str::slug($model->name, '');
         $model->campaign_id = CampaignLocalization::getCampaign()->id;
+        //$model->name = strip_tags($model->name);
 
         // If we're from the "move" service, we can skip this part.
         // Or if we are deleting, we don't want to re-do the whole set foreign ids to null
@@ -53,7 +52,7 @@ abstract class MiscObserver
 
         $attributes = $model->getAttributes();
         if (array_key_exists('entry', $attributes)) {
-            $model->entry = $this->purify($model->entry);
+            $model->entry = $this->purify(Mentions::codify($model->entry));
         }
 
         // Handle image. Let's use a service for this.
@@ -79,6 +78,11 @@ abstract class MiscObserver
      */
     public function saved(MiscModel $model)
     {
+        // If we're from the "move" service, we can skip this part.
+        if ($model->savingObserver === false && $model->forceSavedObserver === false) {
+            return;
+        }
+
         // Whenever an misc model is saved, we need to make sure it has an associated entity with it.
         // If none exists, we need to create one. Otherwise, we need to update it.
         $entity = $model->entity;
@@ -97,35 +101,22 @@ abstract class MiscObserver
             // Take care of mentions for the entity.
             $this->syncMentions($model, $entity);
             $model->refresh();
+
+            // Clear some cache
+            EntityCache::clearSuggestion($model);
         }
     }
 
     public function created(MiscModel $model)
     {
+        // If we're from the "move" service, we can skip this part.
+        if ($model->savingObserver === false) {
+            return;
+        }
+
         // Created a new sub entity? Create the parent entity.
-        $entity = Entity::create([
-            'entity_id' => $model->id,
-            'campaign_id' => $model->campaign_id,
-            'is_private' => $model->is_private,
-            'name' => $model->name,
-            'type' => $model->getEntityType()
-        ]);
+        $entity = $model->createEntity();
 
-        // Attribute templates
-        if (request()->has('template_id') && request()->filled('template_id')) {
-            $template = AttributeTemplate::findOrFail(request()->get('template_id'));
-            $template->apply($entity);
-        }
-
-        // Copy attributes from source?
-        if (request()->has('copy_source_attributes') && request()->filled('copy_source_attributes')) {
-            $sourceId = request()->post('copy_source_id');
-            /** @var Entity $source */
-            $source = Entity::findOrFail($sourceId);
-            foreach ($source->attributes as $attribute) {
-                $attribute->copyTo($model->entity);
-            }
-        }
         // Copy attributes from source?
         if (request()->has('copy_source_notes') && request()->filled('copy_source_notes')) {
             $sourceId = request()->post('copy_source_id');
@@ -142,6 +133,16 @@ abstract class MiscObserver
      */
     public function deleted(MiscModel $model)
     {
+        // Soft-delete the entity
+        if ($model->entity) {
+            $model->entity->delete();
+        }
+
+        // If soft deleting, don't really delete the image
+        if ($model->trashed()) {
+            return;
+        }
+
         ImageService::cleanup($model);
     }
 
@@ -161,34 +162,18 @@ abstract class MiscObserver
     }
 
     /**
-     * @param MiscModel $model
-     */
-    public function deleting(MiscModel $model)
-    {
-        // Delete the entity
-        if ($model->entity) {
-            $model->entity->delete();
-        }
-    }
-
-    /**
      * When saving an entity, we can to update our mentions if they have been changed
      * @param Entity $entity
      */
     protected function syncMentions(MiscModel $model, Entity $entity)
     {
+        if (!$model->saveObserver) {
+            return;
+        }
         //$this->entityMappingService->verbose = true;
         // If the entity's entry has changed, we need to re-build it's map.
         if ($model->isDirty('entry')) {
             $this->entityMappingService->silent()->mapEntity($entity);
-        }
-
-        // If we changed the name or entry of this object, we need to update the entry of objects mentioning us
-        if ($model->isDirty('name') || $model->isDirty('entry')) {
-            // If the entity is targeted by mentions, queue a job to update texts
-            if ($entity->targetMentions()->count() > 0) {
-                EntityMentionJob::dispatch($entity);
-            }
         }
     }
 }

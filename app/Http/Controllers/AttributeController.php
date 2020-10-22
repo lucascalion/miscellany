@@ -48,7 +48,17 @@ class AttributeController extends CrudAttributeController
      */
     public function index(Entity $entity)
     {
+        $this->authorize('attributes', $entity);
         return $this->crudIndex($entity);
+    }
+
+    /**
+     * @param Entity $entity
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function show(Entity $entity)
+    {
+        return response()->redirectToRoute('entities.attributes.index', $entity);
     }
 
     /**
@@ -114,6 +124,7 @@ class AttributeController extends CrudAttributeController
     public function template(Entity $entity)
     {
         $this->authorize('update', $entity->child);
+        $this->authorize('attributes', $entity);
 
         $name = $entity->pluralType() . '.attributes' . $this->view;
         $route = 'entities.attributes';
@@ -126,7 +137,6 @@ class AttributeController extends CrudAttributeController
         }
 
         return view('cruds.attributes.' . ($ajax ? '_' : null) . 'template', compact(
-            'attribute',
             'communityTemplates',
             'name',
             'route',

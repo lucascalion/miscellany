@@ -2,10 +2,12 @@
     'title' => trans('organisations.members.title', ['name' => $model->name]),
     'description' => '',
     'breadcrumbs' => [
-        ['url' => route('organisations.index'), 'label' => __('organisations.index.title')],
+        ['url' => Breadcrumb::index('organisations'), 'label' => __('organisations.index.title')],
         ['url' => route('organisations.show', $model), 'label' => $model->name],
-        trans('organisations.show.tabs.members')
-    ]
+        trans('organisations.fields.members')
+    ],
+    'mainTitle' => false,
+    'miscModel' => $model,
 ])
 
 @inject('campaign', 'App\Services\CampaignService')

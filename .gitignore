@@ -4,6 +4,8 @@
 /public/.htaccess
 /public/exports
 /public/info.php
+/public/robots.txt
+#/public/images/defaults/patreon
 /storage/*.key
 /storage
 /vendor
@@ -15,3 +17,4 @@ Homestead.yaml
 npm-debug.log
 yarn-error.log
 .env
+.DS_Store

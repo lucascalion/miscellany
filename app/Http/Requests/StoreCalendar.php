@@ -30,7 +30,8 @@ class StoreCalendar extends FormRequest
             'image_url' => 'nullable|url|active_url',
             'month_name' => 'required|array|min:2',
             'weekday' => 'required|array|min:2',
-            'year_name' => 'required|array',
+            'start_offset' => 'nullable|integer|min:0|max:99',
+            'year_name' => 'nullable|array',
             'moon_name' => 'nullable|array',
             'epoch_name' => 'nullable|array',
             'season_name' => 'nullable|array',
@@ -43,7 +44,12 @@ class StoreCalendar extends FormRequest
             $rules['leap_year_offset'] = 'required|numeric|min:1|max:255';
             $rules['leap_year_start'] = 'required|numeric|min:1|max:255';
         }
-        
+
+        $self = request()->segment(5);
+        if (!empty($self)) {
+            $rules['calendar_id'] = 'integer|not_in:' . ((int) $self) . '|exists:calendars,id';
+        }
+
         return $rules;
     }
 }

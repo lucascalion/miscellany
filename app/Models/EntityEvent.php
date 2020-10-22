@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\SimpleSortableTrait;
 use App\Traits\OrderableTrait;
 
 /**
@@ -14,9 +15,18 @@ use App\Traits\OrderableTrait;
  * @property integer $length
  * @property string $comment
  * @property string $colour
+ * @property integer $day
+ * @property integer $month
+ * @property integer $year
  * @property boolean $is_recurring
  * @property integer $recurring_until
+ * @property integer $recurring_periodicity
+ * @property integer $type_id
+ * @property integer $elapsed
  * @property boolean $is_private
+ *
+ * @property Calendar $calendar
+ * @property EntityEventType $type
  */
 class EntityEvent extends MiscModel
 {
@@ -24,13 +34,14 @@ class EntityEvent extends MiscModel
      * Traits
      */
     //use VisibleTrait;
-    use OrderableTrait;
+    use OrderableTrait, SimpleSortableTrait;
 
     /**
      * Trigger for filtering based on the order request.
      * @var string
      */
     protected $orderTrigger = 'events/';
+    protected $orderDefaultDir = 'desc';
 
     /**
      * @var string
@@ -44,10 +55,20 @@ class EntityEvent extends MiscModel
     public $aclFieldName = 'entity_events.entity_id';
 
     /**
+     * @var bool tell the AclTrait that this entity has no is_private field
+     */
+    public $aclIsPrivate = false;
+
+    /**
      * If the ACL engine should use the "real" entity id (entities.id) or the
      * @var bool
      */
     public $aclUseEntityID = true;
+
+    /**
+     * @var string Cached readable date
+     */
+    protected $readableDate;
 
 
     /**
@@ -61,7 +82,12 @@ class EntityEvent extends MiscModel
         'comment',
         'is_recurring',
         'recurring_until',
+        'recurring_periodicity',
         'colour',
+        'day',
+        'month',
+        'year',
+        'type_id'
     ];
 
     /**
@@ -81,52 +107,58 @@ class EntityEvent extends MiscModel
     }
 
     /**
-     * @return string
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function getDate($date = null)
+    public function type()
     {
-        if (empty($date)) {
-            $date = $this->date;
-        }
-
-        $dates = explode('-', $date);
-        if (substr($date, 0, 1) === '-') {
-            $dates = explode('-', trim($date, '-'));
-            $dates[0] = -$dates[0];
-        }
-
-        // Replace month with real month, and year maybe
-        $months = $this->calendar->months();
-        $years = $this->calendar->years();
-
-        try {
-            return $dates[2] . ' ' .
-                (isset($months[$dates[1] - 1]) ? $months[$dates[1] - 1]['name'] : $dates[1]) . ', ' .
-                (isset($years[$dates[0]]) ? $years[$dates[0]] : $dates[0]) . ' ' .
-                $this->calendar->suffix;
-        } catch (\Exception $e) {
-            return $this->date;
-        }
-    }
-
-    /**
-     * @param $year
-     * @return string
-     */
-    public function getDateWithYear($year)
-    {
-        $date = explode('-', $this->date);
-        $date[0] = $year;
-
-        return $this->getDate($date);
+        return $this->belongsTo('App\Models\EntityEventType', 'type_id');
     }
 
     /**
      * @return string
      */
-    public function getLabelColour()
+    public function readableDate(): string
     {
-        if (empty($this->colour) || $this->colour == 'default') {
+        if ($this->readableDate === null) {
+            // Replace month with real month, and year maybe
+            $months = $this->calendar->months();
+            $years = $this->calendar->years();
+
+            try {
+                $this->readableDate = $this->day . ' ' .
+                    (isset($months[$this->month - 1]) ? $months[$this->month - 1]['name'] : $this->month) . ', ' .
+                    (isset($years[$this->year]) ? $years[$this->year] : $this->year) . ' ' .
+                    $this->calendar->suffix;
+            } catch (\Exception $e) {
+                $this->readableDate = $this->date();
+            }
+        }
+        return $this->readableDate;
+    }
+
+    /**
+     * @param Calendar $calendar
+     * @return bool
+     */
+    public function isToday(Calendar $calendar): bool
+    {
+        return $this->date() === $calendar->date;
+    }
+
+    /**
+     * @return string
+     */
+    public function date(): string
+    {
+        return $this->year . '-' . $this->month . '-' . $this->day;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLabelColour(): string
+    {
+        if (empty($this->colour) || in_array($this->colour, ['default', 'grey'])) {
             return 'colour-pallet bg-gray';
         }
         return 'colour-pallet bg-' . $this->colour;
@@ -136,7 +168,7 @@ class EntityEvent extends MiscModel
      * Generate the Entity Event label for the calendar
      * @return string
      */
-    public function getLabel()
+    public function getLabel(): string
     {
         $label = '';
 
@@ -153,37 +185,54 @@ class EntityEvent extends MiscModel
     }
 
     /**
-     * @return mixed
+     * Check if a reminder is after the current date of a given calendar
+     * @param Calendar $calendar
+     * @return bool
      */
-    public function getYearAttribute()
+    public function isPast(Calendar $calendar): bool
     {
-        $segments = explode('-', $this->date);
-        return array_get($segments, 0, 1);
+        // First check the year
+        if ($this->year < $calendar->currentDate('year')) {
+            return true;
+        } elseif ($this->year > $calendar->currentDate('year')) {
+            return false;
+        }
+
+        // Current year is reminder's year, check month
+        if ($this->month < $calendar->currentDate('month')) {
+            return true;
+        } elseif ($this->month > $calendar->currentDate('month')) {
+            return false;
+        }
+
+        // Current month, check on day
+        return $this->day < $calendar->currentDate('date');
     }
 
     /**
-     * @return mixed
+     * Calculate the elapsed time since the event happened
      */
-    public function getMonthAttribute()
+    public function calcElasped(EntityEvent $event = null)
     {
-        $segments = explode('-', $this->date);
-        return array_get($segments, 1, 1);
-    }
+        if (!empty($event)) {
+            $year = $event->year;
+            $month = $event->month;
+            $day = $event->day;
+        } else {
+            $year = $this->calendar->currentDate('year');
+            $month = $this->calendar->currentDate('month');
+            $day = (int) $this->calendar->currentDate('date');
+        }
 
-    /**
-     * @return mixed
-     */
-    public function getDayAttribute()
-    {
-        $segments = explode('-', $this->date);
-        return array_get($segments, 2, 1);
-    }
+        $years = $year - $this->year;
+        if ($month < $this->month) {
+            return $years-1;
+        }
+        if ($month > $this->month) {
+            return $years;
+        }
 
-    /**
-     * @param $date
-     */
-    public function setDate($date)
-    {
-        $this->date = $date['year'] . '-' . $date['month'] . '-' . $date['day'];
+        // Same month
+        return $years - ($day < $this->day ? 1 : 0);
     }
 }

@@ -4,14 +4,28 @@ namespace App\Services;
 
 use App\Models\Campaign;
 use App\Models\Character;
+use App\Models\CharacterTrait;
 use App\Models\Entity;
+use App\Models\EntityNote;
+use App\Models\Event;
+use App\Models\Family;
+use App\Models\Item;
+use App\Models\Location;
 use App\Models\MiscModel;
+use App\Models\Note;
+use App\Models\Organisation;
 use App\Models\OrganisationMember;
+use App\Models\Race;
+use App\Models\Timeline;
+use App\Models\TimelineEra;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use App\Exceptions\TranslatableException;
 use App\Facades\CampaignLocalization;
+use Illuminate\Support\Str;
 
 class EntityService
 {
@@ -26,6 +40,7 @@ class EntityService
     public function __construct()
     {
         $this->entities = [
+            'abilities' => 'App\Models\Ability',
             'characters' => 'App\Models\Character',
             'calendars' => 'App\Models\Calendar',
             'conversations' => 'App\Models\Conversation',
@@ -34,16 +49,21 @@ class EntityService
             'items' => 'App\Models\Item',
             'journals' => 'App\Models\Journal',
             'locations' => 'App\Models\Location',
+            'maps' => 'App\Models\Map',
             'notes' => 'App\Models\Note',
             'organisations' => 'App\Models\Organisation',
             'quests' => 'App\Models\Quest',
+            'races' => 'App\Models\Race',
             'tags' => 'App\Models\Tag',
+            'timelines' => 'App\Models\Timeline',
             'attribute_templates' => 'App\Models\AttributeTemplate',
             'dice_rolls' => 'App\Models\DiceRoll',
             'menu_links' => 'App\Models\MenuLink',
-            'races' => 'App\Models\Race',
         ];
     }
+
+    /** @var bool|array */
+    protected $cachedNewEntityTypes = false;
 
     /**
      * Get the entities
@@ -69,10 +89,10 @@ class EntityService
      * Get labelled entities
      *
      * @param bool $singular
-     * @param null $ignore
+     * @param array $ignore
      * @return array
      */
-    public function labelledEntities($singular = true, $ignore = null, $includeNull = false)
+    public function labelledEntities($singular = true, array $ignore = [], $includeNull = false)
     {
         $labels = [];
         if ($includeNull) {
@@ -89,23 +109,14 @@ class EntityService
             }
         }
 
-        if (!empty($ignore) && !empty($labels[$ignore])) {
-            unset($labels[$ignore]);
-        }
-
-        return $labels;
-    }
-
-    public function dashboardEntities()
-    {
-        $real = [];
-        foreach ($this->entities() as $name => $class) {
-            if (in_array($name, ['characters', 'families', 'locations', 'organisations', 'items', 'journals'])) {
-                $real[$name] = $class;
+        // Removed options
+        if (!empty($ignore)) {
+            foreach ($ignore as $unset) {
+                unset($labels[$unset]);
             }
         }
 
-        return $real;
+        return $labels;
     }
 
     /**
@@ -117,6 +128,9 @@ class EntityService
         $singular = rtrim($entity, 's');
         if ($entity == 'families') {
             $singular = 'family';
+        }
+        elseif ($entity == 'abilities') {
+            $singular = 'ability';
         }
         return $singular;
     }
@@ -133,7 +147,11 @@ class EntityService
         if (!empty($request['target'])) {
             return $this->moveType($entity, $request['target']);
         } elseif (!empty($request['campaign'])) {
-            return $this->moveCampaign($entity, $request['campaign']);
+            return $this->moveCampaign(
+                $entity,
+                $request['campaign'],
+                Arr::get($request, 'copy', false)
+            );
         }
         return false;
     }
@@ -141,11 +159,12 @@ class EntityService
     /**
      * Move an entity to another campaign
      * @param Entity $entity
-     * @param $campaignId
+     * @param int $campaignId
+     * @param bool $copy
      * @return Entity
      * @throws TranslatableException
      */
-    protected function moveCampaign(Entity $entity, $campaignId)
+    protected function moveCampaign(Entity $entity, int $campaignId, bool $copy)
     {
         // First we make sure we have access to the new campaign.
         $campaign = Auth::user()->campaigns()->where('campaign_id', $campaignId)->first();
@@ -163,38 +182,143 @@ class EntityService
             throw new TranslatableException('crud.move.errors.permission');
         }
 
-        // Made it so far, we can move the entity's campaign_id. We first need to remove all the relations and, since
-        // they won't make sense on the new campaign.
-        $entity->relationships()->delete();
-        $entity->targetRelationships()->delete();
-
-        // Get the child of the entity (the actual Location, Character etc) and remove the permissions, since they
-        // won't make sense on the new campaign either.
-        /* @var MiscModel $child */
-        $child = $entity->child;
-        $child->permissions()->delete();
-
-        // Detach is a custom function on a child to remove itself from where it is parent to other entities.
-        $child->detach();
+        if ($copy) {
+            return $this->copyToCampaign($entity, $campaign);
+        }
 
         // Save and keep the current campaign before updating the entity
         $currentCampaign = CampaignLocalization::getCampaign();
 
-        // Update Entity first, as there are no hooks on the Entity model.
-        CampaignLocalization::forceCampaign($campaign);
-        $entity->campaign_id = $campaign->id;
-        $entity->save();
+        DB::beginTransaction();
+        try {
+            // Made it so far, we can move the entity's campaign_id. We first need to remove all the relations and, since
+            // they won't make sense on the new campaign.
+            $entity->relationships()->delete();
+            $entity->targetRelationships()->delete();
 
-        // Finally, we can change and save the child. Should be all good. But tell the app not to create the entity to
-        // avoid silly duplicates and new entities.
-        define('MISCELLANY_SKIP_ENTITY_CREATION', true);
+            // Get the child of the entity (the actual Location, Character etc) and remove the permissions, since they
+            // won't make sense on the new campaign either.
+            /* @var MiscModel $child */
+            $child = $entity->child;
+            $child->permissions()->delete();
 
-        // Update child second. We do this otherwise we'll have an old entity and a new one
-        $child->campaign_id = $campaign->id; // Technically don't need this since it's in MiscObserver::saving()
-        $child->save();
+            // Detach is a custom function on a child to remove itself from where it is parent to other entities.
+            $child->detach();
+
+            // Update Entity first, as there are no hooks on the Entity model.
+            CampaignLocalization::forceCampaign($campaign);
+            $entity->campaign_id = $campaign->id;
+            $entity->save();
+
+            // Finally, we can change and save the child. Should be all good. But tell the app not to create the entity to
+            // avoid silly duplicates and new entities.
+            define('MISCELLANY_SKIP_ENTITY_CREATION', true);
+
+            // Update child second. We do this otherwise we'll have an old entity and a new one
+            $child->campaign_id = $campaign->id; // Technically don't need this since it's in MiscObserver::saving()
+            $child->save();
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+        }
 
         // Switch back to the original campaign
         CampaignLocalization::forceCampaign($currentCampaign);
+
+        return $entity;
+    }
+
+    /**
+     * @param Entity $entity
+     * @param Campaign $newCampaign
+     * @return Entity
+     */
+    protected function copyToCampaign(Entity $entity, Campaign $newCampaign)
+    {
+        // Save and keep the current campaign before updating the entity
+        $originalCampaign = CampaignLocalization::getCampaign();
+
+        // Update Entity first, as there are no hooks on the Entity model.
+        CampaignLocalization::forceCampaign($newCampaign);
+
+        DB::beginTransaction();
+        try {
+            $newModel = $entity->child->replicate();
+            // Remove any foreign keys that wouldn't make any sense in the new campaign
+            foreach ($newModel->getAttributes() as $attribute) {
+                if (strpos($attribute, '_id') !== false) {
+                    $newModel->$attribute = null;
+                }
+            }
+
+            // Copy the image to avoid issues when deleting/replacing one image
+            if (!empty($entity->child->image)) {
+                $uniqid = uniqid();
+                $newPath = str_replace('.', $uniqid . '.', $entity->child->image);
+                $newModel->image = $newPath;
+                if (!Storage::exists($newPath)) {
+                    Storage::copy($entity->child->image, $newPath);
+                }
+
+                // Copy thumb
+//                $oldThumb = str_replace('.', '_thumb.', $entity->child->image);
+//                $newThumb = str_replace('.', $uniqid . '_thumb.', $entity->child->image);
+//                if (!Storage::exists($newThumb)) {
+//                    Storage::copy($oldThumb, $newThumb);
+//                }
+            }
+
+            // The model is ready to be saved.
+            $newModel->savingObserver = false;
+            $newModel->saveObserver = false;
+            $newModel->save();
+            $newModel->createEntity();
+
+            // Copy entity notes over
+            foreach ($entity->notes as $note) {
+                /** @var EntityNote $newNote */
+                $newNote = $note->replicate();
+                $newNote->entity_id = $newModel->entity->id;
+                $newNote->savedObserver = false;
+                $newNote->save();
+            }
+
+            // Attributes please
+            foreach ($entity->attributes as $attribute) {
+                /** @var EntityNote $newNote */
+                $newAttribute = $attribute->replicate();
+                $newAttribute->entity_id = $newModel->entity->id;
+                $newAttribute->save();
+            }
+
+            // Characters: copy traits
+            if ($entity->child instanceof Character) {
+                /** @var CharacterTrait $trait */
+                foreach ($entity->child->characterTraits as $trait) {
+                    $newTrait = $trait->replicate();
+                    $newTrait->character_id = $newModel->id;
+                    $newTrait->save();
+                }
+            }
+
+            // Timeline: copy eras
+            if($entity->child instanceof Timeline) {
+                /** @var TimelineEra $newEra **/
+                foreach ($entity->child->eras as $era) {
+                    $newEra = $era->replicate();
+                    $newEra->timeline_id = $newModel->id;
+                    $newEra->save();
+                }
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+        }
+
+        // Switch back to the original campaign
+        CampaignLocalization::forceCampaign($originalCampaign);
 
         return $entity;
     }
@@ -246,15 +370,16 @@ class EntityService
             }
 
             // Copy thumb
-            $oldThumb = str_replace('.', '_thumb.', $old->image);
-            $newThumb = str_replace($old->getTable(), $new->getTable(), $oldThumb);
-            if (!Storage::exists($newThumb)) {
-                Storage::copy($oldThumb, $newThumb);
-            }
+//            $oldThumb = str_replace('.', '_thumb.', $old->image);
+//            $newThumb = str_replace($old->getTable(), $new->getTable(), $oldThumb);
+//            if (!Storage::exists($newThumb)) {
+//                Storage::copy($oldThumb, $newThumb);
+//            }
         }
 
         // Finally, we can save. Should be all good. But tell the app not to create the entity
         define('MISCELLANY_SKIP_ENTITY_CREATION', true);
+        $new->savingObserver = false;
         $new->save();
 
         // If switching from an organisation to a family, we need to move the members?
@@ -326,7 +451,7 @@ class EntityService
          */
         $new = new $this->entities[$target]();
         $new->name = $name;
-        $new->is_private = false;
+        $new->is_private = Auth::user()->isAdmin() ? CampaignLocalization::getCampaign()->entity_visibility : false;
         $new->save();
         return $new;
     }
@@ -338,7 +463,7 @@ class EntityService
      */
     public function getClass($entity)
     {
-        return array_get($this->entities, $entity, false);
+        return Arr::get($this->entities, $entity, false);
     }
 
     /**
@@ -359,5 +484,82 @@ class EntityService
             }
         }
         return $entityTypes;
+    }
+
+    /**
+     * From a link to an entity, get the entity ID
+     * @param string $url
+     */
+    public function extractEntityIdFromUrl(string $url): int
+    {
+        // Strip stuff we don't want based on known urls
+        $url = Str::after($url, config('app.url') . '/');
+
+        // Remove language
+        $url = Str::after(trim($url, '/'), '/');
+
+        // left with characters/123 or entities/13223
+        if (Str::startsWith($url, 'entities')) {
+            // Easy peasy-ish
+        }
+    }
+
+    /**
+     * Toggle the entity's template status
+     * @param Entity $entity
+     * @return Entity
+     */
+    public function toggleTemplate(Entity $entity): Entity
+    {
+        $entity->is_template = !$entity->is_template;
+        $entity->save();
+        return $entity;
+    }
+
+    public function newEntityTypes(): array
+    {
+        if ($this->cachedNewEntityTypes !== false) {
+            return $this->cachedNewEntityTypes;
+        }
+
+        // Save and keep the current campaign before updating the entity
+        $campaign = CampaignLocalization::getCampaign();
+
+        $newTypes = [
+            'character' => Character::class,
+            'location' => Location::class,
+            'race' => Race::class,
+            'item' => Item::class,
+            'note' => Note::class,
+            'family' => Family::class,
+            'organisation' => Organisation::class,
+            'event' => Event::class,
+        ];
+        $entities = [];
+        foreach ($newTypes as $type => $class) {
+            if ($campaign->enabled(Str::plural($type)) && auth()->user()->can('create', $class)) {
+                $entities[$type] = $class;
+            }
+        }
+
+        return $this->cachedNewEntityTypes = $entities;
+    }
+
+    /**
+     * @param MiscModel $model
+     * @param string $name
+     * @return MiscModel
+     */
+    public function makeNewMentionEntity(MiscModel $model, string $name)
+    {
+        $campaign = CampaignLocalization::getCampaign();
+
+        $model->name = $name;
+        $model->savingObserver = false;
+        $model->forceSavedObserver = true;
+        $model->is_private = $campaign->entity_visibility;
+        $model->save();
+
+        return $model;
     }
 }

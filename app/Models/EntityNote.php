@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Facades\Mentions;
+use App\Models\Concerns\Blameable;
 use App\Models\Concerns\Paginatable;
 use App\Traits\OrderableTrait;
 use App\Traits\VisibilityTrait;
@@ -42,11 +44,15 @@ class EntityNote extends Model
     protected $orderTrigger = 'notes/';
 
     /**
+     * Set to false to skip save observers
+     * @var bool
+     */
+    public $savedObserver = true;
+
+    /**
      * Traits
      */
-    use VisibilityTrait;
-    use OrderableTrait;
-    use Paginatable;
+    use VisibilityTrait, OrderableTrait, Paginatable, Blameable;
 
     /**
      * Searchable fields
@@ -62,15 +68,6 @@ class EntityNote extends Model
     public function entity()
     {
         return $this->belongsTo('App\Models\Entity', 'entity_id');
-    }
-
-    /**
-     * Who created this entry
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function creator()
-    {
-        return $this->belongsTo('App\User', 'created_by');
     }
 
     /**
@@ -91,5 +88,22 @@ class EntityNote extends Model
         $new = $this->replicate(['entity_id']);
         $new->entity_id = $target->id;
         return $new->save();
+    }
+
+    /**
+     * @return mixed
+     */
+    public function entry()
+    {
+        return Mentions::mapEntityNote($this);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getEntryForEditionAttribute()
+    {
+        $text = Mentions::editEntityNote($this);
+        return $text;
     }
 }

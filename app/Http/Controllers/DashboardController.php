@@ -3,17 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Facades\CampaignLocalization;
-use App\Http\Requests\StoreUserDashboardSetting;
+use App\Facades\PostCache;
 use App\Models\CampaignDashboardWidget;
 use Illuminate\Support\Facades\Auth;
 
-use App\Models\Character;
-use App\Models\Family;
-use App\Models\Item;
-use App\Models\Journal;
-use App\Models\Location;
-use App\Models\Note;
-use App\Models\Organisation;
 use App\Models\Release;
 
 class DashboardController extends Controller
@@ -29,52 +22,21 @@ class DashboardController extends Controller
             return redirect()->route('start');
         }
 
-        $recentCount = 5;
         $user = null;
         $settings = null;
         if (Auth::check() && Auth::user()->can('update', $campaign)) {
             $settings = true;
         }
 
-        //$characters = Character::
-
-        $release = Release::with(['category'])
-            ->where('status', 'PUBLISHED')
-            ->orderBy('created_at', 'DESC')
-            ->first();
-
-
         $widgets = CampaignDashboardWidget::positioned()->get();
+        $release = PostCache::latest();
 
         return view('home', compact(
             'campaign',
-            'notes',
             'settings',
             'release',
             'widgets'
         ));
-    }
-
-    /**
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-     */
-    public function edit()
-    {
-        return view('dashboard.settings.setting');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Family $family
-     * @return \Illuminate\Http\Response
-     */
-    public function update(StoreUserDashboardSetting $request)
-    {
-        $setting = Auth::user()->dashboardSetting;
-        $setting->update($request->all());
-        return redirect()->route('home')->with('success', trans('dashboard.settings.edit.success'));
     }
 
     /**
@@ -84,6 +46,7 @@ class DashboardController extends Controller
     public function recent($id)
     {
         $widget = CampaignDashboardWidget::findOrFail($id);
+        $campaign = CampaignLocalization::getCampaign();
         if ($widget->widget != CampaignDashboardWidget::WIDGET_RECENT) {
             return response()->json([
                 'success' => true
@@ -93,8 +56,10 @@ class DashboardController extends Controller
         $offset = request()->get('offset', 0);
 
         $entities = \App\Models\Entity::recentlyModified()
+            ->inTags($widget->tags->pluck('id')->toArray())
             ->type($widget->conf('entity'))
             ->acl()
+            ->with(['tags', 'updater'])
             ->take(10)
             ->offset($offset)
             ->get();
@@ -102,6 +67,39 @@ class DashboardController extends Controller
         return view('dashboard.widgets._recent_list')
             ->with('entities', $entities)
             ->with('widget', $widget)
+            ->with('campaign', $campaign)
+            ->with('offset', $offset);
+    }
+
+    /**
+     * @param $id
+     * @return bool
+     */
+    public function unmentioned($id)
+    {
+        $widget = CampaignDashboardWidget::findOrFail($id);
+        $campaign = CampaignLocalization::getCampaign();
+        if ($widget->widget != CampaignDashboardWidget::WIDGET_UNMENTIONED) {
+            return response()->json([
+                'success' => true
+            ]);
+        }
+
+        $offset = request()->get('offset', 0);
+
+        $entities = \App\Models\Entity::unmentioned()
+            ->inTags($widget->tags->pluck('id')->toArray())
+            ->type($widget->conf('entity'))
+            ->acl()
+            ->with(['updater'])
+            ->take(10)
+            ->offset($offset)
+            ->get();
+
+        return view('dashboard.widgets._recent_list')
+            ->with('entities', $entities)
+            ->with('widget', $widget)
+            ->with('campaign', $campaign)
             ->with('offset', $offset);
     }
 }

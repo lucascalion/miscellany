@@ -1,19 +1,17 @@
 <?php /** @var App\Models\location $location */ ?>
 <div class="box box-solid">
     <div class="box-body box-profile">
-        @include ('cruds._image')
-
-        <h3 class="profile-username text-center">{{ $model->name }}
-            @if ($model->is_private)
-                <i class="fas fa-lock" title="{{ trans('crud.is_private') }}"></i>
-            @endif
-        </h3>
+        @if (!View::hasSection('entity-header'))
+            @include ('cruds._image')
+        @endif
 
         <ul class="list-group list-group-unbordered">
             @if ($model->race)
                 <li class="list-group-item">
-                    <b>{{ trans('characters.fields.race') }}</b>
-                    <a class="pull-right" href="{{ route('races.show', $model->race_id) }}" data-toggle="tooltip" title="{{ $model->race->tooltip() }}">{{ $model->race->name }}</a>
+                    <b>{{ trans('races.fields.race') }}</b>
+                    <span class="pull-right">
+                        {!! $model->race->tooltipedLink() !!}
+                    </span>
                     <br class="clear" />
                 </li>
             @endif
@@ -23,12 +21,13 @@
                     <br class="clear" />
                 </li>
             @endif
-            @include('entities.components.tags')
-            @include('entities.components.files')
-        </ul>
 
-        @include('.cruds._actions')
+            @include('entities.components.relations')
+            @include('entities.components.attributes')
+            @include('entities.components.tags')
+        </ul>
     </div>
 </div>
 
 @include('entities.components.menu')
+@include('entities.components.actions')

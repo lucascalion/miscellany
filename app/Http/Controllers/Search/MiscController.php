@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Search;
 
 use App\Http\Controllers\Controller;
+use App\Models\Entity;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Response;
 
 class MiscController extends Controller
@@ -144,6 +147,52 @@ class MiscController extends Controller
      * @param Request $request
      * @return mixed
      */
+    public function maps(Request $request)
+    {
+        $term = trim($request->q);
+        return $this->buildSearchResults($term, \App\Models\Map::class);
+    }
+
+    /**
+     * @param Request $request
+     * @return mixed
+     */
+    public function notes(Request $request)
+    {
+        $term = trim($request->q);
+        return $this->buildSearchResults($term, \App\Models\Note::class);
+    }
+
+    /**
+     * @param Request $request
+     * @return mixed
+     */
+    public function journals(Request $request)
+    {
+        $term = trim($request->q);
+        return $this->buildSearchResults($term, \App\Models\Journal::class);
+    }
+
+    /**
+     * @param Request $request
+     * @return mixed
+     */
+    public function abilities(Request $request)
+    {
+        $term = trim($request->get('q', null));
+        $exclude = [];
+        if ($request->has('exclude')) {
+            /** @var Entity $entity */
+            $entity = Entity::findOrFail($request->get('exclude'));
+            $exclude = $entity->abilities->pluck('ability_id')->toArray();
+        }
+        return $this->buildSearchResults($term, \App\Models\Ability::class, $exclude);
+    }
+
+    /**
+     * @param Request $request
+     * @return mixed
+     */
     public function attributeTemplates(Request $request)
     {
         $term = trim($request->q);
@@ -152,25 +201,38 @@ class MiscController extends Controller
 
     /**
      * Build the search results
-     * @param $term
-     * @param $class
+     * @param string $term
+     * @param string $class
+     * @param array $excludes
      * @return mixed
      */
-    protected function buildSearchResults($term, $class)
+    protected function buildSearchResults($term, $class, array $excludes = [])
     {
+        /** @var Builder $modelClass */
         $modelClass = new $class;
         if (empty($term)) {
-            $models = $modelClass->acl()->limit(10)->orderBy('updated_at', 'DESC')->get();
+            $models = $modelClass->whereNotIn('id', $excludes)
+                ->limit(10)
+                ->orderBy('updated_at', 'DESC')
+                ->get();
         } else {
-            $models = $modelClass->acl()->where('name', 'like', "%$term%")->limit(10)->get();
+            $models = $modelClass->whereNotIn('id', $excludes)
+                ->where('name', 'like', "%$term%")
+                ->limit(10)
+                ->get();
         }
         $formatted = [];
 
         foreach ($models as $model) {
-            $formatted[] = [
+            $format = [
                 'id' => $model->id,
                 'text' => $model->name
             ];
+            if ($class === 'App\Models\Tag' && $model->hasColour()) {
+                $format['colour'] = $model->colourClass();
+            }
+
+            $formatted[] = $format;
         }
 
         return Response::json($formatted);

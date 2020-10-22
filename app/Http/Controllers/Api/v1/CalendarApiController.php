@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Models\Campaign;
 use App\Models\Calendar;
 use App\Http\Requests\StoreCalendar as Request;
-use App\Http\Resources\Calendar as Resource;
-use App\Http\Resources\CalendarCollection as Collection;
+use App\Http\Resources\CalendarResource as Resource;
 
 class CalendarApiController extends ApiController
 {
@@ -18,9 +17,8 @@ class CalendarApiController extends ApiController
     public function index(Campaign $campaign)
     {
         $this->authorize('access', $campaign);
-        return new Collection($campaign
+        return Resource::collection($campaign
             ->calendars()
-            ->acl()
             ->with([
                 'entity',
                 'entity.tags',
@@ -57,6 +55,7 @@ class CalendarApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('create', Calendar::class);
         $model = Calendar::create($request->all());
+        $this->crudSave($model);
         return new Resource($model);
     }
 
@@ -71,6 +70,7 @@ class CalendarApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('update', $calendar);
         $calendar->update($request->all());
+        $this->crudSave($calendar);
 
         return new Resource($calendar);
     }

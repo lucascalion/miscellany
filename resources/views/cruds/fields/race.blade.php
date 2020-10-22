@@ -5,15 +5,18 @@
         $preset = $model->race;
     } elseif (isset($isRandom) && $isRandom) {
         $preset = $random->generateForeign(\App\Models\Race::class);
+    } elseif (isset($parent) && $parent) {
+        $preset = FormCopy::field('race')->select(true, \App\Models\Race::class);
     } else {
-        $preset = $formService->prefillSelect('race', $source);
+        $preset = FormCopy::field('race')->select();
     }?>
     <div class="form-group">
         {!! Form::select2(
             'race_id',
             $preset,
             App\Models\Race::class,
-            isset($enableNew) ? $enableNew : true
+            isset($enableNew) ? $enableNew : true,
+            isset($parent) ? 'races.fields.race' : null
         ) !!}
     </div>
 @endif

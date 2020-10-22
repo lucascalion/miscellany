@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Datagrids\Filters\TagFilter;
+use App\Datagrids\Sorters\TagChildrenSorter;
+use App\Datagrids\Sorters\TagTagSorter;
+use App\Http\Requests\StoreTagEntity;
 use App\Models\Character;
 use App\Http\Requests\StoreTag;
 use App\Models\Tag;
@@ -23,31 +27,11 @@ class TagController extends CrudController
     protected $view = 'tags';
     protected $route = 'tags';
 
-    /**
-     * @var string
-     */
+    /** @var string Model */
     protected $model = \App\Models\Tag::class;
 
-    /**
-     * TagController constructor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-
-        $this->filters = [
-            'name',
-            'type',
-            [
-                'field' => 'tag_id',
-                'label' => trans('crud.fields.tag'),
-                'type' => 'select2',
-                'route' => route('tags.find'),
-                'placeholder' =>  trans('crud.placeholders.tag'),
-                'model' => Tag::class,
-            ],
-        ];
-    }
+    /** @var string Filter */
+    protected $filter = TagFilter::class;
 
     /**
      * Store a newly created resource in storage.
@@ -104,7 +88,7 @@ class TagController extends CrudController
     {
         return $this->crudDestroy($tag);
     }
-    
+
     /**
      * @param Tag $tag
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
@@ -112,7 +96,9 @@ class TagController extends CrudController
      */
     public function tags(Tag $tag)
     {
-        return $this->menuView($tag, 'tags');
+        return $this
+            ->datagridSorter(TagTagSorter::class)
+            ->menuView($tag, 'tags');
     }
 
     /**
@@ -122,7 +108,9 @@ class TagController extends CrudController
      */
     public function children(Tag $tag)
     {
-        return $this->menuView($tag, 'children');
+        return $this
+            ->datagridSorter(TagChildrenSorter::class)
+            ->menuView($tag, 'children');
     }
 
     /**
@@ -134,5 +122,45 @@ class TagController extends CrudController
     public function mapPoints(Tag $tag)
     {
         return $this->menuView($tag, 'map-points', true);
+    }
+
+    /**
+     * @param Tag $tag
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function entityAdd(Tag $tag)
+    {
+        $this->authorize('update', $tag);
+        $ajax = request()->ajax();
+        $formOptions = ['tags.entity-add', 'tag' => $tag];
+        if (request()->has('from-children')) {
+            $formOptions['from-children'] = true;
+        }
+
+        return view('tags.entities.create', [
+            'model' => $tag,
+            'ajax' => $ajax,
+            'formOptions' => $formOptions
+        ]);
+    }
+
+    /**
+     * @param StoreTagEntity $request
+     * @param Tag $tag
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function entityStore(StoreTagEntity $request, Tag $tag)
+    {
+        $this->authorize('update', $tag);
+        $redirectUrlOptions = ['tag' => $tag->id];
+        if (request()->has('from-children')) {
+            $redirectUrlOptions['tag_id'] = $tag->id;
+        }
+
+        $tag->attachEntity($request->only('entity_id'));
+        return redirect()->route('tags.children', $redirectUrlOptions)
+            ->with('success', trans('tags.children.create.success', ['name' => $tag->name]));
     }
 }

@@ -17,14 +17,20 @@ return array(
     'locales' => [
         'en',
         'en-US',
-        'fr',
         'de',
         'es',
-        'nl',
+        'fr',
+        'hu',
         'it',
+        'nl',
         'pt-BR',
         'ru',
-        'hu',
+        'sk',
+        'he',
+        'hr',
+        'pl',
+        'el',
+        'tr',
     ],
     /**
      * Specify locales that you want to show in the web interface, if empty or not provided then all locales in the database
@@ -33,6 +39,11 @@ return array(
      * @type array of strings
      */
     'show_locales' => [
+        'en',
+        'fr',
+        'de',
+        'es',
+        'it',
     ],
     /**
      * Specify the prefix used for all cookies, session data and cache persistence.
@@ -135,11 +146,20 @@ return array(
      * @type array
      */
     'exclude_groups' => array(
+        'auth',
         'reminders',
         'validation',
+        'validation-inline',
         'pagination',
         'passwords',
         'voyager',
+        'admin.community-events',
+        'admin.community-votes',
+        'admin.home',
+        'admin.patrons',
+        'admin.referrals',
+        'admin.releases',
+        'admin.users',
     ),
     /**
      * Exclude specific groups from Laravel Translation Manager in page edit mode.
@@ -148,6 +168,7 @@ return array(
      * @type array
      */
     'exclude_page_edit_groups' => array(
+        'auth',
         //'page-titles',
         'reminders',
         'validation',
@@ -345,7 +366,7 @@ return array(
      */
     'language_dirs' => array(
         'lang' => '/resources/lang/{locale}/{group}',
-        'packages' => null, //'/resources/lang/vendor/{package}/{locale}/{group}',
+        'packages' => '/resources/lang/vendor/{package}/{locale}/{group}',
         'workbench' => null,
         'vendor' => null,
         /*
@@ -391,5 +412,8 @@ return array(
      *
      */
     'zip_root' => '/resources',
+
+    'disable-react-ui' => true,
+    'disable-react-ui-link' => true,
 
 );

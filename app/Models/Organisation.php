@@ -2,13 +2,27 @@
 
 namespace App\Models;
 
+use App\Facades\CampaignLocalization;
+use App\Models\Concerns\SimpleSortableTrait;
 use App\Traits\CampaignTrait;
 use App\Traits\ExportableTrait;
 use App\Traits\VisibleTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Kalnoy\Nestedset\NodeTrait;
 
+/**
+ * Class Organisation
+ * @package App\Models
+ * @property Organisation $organisation
+ */
 class Organisation extends MiscModel
 {
+    use CampaignTrait,
+        VisibleTrait,
+        ExportableTrait,
+        NodeTrait,
+        SimpleSortableTrait,
+        SoftDeletes;
     /**
      * @var array
      */
@@ -46,6 +60,17 @@ class Organisation extends MiscModel
         'organisation_id',
         'tag_id',
         'is_private',
+        'tags',
+        'has_image',
+    ];
+
+    /**
+     * Fields that can be sorted on
+     * @var array
+     */
+    protected $sortableColumns = [
+        'organisation.name',
+        'location.name',
     ];
 
     /**
@@ -66,10 +91,7 @@ class Organisation extends MiscModel
         'organisation_id'
     ];
 
-    /**
-     * Traits
-     */
-    use CampaignTrait, VisibleTrait, ExportableTrait, NodeTrait;
+    protected $organisationAndDescendantIds = false;
 
     /**
      * Performance with for datagrids
@@ -78,7 +100,15 @@ class Organisation extends MiscModel
      */
     public function scopePreparedWith($query)
     {
-        return $query->with(['entity', 'location', 'location.entity', 'organisation']);
+        return $query
+            ->with([
+                'entity',
+                'location',
+                'location.entity',
+                'organisation',
+                'members',
+                'organisations'
+            ]);
     }
 
     /**
@@ -132,18 +162,29 @@ class Organisation extends MiscModel
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function quests()
     {
-        return $this->hasManyThrough(
-            'App\Models\Quest',
-            'App\Models\QuestOrganisation',
-            'organisation_id',
-            'id',
-            'id',
-            'quest_id'
-        );
+        return $this->belongsToMany('App\Models\Quest', 'quest_organisations')
+            ->using('App\Models\Pivots\QuestOrganisation')
+            ->withPivot('role', 'is_private');
+    }
+
+    /**
+     * @return mixed
+     */
+    public function relatedQuests()
+    {
+        $query = $this->quests()
+            ->orderBy('name', 'ASC')
+            ->with(['characters', 'locations', 'quests']);
+
+        if (!auth()->check() || !auth()->user()->isAdmin()) {
+            $query->where('quest_organisations.is_private', false);
+        }
+
+        return $query;
     }
 
     /**
@@ -151,12 +192,24 @@ class Organisation extends MiscModel
      */
     public function allMembers()
     {
-        $organisationId = [$this->id];
-        foreach ($this->descendants as $descendant) {
-            $organisationId[] = $descendant->id;
-        };
+        $organisationId = $this->organisationAndDescendantIds();
 
-        return OrganisationMember::whereIn('organisation_id', $organisationId)->with('character');
+        return OrganisationMember::whereIn('organisation_member.organisation_id', $organisationId)->with('character');
+    }
+
+    /**
+     * Get a list of this organisation and descendant ids
+     * @return array|bool
+     */
+    public function organisationAndDescendantIds()
+    {
+        if ($this->organisationAndDescendantIds === false) {
+            $this->organisationAndDescendantIds = [$this->id];
+            foreach ($this->descendants as $descendant) {
+                $this->organisationAndDescendantIds[] = $descendant->id;
+            };
+        }
+        return $this->organisationAndDescendantIds;
     }
 
     /**
@@ -179,10 +232,10 @@ class Organisation extends MiscModel
      */
     public function menuItems($items = [])
     {
-        $campaign = $this->campaign;
+        $campaign = CampaignLocalization::getCampaign();
         $canEdit = auth()->check() && auth()->user()->can('update', $this);
 
-        $count = $this->descendants()->acl()->count();
+        $count = $this->descendants()->count();
         if ($count > 0) {
             $items['organisations'] = [
                 'name' => 'organisations.show.tabs.organisations',
@@ -191,23 +244,7 @@ class Organisation extends MiscModel
             ];
         }
 
-        $count = $this->members()->acl()->has('character')->count();
-        if ($campaign->enabled('characters')) {
-            $items['members'] = [
-                'name' => 'organisations.show.tabs.members',
-                'route' => 'organisations.members',
-                'count' => $count
-            ];
-        }
-        $count = $this->allMembers()->acl()->has('character')->count();
-        if ($campaign->enabled('characters') && $count > 0) {
-            $items['all_members'] = [
-                'name' => 'organisations.show.tabs.all_members',
-                'route' => 'organisations.all-members',
-                'count' => $count
-            ];
-        }
-        $count = $this->quests()->acl()->count();
+        $count = $this->relatedQuests()->count();
         if ($campaign->enabled('quests') && $count > 0) {
             $items['quests'] = [
                 'name' => 'organisations.show.tabs.quests',
@@ -215,6 +252,16 @@ class Organisation extends MiscModel
                 'count' => $count
             ];
         }
+
         return parent::menuItems($items);
+    }
+
+    /**
+     * Get the entity_type id from the entity_types table
+     * @return int
+     */
+    public function entityTypeId(): int
+    {
+        return (int) config('entities.ids.organisation');
     }
 }

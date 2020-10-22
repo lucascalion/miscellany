@@ -25,7 +25,7 @@ return [
     ],
     'helpers'       => [
         'descendants'   => 'This list contains all organisations which are descendants of this organisation, and not only those directly under it.',
-        'nested'        => 'When in Nested View, you can view your Organisations in a nested manner. Organisations with no parent organisation will be shown by default. Organisations with children tags can be clicked to view those children. You can keep clicking until there are no more children to view.',
+        'nested'        => 'When in Nested View, you can view your Organisations in a nested manner. Organisations with no parent organisation will be shown by default. Organisations with children organisations can be clicked to view those children. You can keep clicking until there are no more children to view.',
     ],
     'index'         => [
         'add'           => 'New Organisation',
@@ -55,8 +55,8 @@ return [
             'role'          => 'Role',
         ],
         'helpers'       => [
-            'all_members'       => 'The following list are all characters that are in this organisation and all of the organisation\'s descendant organisations.',
-            'direct_members'    => 'Most organisations require members to run successfully. The following list are characters that are directly in this organisation.',
+            'all_members'   => 'All the characters that are members of this organisations and it\'s sub-organisations.',
+            'members'       => 'All the characters that are members of this organisation.',
         ],
         'placeholders'  => [
             'character' => 'Choose a character',
@@ -79,8 +79,6 @@ return [
     'show'          => [
         'description'   => 'A detailed view of an organisation',
         'tabs'          => [
-            'all_members'   => 'All Members',
-            'members'       => 'Direct Members',
             'organisations' => 'Organisations',
             'quests'        => 'Quests',
             'relations'     => 'Relations',

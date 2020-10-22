@@ -2,16 +2,21 @@
 
 namespace App\Observers;
 
+use App\Facades\Mentions;
+use App\Facades\UserCache;
 use App\Models\Campaign;
+use App\Models\CampaignFollower;
 use App\Models\CampaignUser;
 use App\Facades\CampaignLocalization;
 use App\Models\CampaignRole;
 use App\Models\CampaignRoleUser;
 use App\Models\CampaignSetting;
+use App\Models\RpgSystem;
 use App\Services\EntityMappingService;
 use App\Services\ImageService;
 use App\Services\StarterService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class CampaignObserver
 {
@@ -27,12 +32,19 @@ class CampaignObserver
     protected $entityMappingService;
 
     /**
+     * @var StarterService
+     */
+    protected $starterService;
+
+    /**
      * CharacterObserver constructor.
      * @param EntityMappingService $entityMappingService
+     * @param StarterService $starterService
      */
-    public function __construct(EntityMappingService $entityMappingService)
+    public function __construct(EntityMappingService $entityMappingService, StarterService $starterService)
     {
         $this->entityMappingService = $entityMappingService;
+        $this->starterService = $starterService;
     }
 
     /**
@@ -40,10 +52,17 @@ class CampaignObserver
      */
     public function saving(Campaign $campaign)
     {
-        $campaign->slug = str_slug($campaign->name, '');
+        if (!$campaign->withObservers) {
+            return;
+        }
 
         // Purity text
-        $campaign->entry = $this->purify($campaign->entry);
+        $campaign->name = $this->purify($campaign->name);
+        $campaign->entry = $this->purify(Mentions::codify($campaign->entry));
+        $campaign->excerpt = $this->purify(Mentions::codify($campaign->excerpt));
+        $campaign->css = str_replace(['&gt;', '{{', '}}'], ['>', '', ''], strip_tags($campaign->css));
+
+        $campaign->slug = Str::slug($campaign->name, '');
 
         // Public?
         $previousVisibility = $campaign->getOriginal('visibility');
@@ -54,6 +73,22 @@ class CampaignObserver
         } elseif (empty($isPublic) && $previousVisibility != Campaign::VISIBILITY_PRIVATE) {
             $campaign->visibility = Campaign::VISIBILITY_PRIVATE;
         }
+
+        // UI settings
+        $uiSettings = $campaign->ui_settings;
+        if (request()->has('tooltip_family')) {
+            $uiSettings['tooltip_family'] = (bool) request()->get('tooltip_family');
+        }
+        if (request()->has('tooltip_image')) {
+            $uiSettings['tooltip_image'] = (bool) request()->get('tooltip_image');
+        }
+        if (request()->has('hide_members')) {
+            $uiSettings['hide_members'] = (bool) request()->get('hide_members');
+        }
+        if (request()->has('hide_history')) {
+            $uiSettings['hide_history'] = (bool) request()->get('hide_history');
+        }
+        $campaign->ui_settings = $uiSettings;
 
         // Handle image. Let's use a service for this.
         ImageService::handle($campaign, 'campaigns');
@@ -79,7 +114,6 @@ class CampaignObserver
         // Make sure we save the last campaign id to avoid infinite loops
         $user = Auth::user();
         $user->last_campaign_id = $campaign->id;
-        $user->campaign_role = 'owner';
         $user->save();
 
         $role = CampaignRole::create([
@@ -106,20 +140,46 @@ class CampaignObserver
 
         // Settings
         $setting = new CampaignSetting([
-            'campaign_id' => $campaign->id
+            'campaign_id' => $campaign->id,
+            'dice_rolls' => 0,
+            'conversations' => 0,
         ]);
         $setting->save();
 
+        // If it's the first campaign for the user, generate some boilerplate content
         if ($first) {
-            StarterService::generateBoilerplate($campaign);
+            $this->starterService->generateBoilerplate($campaign);
         }
+
+        UserCache::clearCampaigns();
     }
 
+    /**
+     * @param Campaign $campaign
+     */
     public function saved(Campaign $campaign)
     {
+        if (!$campaign->withObservers) {
+            return;
+        }
+
         // If the entity note's entry has changed, we need to re-build it's map.
         if ($campaign->isDirty('entry')) {
             $this->entityMappingService->mapCampaign($campaign);
+        }
+
+        $this->saveRpgSystems($campaign);
+
+        foreach ($campaign->members()->with('user')->get() as $member) {
+            UserCache::user($member->user)->clearCampaigns();
+        }
+
+        // In case the campaign is no longer public, update any followers
+        if ($campaign->isDirty('visibility') && $campaign->visibility == Campaign::VISIBILITY_PRIVATE) {
+            /** @var CampaignFollower $follow */
+            foreach ($campaign->followers()->with('user')->get() as $follow) {
+                UserCache::user($follow->user)->clearFollows();
+            }
         }
     }
 
@@ -129,6 +189,7 @@ class CampaignObserver
     public function deleted(Campaign $campaign)
     {
         ImageService::cleanup($campaign);
+        UserCache::clearCampaigns();
     }
 
     /**
@@ -146,5 +207,43 @@ class CampaignObserver
         $campaign->setting->delete();
 
         ImageService::cleanup($campaign, 'header_image');
+    }
+
+    /**
+     * @param Campaign $campaign
+     */
+    protected function saveRpgSystems(Campaign $campaign): void
+    {
+        if (!request()->has('rpg_systems')) {
+            return;
+        }
+
+        $ids = request()->post('rpg_systems', []);
+
+        // Only use tags the user can actually view. This way admins can
+        // have tags on entities that the user doesn't know about.
+        $existing = [];
+        foreach ($campaign->rpgSystems as $system) {
+            $existing[] = $system->id;
+        }
+        $new = [];
+
+        foreach ($ids as $id) {
+            if (!empty($existing[$id])) {
+                unset($existing[$id]);
+            } else {
+                $system = RpgSystem::find($id);
+                if (empty($system)) {
+                    continue;
+                }
+                $new[] = $system->id;
+            }
+        }
+        $campaign->rpgSystems()->attach($new);
+
+        // Detach the remaining
+        if (!empty($existing)) {
+            $campaign->rpgSystems()->detach($existing);
+        }
     }
 }

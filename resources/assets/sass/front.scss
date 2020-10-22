@@ -1,40 +1,129 @@
+
 // This is kind of a mess, since the plugin uses bootstrap 4.0.0, but adminlte still uses the previous bootstrap.
 // will have to reevaluate when adminlte supports b-4.0.0
 
-@import "~simple-line-icons/scss/simple-line-icons";
+@import 'front/new-age.min.css';
+
+$KankaBlue: #2828A1;
+$KankaDarkBlue: #08083c;
+$KankaGrey: #EDEDED;
+
 body {
   background-color: #222;
 }
 header.masthead {
-  background: linear-gradient(to left, #2e8893,#0E2231) !important;
+  background: linear-gradient(to left, #3f44a1, $KankaDarkBlue);
+}
+header.masthead-img {
+  background-color: $KankaDarkBlue;
+  background-image: url(https://images.kanka.io/app/fRvHCH-8nraqMOxYiqN7rOJtq7I=/src/images%2Fbackgrounds%2Fmountain-background-desktop.jpg);
+  background-position: top left;
+  background-size: cover;
+
+  .container {
+    z-index: 1;
+    position: relative;
+  }
+
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,.5);
+  }
+
+  p {
+    font-size: 22px;
+  }
+}
+header.masthead-img.webpfallback {
+  background-image: url(https://images.kanka.io/app/fRvHCH-8nraqMOxYiqN7rOJtq7I=/src/images%2Fbackgrounds%2Fmountain-background-desktop.jpg?webpfallback) !important;
+}
+section.cta {
+
+  background: linear-gradient(to left, #3f44a1, $KankaDarkBlue) !important;
+  //background-image: url(https://kanka-app-assets.s3.amazonaws.com/images/backgrounds/mountain-background-desktop.jpg);
+  //background-position: top left;
+  //background-size: cover;
 }
 header.reduced-masthead {
-  min-height: 375px;
-  height: 50vh;
+  min-height: 325px;
+  height: unset;
+  padding-bottom: 20px;
+  padding-top: 60px;
+  .header-content {
+    margin-top: 40px;
+  }
 }
 .bg-primary {
-  background: linear-gradient(#FFF0BC, #FFF0BC) !important;
+  background: linear-gradient(#FFFFFF, $KankaGrey) !important;
 }
-#mainNav .navbar-brand {
-  color: #73a6c0 !important;
+#mainNav {
+  top: 34px;
+  box-shadow: 0 7px 6px rgba(50, 50, 93, 0.21);
+  .navbar-brand {
+    color: #73a6c0 !important;
+    font-family: Catamaran,Helvetica,Arial,sans-serif !important;
+
+    img {
+      height: 32px;
+    }
+  }
+  .nav-active, .nav-link:hover {
+    transition: all 0.2s ease-in-out;
+    text-decoration: underline;
+  }
 }
 
-@font-face {
-  font-family: 'Dubai';
-  src: url('../fonts/dubai/DubaiW23-Light.eot'); /* IE9 Compat Modes */
-  src: url('../fonts/dubai/DubaiW23-Light.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-  url('../fonts/dubai/DubaiW23-Light.woff2') format('woff2'), /* Super Modern Browsers */
-  url('../fonts/dubai/DubaiW23-Light.woff') format('woff'), /* Pretty Modern Browsers */
-  url('../fonts/dubai/DubaiW23-Light.ttf')  format('truetype'); /* Safari, Android, iOS */
+.topbar {
+  display: block;
+  position: fixed;
+  z-index: 1030;
+  top: 0;
+  right: 0;
+  left: 0;
+  background-color: $KankaDarkBlue;
+  text-align: right;
+  padding: 5px 25px;
+  height: 36px;
+
+  .topbar-list {
+    list-style-type: none;
+    margin-bottom: 0;
+    li {
+      display: inline-block;
+      margin: 0 10px;
+      line-height: 12px;
+      a {
+        color: $KankaGrey;
+      }
+    }
+
+    .login {
+      margin-right: 15px;
+    }
+  }
+}
+.navbar {
+  a {
+    color: $KankaBlue;
+  }
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Dubai',Catamaran,Helvetica,Arial,sans-serif !important;
-}
-#mainNav .navbar-brand {
-  font-family: 'Dubai',Catamaran,Helvetica,Arial,sans-serif !important;
+  font-family: Catamaran,Helvetica,Arial,sans-serif !important;
 }
 
+section.contact-us {
+  p {
+    font-size: 24px;
+  }
+  a {
+    margin: 0 10px;
+  }
+}
 section.contact ul.list-social li.social-discord a{
   background-color:#7289da;
 
@@ -55,101 +144,192 @@ hr {
   margin: 25px auto;
 }
 
+@media (min-width: 992px) {
+  #mainNav {
+    border-color: transparent;
+    background-color: $KankaDarkBlue;
+  }
+}
+
 footer {
-  padding-top: 90px;
+  padding-top: 40px;
   padding-bottom: 30px;
   text-align: left;
+  background-color: $KankaDarkBlue;
 
   ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
+    margin-bottom: 20px;
     li {
       padding: 0;
       display: block;
-      margin: 12px 0;
+      margin: 2px 0;
       a {
-        padding: 5px 15px;
-        font-size: 16px !important;
+        padding: 5px 2px;
+        font-size: 14px !important;
+        width: 100%;
+        color: rgba(255, 255, 255, 0.6);
       }
     }
   }
   h4 {
-    margin: 0 15px 10px;
-    font-size: 20px;
+    font-size: 14px;
     font-weight: 700;
+    color: #ddd;
+     a {
+       padding: 5px;
+       display: inline-block;
+     }
+  }
+  h5 {
+    margin: 0;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    font-size: 18px;
+    color: #ccc;
   }
 
-
-  p {
-    padding: 15px 25px;
-    font-size: 16px !important;
-    &:hover {
-      color: #eee;
-    }
-  }
-  p.first {
-    margin-top: -15px;
-  }
-
-  p, a {
+  a, span {
     border-radius: 4px;
+    letter-spacing: 1.1px;
+
     &:hover {
       transition: all 0.2s ease;
       background: rgba(255, 255, 255, 0.4);
       text-decoration: none;
+      letter-spacing: 1.5px;
     }
   }
 
   .footer-social {
+    text-align: center;
     a {
-      font-size: 20px !important;
+      font-size: 28px !important;
+      margin: 0 3px;
+      color: #ccc;
       &:hover {
         background: none;
         color: #c09853;
       }
     }
+
+    .email {
+      margin-bottom: 20px;
+      border-radius: 4px;
+      padding: 15px 25px;
+      font-size: 18px;
+      &:hover {
+        transition: all 0.2s ease;
+        background: rgba(255, 255, 255, 0.4);
+        text-decoration: none;
+        display: block;
+      }
+    }
+  }
+
+  .copyright {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .secondary-footer {
+    margin-top: 25px;
+
+    ul {
+      li {
+        display: inline-block;
+        a {
+          font-size: 12px !important;
+        }
+      }
+    }
   }
 }
 
-.campaign {
+.campaign-container {
   overflow: hidden;
-  display: block;
   margin-bottom: 20px;
+  position: relative;
+  height: 200px;
 
-  .image-wrapper {
-    max-width: 100%;
-    display: block;
-    height: 200px;
-    background-color: #ebebeb;
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-position: 50% 50%;
-  }
-  .small-campaign {
-    height: 160px;
-  }
+  .campaign {
+    transition: all 0.5s;
 
-  .campaign-title {
-    margin-top: 6px;
-    max-height: 56px;
-    padding: 5px;
-  }
+    .campaign-image {
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      height: 200px;
+      width: 100%;
+      transition: all 0.5s;
+      position: absolute;
+      top: 0;
+    }
 
-  &:hover {
-    box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
-    transition: all 0.15s ease;
-    text-decoration: none;
-    color: #c09853;
+    .small-campaign {
+      height: 160px;
+    }
+
+    &:hover {
+      box-shadow: 0 4px 6px rgba(50, 50, 93, 0.11), 0 1px 3px rgba(0, 0, 0, 0.08);
+      text-decoration: none;
+      .campaign-image {
+        transform: scale(1.1);
+      }
+    }
+
+    .bottom {
+      position: absolute;
+      bottom: 0;
+      padding: 20px 5px 5px 5px;
+      background: linear-gradient(180deg, rgba(51, 51, 51, 0) 0%, #333333 100%);
+      width: 100%;
+
+      .labels {
+        font-size: 14pt;
+      }
+
+      h4.campaign-title {
+        margin: 0;
+        max-height: 50px;
+        overflow: hidden;
+        font-size: 20px;
+      }
+    }
   }
 }
 
-.featured-campaigns {
-  padding-bottom: 50px;
+.campaign-boosted {
+  box-shadow: 0 4px 6px rgba(98, 46, 116, 0.3), 0 1px 3px rgba(69, 17, 82, 0.08);
+}
+
+.campaign-placeholder {
+  background-image: url(https://images.kanka.io/app/L5nSYCLgwtxR3wlUGk16fMZ0zAU=/280x210/src/images%2Fbackgrounds%2Fmountain-background-medium.jpg);
 }
 
 .campaigns {
   padding-top: 50px;
+}
+
+h4 {
+  a {
+    font-size: 28px;
+  }
+}
+
+h2 {
+  font-size: 44px !important;
+}
+
+section {
+  a {
+    color: #fac134;
+  }
+  li a {
+    color: $KankaBlue;
+  }
 }
 
 ul.pagination {
@@ -191,30 +371,239 @@ ul.pagination {
   color: #444;
 }
 
-// Login / Register
-.login-page, .register-page {
-  background-color: #eef1f4;
 
-  h1 {
-    img {
-      display: inline-block;
-      width: 40px;
-      margin-top: -8px;
+
+.partners {
+  a {
+    display: block;
+
+    border-radius: 4px;
+  }
+}
+
+.minimal-padding {
+  padding: 50px 20px;
+  background-color: #fff;
+  width: 100%;
+}
+
+.table {
+  text-align: center;
+
+  .text {
+    text-align: left;
+  }
+}
+
+.landscape-helper {
+  color: #555;
+  font-style: italic;
+  border: 1px solid #dc2430;
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.team {
+  .card {
+    height: 100%;
+    .card-body {
+      padding-bottom: 40px;
+    }
+    .card-text {
+      font-size: 16px;
+    }
+  }
+}
+
+.card {
+  .pull-bottom {
+    margin-top: 10px;
+    position:absolute;
+    bottom:20px;
+  }
+
+  .card-image {
+    margin-top: -75px;
+    width: 100px;
+    height: 100px;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    display: block;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .subscription-kobold {
+    background-image: url(https://images.kanka.io/app/qys-P4Qdr8__OVuiejzh5grC3dg=/200x200/src/images%2Ftiers%2Fkobold-325.png);
+  }
+  .subscription-owlbear {
+    background-image: url(https://images.kanka.io/app/pNUdiAGfWMlNpLnX7ZMJhnA4hFs=/200x200/src/images%2Ftiers%2Fowlbear-325.png);
+  }
+  .subscription-elemental {
+    background-image: url(https://images.kanka.io/app/E6iultkgKe86CZBAiybu8nT9mwM=/200x200/src/images%2Ftiers%2Felemental-325.png);
+  }
+  .subscription-kobold.webpfallback {
+    background-image: url(https://images.kanka.io/app/qys-P4Qdr8__OVuiejzh5grC3dg=/200x200/src/images%2Ftiers%2Fkobold-325.png?webpfallback);
+  }
+  .subscription-owlbear.webpfallback {
+    background-image: url(https://images.kanka.io/app/pNUdiAGfWMlNpLnX7ZMJhnA4hFs=/200x200/src/images%2Ftiers%2Fowlbear-325.png?webpfallback);
+  }
+  .subscription-elemental.webpfallback {
+    background-image: url(https://images.kanka.io/app/E6iultkgKe86CZBAiybu8nT9mwM=/200x200/src/images%2Ftiers%2Felemental-325.png?webpfallback);
+  }
+}
+
+#pricing, #news {
+  padding: 50px 0;
+}
+.pricing {
+  margin-bottom: 25px;
+
+  .card {
+    border: none;
+    border-radius: 1rem;
+    transition: all 0.2s;
+    box-shadow: 0 0.5rem 1rem 0 rgba(0, 0, 0, 0.1);
+  }
+
+  hr {
+    margin: 1.5rem 0;
+  }
+
+
+  .card-title {
+    margin: 0.5rem 0;
+    font-size: 0.9rem;
+    letter-spacing: .1rem;
+    font-weight: bold;
+  }
+
+  .card-body {
+    ul {
+      min-height: 330px;
+    }
+  }
+  .card-price {
+    font-size: 3rem;
+    margin: 0;
+  }
+
+  .card-price .period {
+    font-size: 0.8rem;
+  }
+
+  ul li {
+    margin-bottom: 1rem;
+  }
+  .text-muted {
+    opacity: 0.7;
+  }
+  .btn {
+    font-size: 80%;
+    border-radius: 5rem;
+    letter-spacing: .1rem;
+    font-weight: bold;
+    padding: 1rem;
+    opacity: 0.7;
+    transition: all 0.2s;
+  }
+
+  a.feature {
+    text-decoration: underline;
+  }
+}
+
+.patreons {
+  .card {
+    margin-top: 4em;
+  }
+}
+
+.faqs {
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    li {
+      margin: 0 0 20px 0;
     }
   }
 
-  .login-box, .register-box {
-    width: 420px;
-
-    .login-box-body, .register-box-body {
-      box-shadow: 0 2px 4px 0 rgba(0,0,0,.1);
-      border-radius: 10px;
+  .faq-more {
+    a {
+      margin-right: 25px;
+      i {
+        display: inline-block;
+      }
     }
   }
-  .btn-app {
-    .fab {
-      font-size: 20px;
-      display: block;
+}
+
+.youtube-placeholder {
+  overflow: hidden;
+}
+.play-youtube-video {
+  width: 100%;
+  cursor: pointer;
+}
+
+.btn-light {
+  background-color: #ecedee;
+}
+
+.landing-heading {
+  margin-bottom: 50px !important;
+}
+
+.cc-window {
+  transition: none !important;
+}
+
+
+.community-events, .community-event {
+  .card .card-img-top {
+    max-height: 280px;
+  }
+}
+
+/* Hover Effects on Card */
+
+@media (min-width: 992px) {
+  .pricing .card:hover {
+    margin-top: -.25rem;
+    margin-bottom: .25rem;
+    box-shadow: 0 0.5rem 1rem 0 rgba(0, 0, 0, 0.3);
+  }
+  .pricing .card:hover .btn {
+    opacity: 1;
+  }
+}
+
+@media (max-width:991px) {
+  #mainNav {
+    top: 0;
+  }
+  .topbar {
+    padding: 0 15px;
+    background-color: #fff;
+
+    .container {
+      padding-right: 0;
+      padding-left: 0;
+    }
+
+    .topbar-list {
+      li {
+        margin: 8px 6px;
+        a {
+          color: $KankaBlue;
+        }
+      }
+
+      .login {
+        margin-right: 5px;
+      }
     }
   }
 }

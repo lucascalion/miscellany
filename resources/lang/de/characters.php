@@ -3,6 +3,7 @@
 return [
     'actions'       => [
         'add_appearance'    => 'Füge ein Aussehen hinzu',
+        'add_organisation'  => 'Füge eine Organisation hinzu',
         'add_personality'   => 'Füge eine Persönlichkeit hinzu',
     ],
     'conversations' => [
@@ -33,6 +34,7 @@ return [
         'image'                     => 'Bild',
         'is_dead'                   => 'Tot',
         'is_personality_visible'    => 'Persönlichkeit sichtbar?',
+        'life'                      => 'Leben',
         'location'                  => 'Aufenthaltsort',
         'name'                      => 'Name',
         'physical'                  => 'Körper',
@@ -44,6 +46,7 @@ return [
         'type'                      => 'Typ',
     ],
     'helpers'       => [
+        'age'   => 'Sie können dieses Objektes mit einem Kalender Ihrer Kampagne verknüpfen, um stattdessen automatisch dessen Alter zu berechnen. :more.',
         'free'  => 'Wo ist das "Freitext" Feld? Wenn dieser Charakter ein solches Feld hatte, wurde es in den neuen Notizen Tab verschoben.',
     ],
     'hints'         => [
@@ -116,7 +119,7 @@ return [
         'sex'               => 'Geschlecht',
         'title'             => 'Titel',
         'traits'            => 'Eigenschaften',
-        'type'              => 'NPC, Spieler Charakter, Gottheit',
+        'type'              => 'NSC, Spieler Charakter, Gottheit',
     ],
     'quests'        => [
         'description'   => 'Quests des Charakters.',
@@ -144,5 +147,8 @@ return [
             'quests'        => 'Quests',
         ],
         'title'         => 'Charakter :name',
+    ],
+    'warnings'      => [
+        'personality_hidden'    => 'Es ist dir nicht erlaubt, die Persönlichkeit dieses Charakters zu bearbeiten.',
     ],
 ];

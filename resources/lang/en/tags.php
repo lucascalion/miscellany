@@ -2,6 +2,12 @@
 
 return [
     'children'      => [
+        'actions'       => [
+            'add'   => 'Add a new tag',
+        ],
+        'create'        => [
+            'title' => 'Add a tag to :name',
+        ],
         'description'   => 'Entities belonging to the tag',
         'title'         => 'Tag :name Children',
     ],
@@ -21,7 +27,7 @@ return [
         'characters'    => 'Characters',
         'children'      => 'Children',
         'name'          => 'Name',
-        'tag'           => 'Tag',
+        'tag'           => 'Parent Tag',
         'tags'          => 'Subtags',
         'type'          => 'Type',
     ],
@@ -45,7 +51,7 @@ return [
     'placeholders'  => [
         'name'  => 'Name of the tag',
         'tag'   => 'Choose a parent tag',
-        'type'  => 'Lore, Wars, History, Religion, Vexology',
+        'type'  => 'Lore, Wars, History, Religion, Vexillology',
     ],
     'show'          => [
         'description'   => 'A detailed view of a tag',

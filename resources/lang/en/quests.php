@@ -37,6 +37,8 @@ return [
     'fields'        => [
         'character'     => 'Instigator',
         'characters'    => 'Characters',
+        'copy_elements' => 'Copy elements attached to the quest',
+        'date'          => 'Date',
         'description'   => 'Description',
         'image'         => 'Image',
         'is_completed'  => 'Completed',
@@ -46,6 +48,7 @@ return [
         'organisations' => 'Organisations',
         'quest'         => 'Parent Quest',
         'quests'        => 'Sub Quests',
+        'role'          => 'Role',
         'type'          => 'Type',
     ],
     'helpers'       => [
@@ -121,8 +124,10 @@ return [
         'title'     => 'Organisations in :name',
     ],
     'placeholders'  => [
+        'date'  => 'Real world date for the quest',
         'name'  => 'Name of the quest',
         'quest' => 'Parent Quest',
+        'role'  => 'This entity\'s role in the quest',
         'type'  => 'Character Arc, Sidequest, Main',
     ],
     'show'          => [

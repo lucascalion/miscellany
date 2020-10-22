@@ -11,6 +11,8 @@ use App\Facades\UserPermission;
  * Todo: Refactor for less calls on each page load. Cache results? To session? Do the logic in php?
  * Load all "item" and "items" on calls and loop through the results?
  * At least cache the roles.
+ *
+ * @method static self acl(string $action = 'read', $user = null)
  */
 trait EntityAclTrait
 {
@@ -36,8 +38,11 @@ trait EntityAclTrait
             ->where('entities.is_private', false)
             ->where(function ($subquery) use ($service) {
                 return $subquery
-                    ->whereIn('entities.id', $service->entityIds())
-                    ->orWhereIn('entities.type', $service->entityTypes());
+                    ->where(function ($sub) use ($service) {
+                        return $sub->whereIn('entities.id', $service->entityIds())
+                            ->orWhereIn('entities.type', $service->entityTypes());
+                    })
+                    ->whereNotIn('entities.id', $service->deniedEntityIds());
             });
     }
 }

@@ -37,4 +37,26 @@ return [
         'name'          => 'Ulyss (example)',
         'type'          => 'Capital',
     ],
+    'note1'         => [
+        'entry'         => <<<'TEXT'
+Welcome to Kanka! Your first campaign has been created and we have included a couple of example entities as inspiration (you can delete them whenever).
+
+You'll probably want to get started by adding some entities of your own, so chose a category from the left and get started. You can disable unneeded categories of entity from the campaign settings, this will hide them from the menu.
+
+A few tips to get you started:
+- You can type @entityName to link to specific entities. The displayed link text will automatically update if you rename or update the linked entity.
+- You can configure account specific settings like themes and entities per page in your profile, accessible on the top right.
+- You can set permissions on whole entity types as well as individually on each entity.
+- There is a growing list of tutorials on :youtube. Tutorials include attributes and how to share your campaign with other people. The :faq may also be useful.
+
+Last but not least:
+- Have a look at :public for inspiration on how others use Kanka.
+- If you have questions, suggestions or just want to chat, join us on :discord.
+- Plan when your group plays its next session with our friends over at :lfgm and sync up your LFGM calendar with your Kanka campaign.
+- Loving the app and want to support it's growth? Consider supporting Kanka through :subscriptions.
+TEXT
+,
+        'name'          => 'Welcome Note',
+        'subscriptions' => 'Subscriptions',
+    ],
 ];

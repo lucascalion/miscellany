@@ -11,11 +11,15 @@ try {
     window.$ = window.jQuery = require('jquery');
 
     require('bootstrap-sass');
+
 } catch (e) {}
 
 require('admin-lte');
 require('select2');
 require('bootstrap-datepicker');
+require('eonasdan-bootstrap-datetimepicker');
+
+
 
 // require('corejs-typeahead');
 // Bloodhound = require('corejs-typeahead/dist/bloodhound.js');

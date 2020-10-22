@@ -37,6 +37,7 @@ return [
     'fields'        => [
         'character'     => 'Istigatore',
         'characters'    => 'Personaggi',
+        'date'          => 'Data',
         'description'   => 'Descrizione',
         'image'         => 'Immagine',
         'is_completed'  => 'Completata',
@@ -46,6 +47,7 @@ return [
         'organisations' => 'Organizzazioni',
         'quest'         => 'Missione Padre',
         'quests'        => 'Sotto-Missioni',
+        'role'          => 'Ruolo',
         'type'          => 'Tipo',
     ],
     'helpers'       => [
@@ -121,8 +123,10 @@ return [
         'title'     => 'Organizzazioni per :name',
     ],
     'placeholders'  => [
+        'date'  => 'Data del mondo reale per la missione',
         'name'  => 'Nome della missione',
         'quest' => 'Missione Padre',
+        'role'  => 'Il ruolo dell\'entità nella missione',
         'type'  => 'Personaggio, Missione Secondaria, Missione Principale',
     ],
     'show'          => [

@@ -4,7 +4,9 @@
     'breadcrumbs' => [
         ['url' => route('campaign'), 'label' => $campaign->name],
         trans('campaigns.show.tabs.export')
-    ]
+    ],
+    'canonical' => true,
+    'mainTitle' => false,
 ])
 
 @section('content')
@@ -14,7 +16,7 @@
             @include('campaigns._menu', ['active' => 'export'])
         </div>
         <div class="col-md-9">
-            <div class="box box-flat">
+            <div class="box box-solid">
                 <div class="box-body">
                     @include('campaigns._export')
                 </div>

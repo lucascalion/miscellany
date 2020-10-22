@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'actions'           => [
+        'follow'    => 'Segui',
+        'unfollow'  => 'Smetti di seguire',
+    ],
     'campaigns'         => [
         'manage'    => 'Gestisci la campagna',
         'tabs'      => [
@@ -11,7 +15,8 @@ return [
     ],
     'description'       => 'La dimora della tua creatività',
     'helpers'           => [
-        'setup' => 'Imposta la dashboard della tua campagna.',
+        'follow'    => 'Seguire una campagna farà si che questa appaia nel selettore delle campagne (in alto a destra) sotto alle tue campagna.',
+        'setup'     => 'Imposta la dashboard della tua campagna.',
     ],
     'latest_release'    => 'Ultima Versione',
     'notifications'     => [
@@ -52,7 +57,7 @@ return [
     ],
     'title'             => 'Dashboard',
     'welcome'           => [
-        'body'      => <<<'TEXT'
+        'body'  => <<<'TEXT'
 Benvenuto in Kanka! La tua prima campagna è stata creata e vi abbiamo inserito un po' di entità di esempio come ispirazione (le potrai cancellare in qualsiasi momento).
 
 Vorrai probabilmente iniziale aggiungendo qualche tua entità, quindi seleziona una categoria da sinistra ed iniziamo.
@@ -65,7 +70,6 @@ Alcuni consigli per iniziare:
 - Se ha delle domande, dei suggerimento o vuoi solamente chattare unisciti a noi su :discord
 TEXT
 ,
-        'header'    => 'Benvenuto',
     ],
     'widgets'           => [
         'calendar'  => [
@@ -83,13 +87,26 @@ TEXT
         'delete'    => [
             'success'   => 'Widget rimosso dalla dashboard',
         ],
+        'fields'    => [
+            'width' => 'Larghezza',
+        ],
         'recent'    => [
+            'full'      => 'Intero',
             'help'      => 'Visualizza solamente l\'ultima entità aggiornata, ma visualizza un\'antemprima completa per la stessa.',
+            'helpers'   => [
+                'full'  => 'Visualizza l\'intera entità in maniera predefinita invece di un\'anteprima.',
+            ],
             'singular'  => 'Singola',
             'title'     => 'Modificati di recente',
         ],
         'update'    => [
             'success'   => 'Widget modificato.',
+        ],
+        'widths'    => [
+            '0' => 'Auto',
+            '12'=> 'Intera',
+            '4' => 'Piccola',
+            '6' => 'Metà',
         ],
     ],
 ];

@@ -1,11 +1,12 @@
 @extends('layouts.app', [
     'title' => trans('locations.organisations.title', ['name' => $model->name]),
-    'description' => trans('locations.organisations.description'),
     'breadcrumbs' => [
-        ['url' => route('locations.index'), 'label' => __('locations.index.title')],
+        ['url' => Breadcrumb::index('locations'), 'label' => __('locations.index.title')],
         ['url' => route('locations.show', $model), 'label' => $model->name],
-        trans('locations.show.tabs.locations')
-    ]
+        trans('locations.show.tabs.organisations')
+    ],
+    'mainTitle' => false,
+    'miscModel' => $model,
 ])
 
 @section('content')

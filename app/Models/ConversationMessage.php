@@ -3,13 +3,34 @@
 namespace App\Models;
 
 use App\Facades\CampaignLocalization;
+use App\Models\Concerns\Blameable;
 use App\Traits\CampaignTrait;
 use App\Traits\VisibleTrait;
+use App\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
+/**
+ * Class ConversationMessage
+ * @package App\Models
+ *
+ * @property int $id
+ * @property int $conversation_id
+ * @property int $created_by
+ * @property int $character_id
+ * @property int $user_id
+ * @property string $message
+ *
+ * @property Character $character
+ * @property User $user
+ * @property Conversation $conversation
+ */
 class ConversationMessage extends MiscModel
 {
+    use Blameable;
+
     //
     protected $fillable = [
         'conversation_id',
@@ -116,11 +137,19 @@ class ConversationMessage extends MiscModel
      * @param $lastSync
      * @return mixed
      */
-    public function scopeLastSync($query, $lastSync)
+    public function scopeLastSync(Builder $query, $lastSync)
     {
         if (empty($lastSync)) {
             return $query;
         }
         return $query->where('updated_at', '>', $lastSync);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isMine(): bool
+    {
+        return Auth::check() && $this->created_by == Auth::user()->id;
     }
 }

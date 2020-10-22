@@ -1,8 +1,6 @@
 @extends('layouts.front', [
-    'menus' => [
-        'features',
-        'contact'
-    ]
+    'metaDescription' => __('front.home.seo.meta-description'),
+    'skipEnding' => true,
 ])
 @section('content')
     @include('front.master')
@@ -11,8 +9,17 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-8 mx-auto">
-                    <h2 class="section-heading">{{ trans('front.first_block.title') }}</h2>
-                    <p>{{ trans('front.first_block.description') }}</p>
+                    <h2 class="section-heading">{{ __('front.first_block.title') }}</h2>
+                    <p>{{ __('front.first_block.description') }}</p>
+                </div>
+            </div>
+            <div class="device-container">
+                <div class="device-mockup iphone6_plus portrait white">
+                    <div class="device">
+                        <div class="screen">
+                            <img src="https://images.kanka.io/app/Waw_atyiOiNeph4a67qCzp_K6RA=/src/images%2Ffront%2Fdashboard.png{{ \App\Facades\Img::nowebp() ? '?webpfallback' : null }}" class="img-fluid" loading="lazy" width=819" height="461" alt="{{ config('app.name') }} tabletop rpg campaign management and worldbuilding dashboard">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -21,108 +28,24 @@
     <section class="features" id="features">
         <div class="container">
             <div class="section-heading text-center">
-                <h2>{{ trans('front.features.title') }}</h2>
-                <p class="text-muted">{{ trans('front.features.description') }}</p>
+                <h2>{{ __('front.features.title') }}</h2>
+                <p class="text-muted">{{ __('front.features.description') }}</p>
                 <hr>
             </div>
-            <div class="row">
-                <div class="col-lg-4 my-auto">
-                    <div class="device-container">
-                        <div class="device-mockup iphone6_plus portrait white">
-                            <div class="device">
-                                <div class="screen">
-                                    <!-- Demo image for screen mockup, you can put an image here, some HTML, an animation, video, or anything else! -->
-                                    <img src="/images/front/home-image.png" class="img-fluid" alt="{{ config('app.name') }} dashboard">
-                                </div>
-                                <div class="button">
-                                    <!-- You can hook the "home button" to some JavaScript events or just remove it -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-8 my-auto">
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-lg-6">
-                                <div class="feature-item">
-                                    <i class="icon-layers text-primary"></i>
-                                    <h3>{{ trans('front.features.layers.title') }}</h3>
-                                    <p class="text-muted">{{ trans('front.features.layers.description') }}</p>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="feature-item">
-                                    <i class="icon-notebook text-primary"></i>
-                                    <h3>{{ trans('front.features.notebook.title') }}</h3>
-                                    <p class="text-muted">{{ trans('front.features.notebook.description') }}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-lg-6">
-                                <div class="feature-item">
-                                    <i class="icon-present text-primary"></i>
-                                    <h3>{{ trans('front.features.free.title') }}</h3>
-                                    <p class="text-muted">{{ trans('front.features.free.description') }}</p>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="feature-item">
-                                    <i class="icon-people text-primary"></i>
-                                    <h3>{{ trans('front.features.collaborative.title') }}</h3>
-                                    <p class="text-muted">{{ trans('front.features.collaborative.description') }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="text-center">
-                <h4>
-                    <a href="{{ route('features') }}">{{ trans('front.features.learn_more') }}</a>
-                </h4>
-            </div>
+            @include('front.features.main')
         </div>
     </section>
 
-    <section class="cta">
-        <div class="cta-content">
-            <div class="container">
-                <h2>{!! trans('front.second_block.title') !!}</h2>
-                <a href="{{ route('register') }}" class="btn btn-outline btn-xl js-scroll-trigger">
-                    {{ trans('front.second_block.call_to_action') }}
-                </a>
-            </div>
-        </div>
-        <div class="overlay"></div>
-    </section>
-
-    <section class="contact bg-primary" id="contact">
+    <section id="pricing">
         <div class="container">
-            <h2>{!! trans('front.contact.title', ['icon' => '<i class="fa fa-heart"></i>']) !!}</h2>
-            <ul class="list-inline list-social">
-                <li class="list-inline-item social-google-plus">
-                    <a href="https://reddit.com/r/kanka" title="Reddit" rel="noreferrer" target="_blank">
-                        <i class="fab fa-reddit"></i>
-                    </a>
-                </li>
-                <li class="list-inline-item social-twitter">
-                    <a href="https://twitter.com/kankaio" title="Twitter" rel="noreferrer" target="_blank">
-                        <i class="fab fa-twitter"></i>
-                    </a>
-                </li>
-                <li class="list-inline-item social-facebook">
-                    <a href="https://www.facebook.com/kanka.io.ch/" title="Facebook" rel="noreferrer" target="_blank">
-                        <i class="fab fa-facebook"></i>
-                    </a>
-                </li>
-                <li class="list-inline-item social-discord">
-                    <a href="{{ config('discord.url') }}" title="Discord">
-                        <img src="/images/thirdparty/discord-logo-white.png" alt="Discord" rel="noreferrer" target="_blank">
-                    </a>
-                </li>
-            </ul>
+            <div class="section-heading text-center">
+                <h2>{{ __('front.pricing.title') }}</h2>
+                <p class="text-muted">{{ __('front.pricing.description') }}</p>
+            </div>
+            <div class="mb-3"><br /></div>
+            <div class="mt-5">
+            @include('front._pricing')
+            </div>
         </div>
     </section>
 @endsection

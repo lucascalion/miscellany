@@ -1,12 +1,8 @@
-<div class="box">
+<div class="box box-solid">
     <div class="box-body box-profile">
-        @include ('cruds._image')
-
-        <h3 class="profile-username text-center">{{ $model->name }}
-            @if ($model->is_private)
-                <i class="fas fa-lock" title="{{ trans('crud.is_private') }}"></i>
-            @endif
-        </h3>
+        @if (!View::hasSection('entity-header'))
+            @include ('cruds._image')
+        @endif
 
         <ul class="list-group list-group-unbordered">
             @if ($model->type)
@@ -20,7 +16,7 @@
                 <li class="list-group-item">
                     <b>{{ trans('items.fields.character') }}</b>
                     <span  class="pull-right">
-                            <a href="{{ $model->character->getLink() }}" data-toggle="tooltip" title="{{ $model->character->tooltip() }}">{{ $model->character->name }}</a>
+                        {!! $model->character->tooltipedLink() !!}
                             </span>
                     <br class="clear" />
                 </li>
@@ -37,12 +33,18 @@
                     <br class="clear" />
                 </li>
             @endif
+            @if ($model->weight)
+                <li class="list-group-item">
+                    <b>{{ trans('items.fields.weight') }}</b> <span class="pull-right">{{ $model->weight }}</span>
+                    <br class="clear" />
+                </li>
+            @endif
+            @include('entities.components.relations')
+            @include('entities.components.attributes')
             @include('entities.components.tags')
-            @include('entities.components.files')
         </ul>
-
-        @include('.cruds._actions')
     </div>
 </div>
 
 @include('entities.components.menu')
+@include('entities.components.actions')

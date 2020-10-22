@@ -11,8 +11,9 @@ use App\Models\EntityEvent;
 use App\Services\CalendarService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 
-class EntityEventController extends CrudController
+class EntityEventController extends Controller
 {
     /**
      * @var string
@@ -32,8 +33,61 @@ class EntityEventController extends CrudController
      */
     public function __construct(CalendarService $calendarService)
     {
-        parent::__construct();
+        //parent::__construct();
         $this->calendarService = $calendarService;
+    }
+
+    /**
+     * @param Entity $entity
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function create(Entity $entity)
+    {
+        $this->authorize('update', $entity->child);
+
+        $name = $this->view;
+        $route = $this->route;
+        $parent = explode('.', $this->view)[0];
+        $ajax = request()->ajax();
+        $next = request()->get('next', null);
+
+        return view('calendars.events.create_from_entity', compact(
+            'entity',
+            'name',
+            'route',
+            'parent',
+            'ajax',
+            'next',
+            'entity'
+        ));
+    }
+
+    /**
+     * @param AddCalendarEvent $request
+     * @param Entity $entity
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function store(AddCalendarEvent $request, Entity $entity)
+    {
+        $this->authorize('update', $entity->child);
+
+        $reminder = new EntityEvent($request->all());
+        $reminder->entity_id = $entity->id;
+        $reminder->save();
+
+
+        $next = request()->post('next', false);
+        if ($next == 'entity.events') {
+            return redirect()
+                ->to($entity->url('show', 'tab_calendars'))
+                ->with('success', trans('calendars.event.create.success'));
+        }
+
+        return redirect()
+            ->route($entity->pluralType() . '.show', [$entity->entity_id, '#calendars'])
+            ->with('success', trans('calendars.event.create.success'));
     }
 
     /**
@@ -52,8 +106,12 @@ class EntityEventController extends CrudController
         $calendar = $entityEvent->calendar;
         $ajax = request()->ajax();
         $next = request()->get('next', null);
+        $from = request()->get('from', null);
+        if (!empty($from)) {
+            $from = Calendar::find($from);
+        }
 
-        return view('calendars.events.' . ($ajax ? '_' : null) . 'edit', compact(
+        return view('calendars.events.edit', compact(
             'entity',
             'entityEvent',
             'calendar',
@@ -61,7 +119,8 @@ class EntityEventController extends CrudController
             'route',
             'parent',
             'ajax',
-            'next'
+            'next',
+            'from'
         ));
     }
 
@@ -76,9 +135,7 @@ class EntityEventController extends CrudController
     {
         $this->authorize('update', $entityEvent->calendar);
 
-        $routeOptions = [$entityEvent->calendar->id, 'year' => request()->post('year')];
-
-        $entityEvent->setDate($request->only(['year', 'month', 'day']));
+        $routeOptions = ['calendar' => $entityEvent->calendar->id, 'year' => request()->post('year')];
         $entityEvent->update($request->all());
 
         if (request()->has('layout')) {
@@ -92,6 +149,13 @@ class EntityEventController extends CrudController
             return redirect()
                 ->route('calendars.events', $entityEvent->calendar)
                 ->with('success', trans('calendars.event.edit.success'));
+        } elseif ($next == 'entity.events') {
+            return redirect()
+                ->to($entity->url('show', 'tab_calendars'))
+                ->with('success', trans('calendars.event.edit.success'));
+        } elseif (Str::startsWith($next, 'calendar.')) {
+            $id = Str::after($next, 'calendar.');
+            $routeOptions['calendar'] = $id;
         }
 
         return redirect()->route('calendars.show', $routeOptions)
@@ -114,6 +178,11 @@ class EntityEventController extends CrudController
         if ($next == 'calendars.events') {
             return redirect()
                 ->route('calendars.events', $entityEvent->calendar)
+                ->with('success', $success);
+
+        } elseif ($next == 'entity.events') {
+            return redirect()
+                ->to($entity->url('show', 'tab_calendars'))
                 ->with('success', $success);
         }
 

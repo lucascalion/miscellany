@@ -1,3 +1,5 @@
+@import "../variables";
+
 $Hard: #fff;
 $Soft: #333;
 $Detail: #0a121b;
@@ -8,28 +10,11 @@ $White: #eee;
 $Link: #9CD7F7;
 $LinkHover: #d4eff7;
 
+@import "_base";
+
 body {
   background-color: #061F2F;
   color: #d3d4d4;
-}
-
-#app {
-  background: none;
-}
-
-.main-sidebar {
-  background: none !important;
-  li:hover, li.active, li.header {
-    background-color: $Detail !important;
-    a {
-      color: $Hard !important;
-      background-color: $Detail !important;
-    }
-  }
-}
-
-.content-wrapper {
-  background: none !important;
 }
 
 .btn {
@@ -49,84 +34,21 @@ body {
     color: white !important;
   }
 }
-.btn-default, .btn-app {
+.btn-default, .btn-app, .btn-secondary {
   color: #444 !important;
 }
-//.input-group-btn {
-//  .btn, .new-entity-selector {
-//    height: 38px !important;
-//    padding-top: 15px !important;
-//  }
-//}
 
-.box, .panel  {
-  border: none !important;
+.box, .panel, .timeline-item  {
   background-color: $Detail !important;
 
   .box-header, .panel-heading {
     background-color: rgba(0, 0, 0, 0.1) !important;
-    border: none !important;
   }
   .with-border {
     border-bottom: none !important;
   }
-
-  .box-footer, .panel-footer {
-    background: none !important;
-    border: none !important;
-  }
-
-  .panel-body {
-    ul {
-      color: $White;
-    }
-  }
 }
 
-.filters {
-  background: $Detail !important;
-  //margin: 0 !important;
-  //border-bottom: none; //1px solid $Unfocused;
-  //border-radius: 0 !important;
-  color: white;
-
-  .element {
-    cursor: pointer;
-    &:hover {
-      background: $Soft !important;
-    }
-  }
-  .first {
-    border-left: 1px solid $Unfocused;
-  }
-}
-
-.table-striped > tbody > tr:nth-of-type(odd) {
-  background-color: $Detail !important;
-}
-.table {
-  tr {
-    td, th {
-      //border: none !important;
-      //border-top: none !important;
-      //border-bottom: none !important;
-      //color: #eee;
-    }
-  }
-}
-.table-hover {
-  tbody {
-    tr {
-      &:hover {
-        background-color: $Detail !important;
-      }
-    }
-  }
-}
-
-h1, h2, h3, h4, h5, h6, h1 > small {
-  color: $White !important;
-}
 a {
   color: $Link !important;
   &:hover {
@@ -135,88 +57,29 @@ a {
   }
 }
 
-input, textarea, .select2, select  {
-  border: 1px solid $Hard !important;
-  //border-radius: 0 !important;
-  background-color: $Detail !important;
-  color: white;
-}
-.form-control, label {
-  color: $White;
-}
-.preview {
-  background-color: $Detail;
-  min-height: 40px;
-}
-
-.select2 {
-  .select2-selection {
-    background: none;
-    //border: none;
-    //height: 36px;
-
-    .select2-selection__rendered {
-      color: white;
-    }
-  }
-}
-.select2-dropdown {
-  background-color: $Detail;
-  .select2-results {
-    color: white;
-  }
-}
-input[type=checkbox] {
-  -webkit-appearance: none !important;
-  -moz-appearance: none;
-  appearance: none;
-  outline: 0;
-  width: 16px;
-  height: 16px;
-}
-input[type=checkbox]:after {
-  background-color: $Detail !important;
-  border: 1px solid $Hard !important;
-}
-input[type="checkbox"]:checked {
-  background: $Hard !important;
-}
-input[type="checkbox"]:checked:after {
-  display: block;
-}
-
-.main-footer {
-  background: none !important;
-  color: #999fac !important;
-}
-
-.user-footer {
-  background-color: $Detail !important;
-}
-
-.post {
-  color: $White;
-}
-.help-block {
-  color: #bbb;
-  font-style: italic;
-  text-align: justify;
-}
-p {
-  text-align: justify;
-  color: $White;
-}
-pre, blockquote {
-  background-color: $Detail;
-  color: $White;
-}
-
 .nav-tabs-custom {
   border: none;
-  background-color: $Detail;
+  background-color: rgba(0, 0, 0, 0.2) !important;
 
+  .pull-right {
+    margin: 5px 5px 0 0;
+  }
+
+  .nav-tabs {
+    border-bottom: 0;
+
+    li {
+      background-color: $Detail !important;
+    }
+    .active {
+      a {
+        background-color: $Detail !important;
+        color: $Hard !important;
+      }
+    }
+  }
   .tab-content {
-    background: none;
+    background: unset;
   }
 }
 .nav-stacked {
@@ -231,8 +94,6 @@ pre, blockquote {
   }
 }
 .nav-tabs {
-  border: none !important;
-
   li {
     border: none;
     &:hover {
@@ -245,7 +106,8 @@ pre, blockquote {
     }
   }
   li.active {
-    border: none;
+    border-top: 3px solid transparent !important;
+
     a {
       color: $Soft !important;
       background-color: $Hard !important;
@@ -254,125 +116,17 @@ pre, blockquote {
   }
 }
 
-.alert  {
-  background-color: $Unfocused !important;
-  color: $White !important;
-  border-radius: 2px !important;
-  border: 0;
-
-  a {
-    color: $Hard !important;
-  }
-}
-
-.list-group-item {
-  background: none;
-  border: 1px solid $Detail;
-  color: $White;
-}
-
-.badge {
-  background-color: $Hard !important;
-  color: $Soft !important;
-}
-/**
- * Tinymce
- */
-.mce-panel {
-  background-color: $Detail !important;
-}
-.mce-menubar {
-  border: 0 !important;
-}
-.mce-edit-area, .mce-content-body {
-  background: none !important;
-}
-.mce-btn {
-  border: 1px solid $Unfocused !important;
-  border-radius: 2px !important;
-  background: none !important;
-  color: $White !important;
-}
-.mce-menubtn button, .mce-menubtn button span, .mce-ico {
-  color: $White !important;
-}
-
-.mce-tabs, .mce-tabs+.mce-container-body, .mce-tab {
-  background: none !important;
-}
-.mce-widget, .mce-label, .mce-tab {
-  text-shadow: 0 1px 1px rgba(0,0,0,0.75) !important;
-}
-.mce-menu-item.mce-disabled, .mce-menu-item.mce-disabled:hover {
-  background: $Unfocused !important;
-}
-
-.input-group .input-group-addon {
-  color: $Hard;
-  background-color: $Soft;
-}
-
-/**
- * Modal, Popover
- */
-.modal-content, .popover-content {
-  background: $Detail;
-  .modal-header, .popover-header {
-    border-color: $Hard !important;
-    border: none !important;
-  }
-  .modal-footer, .popover-footer {
-    border: none !important;
-  }
-}
-.popover-title {
-  background: $Detail;
-}
-
-/**
- * Dashboard
- */
-.products-list > .item {
-  background: none;
-}
 .product-list-in-box > .item {
   border-bottom: 1px solid $Soft;
-}
-.small-box, .info-box {
-  background-color: $Detail !important;
-  border: 1px solid $Detail;
-  border-radius: 2px;
-}
-.info-box-icon {
-  background-color: $Unfocused !important;
 }
 
 /**
  * Menu
  */
-.dropdown-menu {
-  background-color: $Detail;
-  border: 1px solid $Unfocused;
-  border-radius: 2px;
-
-  li.header {
-    background: none !important;
-  }
-  li {
-    color: $White !important;
-    a {
-      border: none;
-      color: $White;
-    }
-  }
-}
-
-.main-header, .navbar {
+.navbar {
   background: $Detail !important;
 
   a {
-    background: none !important;
-    border: none !important;
     color: $Hard !important;
 
     &:hover {
@@ -394,12 +148,6 @@ pre, blockquote {
   }
 }
 
-/**
- * Quests
- */
-.bg-success {
-  background-color: $Detail;
-}
 
 /**
  * Calendar
@@ -408,35 +156,47 @@ pre, blockquote {
   td.today {
     background-color: #515142;
   }
+  .weather {
+    color: #000;
+  }
 }
+
+
+
+.main-sidebar {
+  background-color: $Detail !important;
+
+  .sidebar-text {
+    span, i {
+      color: $Link;
+    }
+  }
+  section.sidebar-campaign {
+    background: linear-gradient(180deg, rgba(51, 51, 51, 0) 0%, $Detail 100%);
+  }
+  .sidebar {
+    background-color: $Detail;
+  }
+
+  li.active a {
+    color: $Hard !important;
+    background: $Detail !important;
+  }
+
+  .campaign-switcher {
+    background-color: $Detail;
+    ul li .background-gradient {
+      background: linear-gradient(270deg, rgba(33, 33, 33, 0) 0%, $Detail 100%);
+    }
+  }
+}
+
 
 /**
  * Conversations
  */
 .box-comments, .box-comment {
  background-color: $Detail;
-
- .comment-text {
-   color: $White;
-   .username {
-     color: $White;
-   }
- }
-
-}
-.box-conversation .box-footer {
- background-color: $Soft;
-}
-
-/*
- Search
- */
-.tt-menu {
-  background-color: $Detail;
-  border-color: $Soft;
-}
-.tt-cursor {
-  color: $Hard !important;
 }
 
 @media (max-width: 991px) {
@@ -449,59 +209,11 @@ pre, blockquote {
   }
 }
 
-// Filters
-.table-filters {
-  background-color: $Soft !important;
-}
-
-/**
- * Footer
- */
-footer {
-  .footer {
-    background-color: rgba(0, 0, 0, 0.2);
-  }
-}
-
-/**
- * Dashboard
- */
-.campaign {
-  .content {
-    background: rgba(0, 0, 0, 0.5);
-
-    ul.campaign-links {
-      li {
-        a {
-          background: rgba(0, 0, 0, 0.7);
-
-          &:hover {
-            background: rgba(0, 0, 0, 0.9);
-          }
-        }
-      }
-    }
-  }
-  .preview {
-    background: none;
-  }
-}
 .panel-body {
   .preview {
     background: none;
     &:before {
-      background: linear-gradient(transparent 0px, $Detail);
-    }
-  }
-}
-.campaign-dashboard-widgets {
-  .widget {
-    .widget-overlay {
-      background-color: rgba(0, 0, 0, 0.7);
-    }
-
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.5);
+      background: linear-gradient(transparent 0px, $Detail) !important;
     }
   }
 }

@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 
-class CreateLtmTranslationsTable extends Migration
+class CreateLTMTranslationsTable extends Migration
 {
 
     /**

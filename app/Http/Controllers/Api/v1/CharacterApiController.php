@@ -5,27 +5,26 @@ namespace App\Http\Controllers\Api\v1;
 use App\Models\Campaign;
 use App\Models\Character;
 use App\Http\Requests\StoreCharacter as Request;
-use App\Http\Resources\Character as Resource;
-use App\Http\Resources\CharacterCollection as Collection;
+use App\Http\Resources\CharacterResource;
 
 class CharacterApiController extends ApiController
 {
     /**
      * @param Campaign $campaign
-     * @return Collection
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index(Campaign $campaign)
     {
         $this->authorize('access', $campaign);
-        return new Collection($campaign->characters()
-            ->acl()
+        return CharacterResource::collection($campaign->characters()
             ->with([
                 'entity', 'entity.tags', 'entity.notes', 'entity.files', 'entity.events',
                 'entity.relationships', 'entity.attributes', 'characterTraits'
             ])
             ->lastSync(request()->get('lastSync'))
-            ->paginate());
+            ->paginate()
+        );
     }
 
     /**
@@ -37,7 +36,7 @@ class CharacterApiController extends ApiController
     {
         $this->authorize('access', $campaign);
         $this->authorize('view', $character);
-        return new Resource($character);
+        return new CharacterResource($character);
     }
 
     /**
@@ -51,16 +50,9 @@ class CharacterApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('create', Character::class);
         $model = Character::create($request->all());
+        $this->crudSave($model);
 
-        // Fire an event for the Entity Observer.
-        $model->crudSaved();
-
-        // MenuLink have no entity attached to them.
-        if ($model->entity) {
-            $model->entity->crudSaved();
-        }
-
-        return new Resource($model);
+        return new CharacterResource($model);
     }
 
     /**
@@ -74,16 +66,9 @@ class CharacterApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('update', $character);
         $character->update($request->all());
+        $this->crudSave($character);
 
-        // Fire an event for the Entity Observer.
-        $character->crudSaved();
-
-        // MenuLink have no entity attached to them.
-        if ($character->entity) {
-            $character->entity->crudSaved();
-        }
-
-        return new Resource($character);
+        return new CharacterResource($character);
     }
 
     /**

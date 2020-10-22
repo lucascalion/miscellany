@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Facades\Mentions;
 use App\Models\EntityNote;
 use App\Services\EntityMappingService;
 use Illuminate\Support\Facades\Auth;
@@ -31,17 +32,9 @@ class EntityNoteObserver
     /**
      * @param EntityNote $entityNote
      */
-    public function creating(EntityNote $entityNote)
-    {
-        $entityNote->created_by = Auth::user()->id;
-    }
-
-    /**
-     * @param EntityNote $entityNote
-     */
     public function saving(EntityNote $entityNote)
     {
-        $entityNote->entry = $this->purify($entityNote->entry);
+        $entityNote->entry = $this->purify(Mentions::codify($entityNote->entry));
 
         // Is private hook for non-admin (who can't set is_private)
         if (!isset($entityNote->is_private)) {
@@ -54,6 +47,10 @@ class EntityNoteObserver
      */
     public function saved(EntityNote $entityNote)
     {
+        if (!$entityNote->savedObserver) {
+            return;
+        }
+
         // When adding or changing an entity note to an entity, we want to update the
         // last updated date to reflect changes in the dashboard.
         $entityNote->entity->child->savingObserver = false;

@@ -1,49 +1,61 @@
-<div class="box box-flat">
+<div class="box box-solid">
     <div class="box-body">
-        <h2 class="page-header with-border">
+        <h2 class="page-header ">
             {{ trans('characters.show.tabs.organisations') }}
         </h2>
 
-        <?php  $r = $model->organisations()->organisationAcl()->orderBy('role', 'ASC')->has('organisation')->with(['organisation', 'organisation.location'])->paginate(); ?>
+        <?php  $r = $model->organisations()->simpleSort($datagridSorter)->has('organisation')->with(['organisation', 'organisation.location'])->paginate(); ?>
+
+        <div class="row hidden-export">
+            <div class="col-md-6">
+                @include('cruds.datagrids.sorters.simple-sorter')
+            </div>
+            <div class="col-md-6 text-right">
+                @can('organisation', [$model, 'add'])
+                    <a href="{{ route('characters.character_organisations.create', ['character' => $model->id]) }}"
+                       class="btn btn-primary btn-sm" data-toggle="ajax-modal"
+                       data-target="#entity-modal" data-url="{{ route('characters.character_organisations.create', $model->id) }}">
+                        <i class="fa fa-plus"></i> {{ __('characters.organisations.actions.add')  }}
+                    </a>
+                @endcan
+            </div>
+        </div>
         <table id="character-organisations" class="table table-hover {{ $r->count() === 0 ? 'export-hidden' : '' }}">
             <tbody><tr>
                 <th class="avatar"><br /></th>
                 <th>{{ trans('organisations.fields.name') }}</th>
-                <th class="visible-sm">{{ trans('organisations.fields.type') }}</th>
+                <th class="hidden-sm hidden-xs">{{ trans('organisations.fields.type') }}</th>
                 <th>{{ trans('organisations.members.fields.role') }}</th>
                 @if ($campaign->enabled('locations'))
-                    <th class="visible-sm">{{ trans('crud.fields.location') }}</th>
+                    <th class="hidden-sm hidden-xs">{{ trans('crud.fields.location') }}</th>
                 @endif
-                <th class="text-right">
-                    @can('organisation', [$model, 'add'])
-                        <a href="{{ route('characters.character_organisations.create', ['character' => $model->id]) }}" class="btn btn-primary btn-sm" data-toggle="ajax-modal"
-                           data-target="#entity-modal" data-url="{{ route('characters.character_organisations.create', $model->id) }}">
-                            <i class="fa fa-plus"></i>
-                        </a>
-                    @endcan
-                </th>
+                @if(Auth::check() && Auth::user()->isAdmin())
+                    <th></th>
+                @endif
+                <th></th>
             </tr>
             @foreach ($r as $organisation)
                 <tr>
                     <td>
-                        <a class="entity-image" style="background-image: url('{{ $organisation->organisation->getImageUrl(true) }}');" title="{{ $organisation->organisation->name }}" href="{{ route('organisations.show', $organisation->organisation->id) }}"></a>
+                        <a class="entity-image" style="background-image: url('{{ $organisation->organisation->getImageUrl(40) }}');" title="{{ $organisation->organisation->name }}" href="{{ route('organisations.show', $organisation->organisation->id) }}"></a>
                     </td>
                     <td>
-                        <a href="{{ route('organisations.show', $organisation->organisation_id) }}" data-toggle="tooltip" title="{{ $organisation->organisation->tooltip() }}">{{ $organisation->organisation->name }}</a>
+                        {!! $organisation->organisation->tooltipedLink() !!}
                     </td>
-                    <td class="visible-sm">{{ $organisation->organisation->type }}</td>
+                    <td class="hidden-sm hidden-xs">{{ $organisation->organisation->type }}</td>
                     <td>{{ $organisation->role }}</td>
                     @if ($campaign->enabled('locations'))
-                        <td class="visible-sm">
+                        <td class="hidden-sm hidden-xs">
                             @if ($organisation->organisation->location)
-                                <a href="{{ route('locations.show', $organisation->organisation->location_id) }}" data-toggle="tooltip" title="{{ $organisation->organisation->location->tooltip() }}">{{ $organisation->organisation->location->name }}</a>
+                                {!! $organisation->organisation->location->tooltipedLink() !!}
                             @endif
                         </td>
                     @endif
+                    @include('cruds.partials.private', ['model' => $organisation])
                     <td class="text-right">
                         @can('organisation', [$model, 'edit'])
-                            <a href="{{ route('characters.character_organisations.edit', ['character' => $model, 'organisationMember' => $organisation]) }}" class="btn btn-xs btn-primary"
-                               data-toggle="ajax-modal" data-target="#entity-modal" data-url="{{ route('characters.character_organisations.edit', ['character' => $model, 'organisationMember' => $organisation]) }}">
+                            <a href="{{ route('characters.character_organisations.edit', [$model, $organisation]) }}" class="btn btn-xs btn-primary"
+                               data-toggle="ajax-modal" data-target="#entity-modal" data-url="{{ route('characters.character_organisations.edit', [$model, $organisation]) }}">
                                 <i class="fa fa-edit"></i> <span class="visible-sm">{{ trans('crud.edit') }}</span>
                             </a>
                         @endcan

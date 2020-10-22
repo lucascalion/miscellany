@@ -29,11 +29,9 @@ class LocationObserver extends MiscObserver
      */
     public function deleting(MiscModel $location)
     {
-        parent::deleting($location);
-
         /**
-         * We need to do this ourselves and not let mysql to it (set null), because the plugin wants to delete
-         * all descendants when deleting the parent, which is stupid.
+         * We need to do this ourselves and not let mysql to it (set null), because the nested wants to delete
+         * all descendants when deleting the parent (soft delete)
          */
         foreach ($location->locations as $sub) {
             $sub->parent_location_id = null;
@@ -42,7 +40,20 @@ class LocationObserver extends MiscObserver
 
         // We need to refresh our foreign relations to avoid deleting our children nodes again
         $location->refresh();
+    }
 
-        ImageService::cleanup($location, 'map');
+    /**
+     * Delete the map when the entity is deleted
+     * @param MiscModel $model
+     */
+    public function deleted(MiscModel $model)
+    {
+        parent::deleted($model);
+
+        if ($model->trashed()) {
+            return;
+        }
+
+        ImageService::cleanup($model, 'map');
     }
 }

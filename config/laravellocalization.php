@@ -26,7 +26,7 @@ return [
         //'nb'          => ['name' => 'Norwegian Bokmål',       'script' => 'Latn', 'native' => 'Bokmål', 'regional' => 'nb_NO'],
         //'bs'          => ['name' => 'Bosnian',                'script' => 'Latn', 'native' => 'bosanski', 'regional' => 'bs_BA'],
         //'br'          => ['name' => 'Breton',                 'script' => 'Latn', 'native' => 'brezhoneg', 'regional' => 'br_FR'],
-        //'ca'          => ['name' => 'Catalan',                'script' => 'Latn', 'native' => 'català', 'regional' => 'ca_ES'],
+        'ca'          => ['name' => 'Catalan',                'script' => 'Latn', 'native' => 'Català', 'regional' => 'ca_ES'],
         //'ch'          => ['name' => 'Chamorro',               'script' => 'Latn', 'native' => 'Chamoru', 'regional' => ''],
         //'ny'          => ['name' => 'Chewa',                  'script' => 'Latn', 'native' => 'chiCheŵa', 'regional' => ''],
         //'kde'         => ['name' => 'Makonde',                'script' => 'Latn', 'native' => 'Chimakonde', 'regional' => ''],
@@ -67,7 +67,7 @@ return [
         //'ha'          => ['name' => 'Hausa',                  'script' => 'Latn', 'native' => 'Hausa', 'regional' => 'ha_NG'],
         //'bez'         => ['name' => 'Bena',                   'script' => 'Latn', 'native' => 'Hibena', 'regional' => ''],
         //'ho'          => ['name' => 'Hiri Motu',              'script' => 'Latn', 'native' => 'Hiri Motu', 'regional' => ''],
-        //'hr'          => ['name' => 'Croatian',               'script' => 'Latn', 'native' => 'hrvatski', 'regional' => 'hr_HR'],
+        'hr'          => ['name' => 'Croatian',               'script' => 'Latn', 'native' => 'Hrvatski', 'regional' => 'hr_HR'],
         //'bem'         => ['name' => 'Bemba',                  'script' => 'Latn', 'native' => 'Ichibemba', 'regional' => 'bem_ZM'],
         //'io'          => ['name' => 'Ido',                    'script' => 'Latn', 'native' => 'Ido', 'regional' => ''],
         //'ig'          => ['name' => 'Igbo',                   'script' => 'Latn', 'native' => 'Igbo', 'regional' => 'ig_NG'],
@@ -221,7 +221,7 @@ return [
         //'mk'          => ['name' => 'Macedonian',             'script' => 'Cyrl', 'native' => 'македонски', 'regional' => 'mk_MK'],
         //'mn'          => ['name' => 'Mongolian (Cyrillic)',   'script' => 'Cyrl', 'native' => 'монгол', 'regional' => 'mn_MN'],
         //'ce'          => ['name' => 'Chechen',                'script' => 'Cyrl', 'native' => 'нохчийн мотт', 'regional' => 'ce_RU'],
-        //'ru'          => ['name' => 'Russian',                'script' => 'Cyrl', 'native' => 'русский', 'regional' => 'ru_RU'],
+        'ru'          => ['name' => 'Russian',                'script' => 'Cyrl', 'native' => 'Pусский', 'regional' => 'ru_RU'],
         //'sah'         => ['name' => 'Yakut',                  'script' => 'Cyrl', 'native' => 'саха тыла', 'regional' => ''],
         //'tt'          => ['name' => 'Tatar',                  'script' => 'Cyrl', 'native' => 'татар теле', 'regional' => 'tt_RU'],
         //'tg'          => ['name' => 'Tajik (Cyrillic)',       'script' => 'Cyrl', 'native' => 'тоҷикӣ', 'regional' => 'tg_TJ'],
@@ -232,7 +232,7 @@ return [
         //'kk'          => ['name' => 'Kazakh',                 'script' => 'Cyrl', 'native' => 'қазақ тілі', 'regional' => 'kk_KZ'],
         //'hy'          => ['name' => 'Armenian',               'script' => 'Armn', 'native' => 'Հայերեն', 'regional' => 'hy_AM'],
         //'yi'          => ['name' => 'Yiddish',                'script' => 'Hebr', 'native' => 'ייִדיש', 'regional' => 'yi_US'],
-        //'he'          => ['name' => 'Hebrew',                 'script' => 'Hebr', 'native' => 'עברית', 'regional' => 'he_IL'],
+        'he'          => ['name' => 'Hebrew',                 'script' => 'Hebr', 'native' => 'עברית', 'regional' => 'he_IL'],
         //'ug'          => ['name' => 'Uyghur',                 'script' => 'Arab', 'native' => 'ئۇيغۇرچە', 'regional' => 'ug_CN'],
         //'ur'          => ['name' => 'Urdu',                   'script' => 'Arab', 'native' => 'اردو', 'regional' => 'ur_PK'],
         //'ar'          => ['name' => 'Arabic',                 'script' => 'Arab', 'native' => 'العربية', 'regional' => 'ar_AE'],
@@ -309,7 +309,7 @@ return [
     //
     'hideDefaultLocaleInURL' => false,
 
-    // If you want to display the locales in particular order in the language selector you should write the order here. 
+    // If you want to display the locales in particular order in the language selector you should write the order here.
     //CAUTION: Please consider using the appropriate locale code otherwise it will not work
     //Example: 'localesOrder' => ['es','en'],
     'localesOrder' => [],

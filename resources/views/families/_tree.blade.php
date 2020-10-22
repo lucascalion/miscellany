@@ -13,10 +13,11 @@
         ],
         // Name
         'name',
+        'type',
         [
             'label' => trans('families.fields.families'),
             'render' => function($model) {
-                return $model->families()->count();
+                return $model->families->count();
             },
             'disableSort' => true,
         ],
@@ -32,10 +33,10 @@
             'visible' => $campaign->enabled('locations'),
         ],
         [
-            'label' => trans('families.fields.members'),
+            'label' => '<i class="fa fa-users" title="' . trans('families.fields.members') . '"></i>',
             'visible' => $campaign->enabled('characters'),
             'render' => function($model) {
-                return $model->members()->count();
+                return $model->members->count();
             },
             'disableSort' => true,
         ],
@@ -54,7 +55,7 @@
         'row' => [
             'data' => [
                 'data-children' => function($model) {
-                    return $model->families()->count();
+                    return $model->families->count();
                 }
             ]
         ]

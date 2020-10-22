@@ -2,9 +2,9 @@
     'title' => trans($name . '.edit.title', ['name' => $parent->name]),
     'description' => trans($name . '.edit.description'),
     'breadcrumbs' => [
-        ['url' => route('quests.index'), 'label' => trans('quests.index.title')],
+        ['url' => Breadcrumb::index('quests'), 'label' => trans('quests.index.title')],
         ['url' => route('quests.show', $parent->id), 'label' => $parent->name],
-        trans('crud.tabs.relations'),
+        ['url' => route('quests.' . $menu, $parent->id), 'label' => trans('quests.show.tabs.' . $menu)],
         trans('crud.update'),
     ]
 ])
@@ -15,7 +15,11 @@
                 <div class="panel-body">
                     @include('partials.errors')
 
-                    {!! Form::model($model, ['method' => 'PATCH', 'route' => [$route . '.update', $parent->id, $model->id]]) !!}
+                    {!! Form::model($model, [
+                        'method' => 'PATCH',
+                        'route' => [$route . '.update', $parent->id, $model->id],
+                        'data-shortcut' => 1,
+                    ]) !!}
                     @include($name . '._form')
 
                     {!! Form::hidden('quest_id', $parent->id) !!}

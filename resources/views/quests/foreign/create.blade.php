@@ -2,9 +2,10 @@
     'title' => trans($name . '.create.title', ['name' => $parent->name]),
     'description' => trans($name . '.create.description'),
     'breadcrumbs' => [
-        ['url' => route('quests.index'), 'label' => trans('quests.index.title')],
+        ['url' => Breadcrumb::index('quests'), 'label' => trans('quests.index.title')],
         ['url' => route('quests.show', $parent->id), 'label' => $parent->name],
-        trans('crud.tabs.relations'),
+        ['url' => route('quests.' . $menu, $parent->id), 'label' => trans('quests.show.tabs.' . $menu)],
+        trans('crud.create'),
     ]
 ])
 
@@ -15,7 +16,11 @@
                 <div class="panel-body">
                     @include('partials.errors')
 
-                    {!! Form::open(array('route' => [$route . '.store', $parent->id], 'method'=>'POST')) !!}
+                    {!! Form::open([
+                        'route' => [$route . '.store', $parent->id],
+                        'method'=>'POST',
+                        'data-shortcut' => 1,
+                    ]) !!}
                     @include($name . '._form', ['mirror' => false])
 
                     {!! Form::hidden('quest_id', $parent->id) !!}

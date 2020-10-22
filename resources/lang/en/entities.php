@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'abilities'             => 'Abilities',
+    'ability'               => 'Ability',
     'attribute_template'    => 'Attribute Template',
     'attribute_templates'   => 'Attribute Templates',
     'calendar'              => 'Calendar',
@@ -12,9 +14,10 @@ return [
     'conversation'          => 'Conversation',
     'conversations'         => 'Conversations',
     'creator'               => [
+        'back'      => 'Back to selection',
         'duplicate' => 'There are other entities of this type with the same name.',
         'error'     => 'There was an error with your values. Please check them again.',
-        'helper'    => 'Select an entity type to create. If no entities appear, it means that your don\'t have the permission to create any kind of entity in this campaign.',
+        'helper'    => 'Select an entity type to create. If no entities appear, it means that you don\'t have the permission to create any kind of entity in this campaign.',
         'success'   => 'New entity \':link\' created.',
         'title'     => 'New Entity',
     ],
@@ -30,8 +33,10 @@ return [
     'journals'              => 'Journals',
     'location'              => 'Location',
     'locations'             => 'Locations',
-    'menu_link'             => 'Menu Link',
-    'menu_links'            => 'Menu Links',
+    'map'                   => 'Map',
+    'maps'                  => 'Maps',
+    'menu_link'             => 'Quick Link',
+    'menu_links'            => 'Quick Links',
     'note'                  => 'Note',
     'notes'                 => 'Notes',
     'organisation'          => 'Organisation',
@@ -42,4 +47,18 @@ return [
     'races'                 => 'Races',
     'tag'                   => 'Tag',
     'tags'                  => 'Tags',
+    'timeline'              => 'Timeline',
+    'timelines'             => 'Timelines',
+
+
+    'new' => [
+        'character' => 'New character',
+        'location' => 'New location',
+        'item' => 'New item',
+        'note' => 'New note',
+        'family' => 'New family',
+        'event' => 'New event',
+        'organisation' => 'New organisation',
+        'race' => 'New race',
+    ],
 ];

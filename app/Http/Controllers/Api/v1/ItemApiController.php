@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Models\Campaign;
 use App\Models\Item;
 use App\Http\Requests\StoreItem as Request;
-use App\Http\Resources\Item as Resource;
-use App\Http\Resources\ItemCollection as Collection;
+use App\Http\Resources\ItemResource as Resource;
 
 class ItemApiController extends ApiController
 {
@@ -18,11 +17,10 @@ class ItemApiController extends ApiController
     public function index(Campaign $campaign)
     {
         $this->authorize('access', $campaign);
-        return new Collection($campaign
+        return Resource::collection($campaign
             ->items()
             ->with(['entity', 'entity.tags', 'entity.notes', 'entity.files',
                 'entity.events', 'entity.relationships', 'entity.attributes'])
-            ->acl()
             ->lastSync(request()->get('lastSync'))
             ->paginate());
     }
@@ -50,6 +48,7 @@ class ItemApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('create', Item::class);
         $model = Item::create($request->all());
+        $this->crudSave($model);
         return new Resource($model);
     }
 
@@ -64,6 +63,7 @@ class ItemApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('update', $item);
         $item->update($request->all());
+        $this->crudSave($item);
 
         return new Resource($item);
     }

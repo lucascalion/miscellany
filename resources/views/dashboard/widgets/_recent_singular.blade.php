@@ -13,16 +13,14 @@ if (empty($entity->child)) {
         <i class="far fa-clock"></i> {{ $entity->child->updated_at->diffForHumans() }}
     </span>
 
-    <a class="entity-image" style="background-image: url('{{ $entity->child->getImageUrl(true) }}');"
+    <a class="entity-image" style="background-image: url('{{ $entity->avatar(true) }}');"
        title="{{ $entity->name }}"
-       href="{{ $entity->child->getLink() }}"></a>
+       href="{{ $entity->url() }}"></a>
 
-    <a class="name" data-toggle="tooltip" title="{{ $entity->tooltipWithName() }}" data-html="true" href="{{ $entity->child->getLink() }}">
-        {{ $entity->name }}
-    </a>
+    {!! $entity->tooltipedLink() !!}
 
     <div class="pinned-entity preview" data-toggle="preview" id="widget-preview-body-{{ $widget->id }}">
-        {!! $entity->child->entry !!}
+        {!! $entity->child->entry() !!}
     </div>
     <a href="#" class="preview-switch hidden"
        id="widget-preview-switch-{{ $widget->id }}" data-widget="{{ $widget->id }}">

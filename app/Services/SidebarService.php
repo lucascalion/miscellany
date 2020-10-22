@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Arr;
+
 class SidebarService
 {
     protected $rules = [
@@ -15,6 +17,7 @@ class SidebarService
             'campaign_user',
             'campaign_roles',
             'campaign_invites',
+            'recovery',
         ],
         'characters' => [
             'characters',
@@ -39,6 +42,9 @@ class SidebarService
         ],
         'locations' => [
             'locations',
+        ],
+        'maps' => [
+            'maps',
         ],
         'notes' => [
             'notes',
@@ -69,6 +75,9 @@ class SidebarService
         'tags' => [
             'tags'
         ],
+        'timelines' => [
+            'timelines'
+        ],
         'dice_rolls' => [
             'dice_rolls',
         ],
@@ -77,6 +86,9 @@ class SidebarService
         ],
         'races' => [
             'races',
+        ],
+        'abilities' => [
+            'abilities',
         ],
     ];
 
@@ -87,6 +99,27 @@ class SidebarService
     protected $adminRules = [
         'faqs' => [
             'faqs'
+        ],
+        'users' => [
+            'users',
+        ],
+        'app-releases' => [
+            'app-releases',
+        ],
+        'community-events' => [
+            'community-events',
+        ],
+        'community-votes' => [
+            'community-votes',
+        ],
+        'patrons' => [
+            'patrons',
+        ],
+        'cache' => [
+            'cache',
+        ],
+        'referrals' => [
+            'referrals',
         ],
     ];
 
@@ -114,6 +147,20 @@ class SidebarService
         }
 
         return null;
+    }
+
+    /**
+     * Settings menu active
+     * @param string $menu
+     * @return string
+     */
+    public function settings(string $menu): string
+    {
+        $current = request()->segment(3);
+        if ($current == $menu) {
+            return ' active';
+        }
+        return '';
     }
 
     /**

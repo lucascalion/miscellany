@@ -35,12 +35,19 @@ class StartController extends Controller
     public function index(Request $request)
     {
         // A user with campaigns doesn't need this process.
-        if (Auth::user()->hasCampaigns()) {
+        if (Auth::user()->campaigns->count() > 0) {
             // Take the first campaign
             $campaign = Auth::user()->campaigns()->first();
             return redirect()->to(CampaignLocalization::getUrl($campaign->id));
         }
-        return view($this->view . '.create', ['start' => true]);
+        $new = session()->has('user_registered');
+        if ($new) {
+            session()->remove('user_registered');
+        }
+        return view($this->view . '.create', [
+            'start' => true,
+            'tracking_new' => $new
+        ]);
     }
 
     /**
@@ -54,7 +61,11 @@ class StartController extends Controller
         $this->authorize('create', 'App\Models\Campaign');
 
         $first = !Auth::user()->hasCampaigns();
-        $campaign = Campaign::create($request->all());
+        $options = $request->all();
+        $options['entry'] = '';
+        $options['excerpt'] = '';
+        $campaign = Campaign::create($options);
+
         $user = auth()->user();
         $user->welcome_campaign_id = $campaign->id;
         $user->save();

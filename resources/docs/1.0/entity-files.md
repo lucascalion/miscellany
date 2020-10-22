@@ -24,25 +24,17 @@ You can get a list of all the entity-files of an entity by using the following e
 {
     "data": [
         {
-            "created_at": {
-                "date": "2019-01-28 19:42:33.000000",
-                "timezone_type": 3,
-                "timezone": "UTC"
-            },
+            "created_at":  "2019-01-30T00:01:44.000000Z",
             "created_by": 1,
             "entity_id": 69,
             "entry": "Lorem Ipsum",
             "id": 31,
-            "is_private": true,
+            "visibility": "all",
             "name": "Secret File",
             "path": "{url}",
             "size": "44420",
             "type": "image/jpeg",
-            "updated_at": {
-                "date": "2019-01-28 19:42:33.000000",
-                "timezone_type": 3,
-                "timezone": "UTC"
-            },
+            "updated_at":  "2019-08-29T13:48:54.000000Z",
             "updated_by": null
         }
     ]
@@ -63,25 +55,17 @@ To get the details of a single entity-file, use the following endpoint.
 ```json
 {
     "data": {
-        "created_at": {
-            "date": "2019-01-28 19:42:33.000000",
-            "timezone_type": 3,
-            "timezone": "UTC"
-        },
+        "created_at":  "2019-01-30T00:01:44.000000Z",
         "created_by": 1,
         "entity_id": 69,
         "entry": "Lorem Ipsum",
         "id": 31,
-        "is_private": true,
+        "visibility": "self",
         "name": "Secret File",
         "path": "{url}",
         "size": "44420",
         "type": "image/jpeg",
-        "updated_at": {
-            "date": "2019-01-28 19:42:33.000000",
-            "timezone_type": 3,
-            "timezone": "UTC"
-        },
+        "updated_at":  "2019-08-29T13:48:54.000000Z",
         "updated_by": null
     }
 }
@@ -102,7 +86,7 @@ To create an entity-file, use the following endpoint.
 | Parameter | Type | Detail |
 | :- |   :-   |  :-  |
 | `file` | `stream` | The uploaded file (max 2mb or 8mb for Patreons) |
-| `is_private` | `boolean` | If the entity-file is only visible to `admin` members of the campaign |
+| `visibility` | `string` | The visibility: `all`, `self`, `admin` or `self-admin`. |
 
 ### Results
 

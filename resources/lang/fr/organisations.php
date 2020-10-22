@@ -25,7 +25,7 @@ return [
     ],
     'helpers'       => [
         'descendants'   => 'Cette liste contient toutes les organisations qui appartiennent directement ou indirectement à cette organisation.',
-        'nested'        => 'Ce mode de naviguation permet d\'afficher les organisations de manière imbriquée. Les organisations sans organisation parent seront affichés par défaut. Les organisations possédant des sous-organisations peuvent être cliqués pour afficher ces enfants. Tu peux continuer à cliquer jusqu\'à ce qu\'il n\'y ait plus d\'enfants à voir.',
+        'nested'        => 'Ce mode de navigation permet d\'afficher les organisations de manière imbriquée. Les organisations sans organisation parent seront affichées par défaut. Les organisations possédant des sous-organisations peuvent être cliquées pour afficher leurs enfants. Tu peux continuer à cliquer jusqu\'à ce qu\'il n\'y ait plus d\'enfants à voir.',
     ],
     'index'         => [
         'add'           => 'Nouvelle Organisation',
@@ -47,7 +47,7 @@ return [
         ],
         'edit'          => [
             'success'   => 'Membre modifié.',
-            'title'     => 'Modifier Member pour :name',
+            'title'     => 'Modifier Membre pour :name',
         ],
         'fields'        => [
             'character'     => 'Personnage',
@@ -55,8 +55,8 @@ return [
             'role'          => 'Rôle',
         ],
         'helpers'       => [
-            'all_members'       => 'Cette liste contient tous les personnages qui font partie de cette organisation et toutes les organisations descendantes.',
-            'direct_members'    => 'Les organisations ont généralement besoin de membres pour fonctionner correctement. Cette liste contient tous les membres directement membre de cette organisation.',
+            'all_members'   => 'Tous les personnages qui sont membres de cette organisation et des sous-organisations.',
+            'members'       => 'Tous les personnages directement membres de cette organisation.',
         ],
         'placeholders'  => [
             'character' => 'Choix du personnage',
@@ -79,8 +79,6 @@ return [
     'show'          => [
         'description'   => 'Détail de l\'organisation',
         'tabs'          => [
-            'all_members'   => 'Tous les membres',
-            'members'       => 'Membres',
             'organisations' => 'Organisations',
             'quests'        => 'Quêtes',
             'relations'     => 'Relations',

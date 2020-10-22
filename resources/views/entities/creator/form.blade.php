@@ -1,5 +1,4 @@
 <?php $enableNew = false; ?>
-@inject('formService', 'App\Services\FormService')
 @inject('campaign', 'App\Services\CampaignService')
 
 <div class="panel-heading">
@@ -18,20 +17,24 @@
                 'data-live' => route('search.live'),
                 'data-type' => $singularType
             ]) !!}
-            <p class="text-yellow duplicate-entity-warning" style="display: none">{{ __('entities.creator.duplicate') }}</p>
+            <p class="text-yellow duplicate-entity-warning" style="display: none">
+                {{ __('entities.creator.duplicate') }}<br /><span id="duplicate-entities"></span>
+            </p>
         </div>
 
         @include('entities.creator.forms.' . $singularType)
 
+        @if ($type !== 'tags')
         @include('cruds.fields.tags')
+        @endif
 
         @include('cruds.fields.private')
 
         <p class="alert alert-danger entity-creator-error" style="display: none">{{ __('entities.creator.error') }}</p>
         <button class="btn btn-success" id="form-submit-main">{{ trans('crud.save') }}</button>
 
+        <a href="#" id="entity-creator-back" data-url="{{ route('entity-creator.selection') }}" data-toggle="ajax-modal" data-target="#entity-modal" class="pull-right">{{ __('entities.creator.back') }}</a>
+
         <input type="hidden" name="entity" value="{{ $type }}" />
     </form>
-
-    <p class="alert alert-success entity-creator-success" style="display: none"></p>
 </div>

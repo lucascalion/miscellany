@@ -5,11 +5,13 @@ namespace App\Models;
 use App\Facades\EntityPermission;
 use App\Traits\AclTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 /**
  * Class MapPoint
  * @package App\Models
  *
+ * @property integer $id
  * @property integer $location_id
  * @property integer $target_entity_id
  * @property integer $axis_x
@@ -19,6 +21,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $size
  * @property string $shape
  * @property string $icon
+ *
+ * @property Location $location
+ * @property Entity $targetEntity
  */
 class MapPoint extends Model
 {
@@ -78,20 +83,41 @@ class MapPoint extends Model
         $dataUrl = route('locations.map_points.show', [$this->location, $this->id]);
         $dataUpdateUrl = route('locations.map_points.edit', [$this->location, $this->id]);
         $dataMoveUrl = route('locations.map_points.move', [$this->location, $this->id]);
-        $url = $this->hasTarget() ? $this->targetEntity->child->getLink() : '#';
+        $url = $this->hasTarget() ? $this->targetEntity->url() : '#';
         $style = 'top: ' . e($this->axis_y) . 'px; left: ' . e($this->axis_x) . 'px;';
-        $title = $this->hasTarget() ? $this->targetEntity->tooltipWithName() : e($this->name);
+        $title = 'title="' . e($this->name) . '"';
         $size = $this->percentageSize();
 
-        if ($this->hasTarget() && $this->icon == 'entity') {
-            $style .= "background-image: url('" . $this->targetEntity->child->getImageUrl(true) . "');";
-            $marker = '';
+        if ($this->hasTarget()) {
+            $title = 'data-url="' . route('entities.tooltip', $this->target_entity_id) . '" '
+                . 'data-toggle="tooltip-ajax" '
+                . 'data-id="' . $this->target_entity_id . '" ';
+            if($this->icon == 'entity') {
+                $style .= "background-image: url('" . $this->targetEntity->child->getImageUrl(40) . "');";
+                $marker = '';
+            }
         }
 
-        return '<a id="map-point-' . $this->id . '" class="point ' . e($this->size) . ' ' . e($this->shape) . ' '
-            . e($this->colour) . '" '
-            . 'style="' . $style . '" href="' . $url . '" data-url="' . $dataUrl . '" '
-            . 'data-url-modal="' . $dataUpdateUrl . '" title="' . e($title) . '" '
+        $class = ['point', e($this->size), e($this->shape)];
+        if (!empty($this->colour) && $this->colour != 'none') {
+            if (Str::startsWith($this->colour, '#')) {
+                $style .= 'background-color: ' . $this->colour . ';';
+                $style .= 'border-color: rgba(' . hexdec(substr($this->colour, 1, 2)) . ', ' . hexdec(substr($this->colour, 3, 2)) . ', ' . hexdec(substr($this->colour, 5, 2)) . ', 0.5);';
+                $style .= 'box-shadow: 0 0 10px ' . $this->colour . ';';
+            } else {
+                $style .= 'background-color: ' . $this->colour . ';';
+                $style .= 'box-shadow: 0 0 10px ' . $this->colour . ';';
+            }
+
+            $class[] = 'coloured';
+        } else {
+            $class[] = 'none';
+        }
+
+        return '<a id="map-point-' . $this->id . '" class="' . implode(' ', $class) . '"'
+            . 'style="' . $style . '" href="' . $url . '" data-url-show="' . $dataUrl . '" '
+            . 'data-url-modal="' . $dataUpdateUrl . '" '
+            . $title
             . 'data-url-move="' . $dataMoveUrl . '" '
             . 'data-toggle="tooltip" data-html="true" data-top="' . $this->axis_y . '" '
             . 'data-left="' . $this->axis_x . '" data-size="' . $size . '"'
@@ -155,7 +181,7 @@ class MapPoint extends Model
     public function visible(): bool
     {
         if ($this->hasTarget()) {
-            return $this->targetEntity->child && EntityPermission::canView($this->targetEntity, $this->location->campaign);
+            return $this->targetEntity && $this->targetEntity->child && EntityPermission::canView($this->targetEntity, $this->location->campaign);
         }
         return true;
     }

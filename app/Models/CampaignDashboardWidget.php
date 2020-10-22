@@ -6,6 +6,8 @@ use App\Traits\AclTrait;
 use App\Traits\CampaignTrait;
 use App\Traits\VisibleTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Arr;
 
 /**
  * Class CampaignDashboardWidget
@@ -16,7 +18,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer $entity_id
  * @property string $widget
  * @property string $config
+ * @property integer $width
  * @property integer $position
+ * @property Tag[] $tags
+ * @property Entity $entity
+ *
+ * @method static self|Builder positioned()
  */
 class CampaignDashboardWidget extends Model
 {
@@ -26,6 +33,8 @@ class CampaignDashboardWidget extends Model
     const WIDGET_PREVIEW = 'preview';
     const WIDGET_RECENT = 'recent';
     const WIDGET_CALENDAR = 'calendar';
+    const WIDGET_UNMENTIONED = 'unmentioned';
+    const WIDGET_RANDOM = 'random';
 
     /**
      * Traits
@@ -41,6 +50,12 @@ class CampaignDashboardWidget extends Model
         'widget',
         'config',
         'position',
+        'width',
+        'is_full',
+    ];
+
+    protected $casts = [
+        'config' => 'Array',
     ];
 
     /**
@@ -60,12 +75,30 @@ class CampaignDashboardWidget extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function tags()
+    {
+        return $this->belongsToMany(
+            'App\Models\Tag',
+            'campaign_dashboard_widget_tags',
+            'widget_id',
+            'tag_id',
+            'id',
+            'id'
+        );
+    }
+
+    /**
      * Get the column size
      * @return int
      */
     public function colSize(): int
     {
-        return ($this->widget == self::WIDGET_PREVIEW ||
+        if (!empty($this->width)) {
+            return $this->width;
+        }
+        return ($this->widget == self::WIDGET_PREVIEW || $this->widget == self::WIDGET_RANDOM ||
             ($this->widget == self::WIDGET_RECENT && $this->conf('singular')))
             ? 4 : 6;
     }
@@ -76,7 +109,8 @@ class CampaignDashboardWidget extends Model
      */
     public function scopePositioned($query)
     {
-        return $query->with('entity')->orderBy('position', 'asc');
+        return $query->with(['entity', 'tags'])
+            ->orderBy('position', 'asc');
     }
 
     /**
@@ -84,7 +118,21 @@ class CampaignDashboardWidget extends Model
      */
     public function conf($value)
     {
-        $data = json_decode($this->config, true);
-        return array_get($data, $value, null);
+        return Arr::get($this->config, $value, null);
+    }
+
+
+    /**
+     * Used by the API to get models updated since a previous date
+     * @param $query
+     * @param $lastSync
+     * @return mixed
+     */
+    public function scopeLastSync(\Illuminate\Database\Eloquent\Builder $query, $lastSync)
+    {
+        if (empty($lastSync)) {
+            return $query;
+        }
+        return $query->where('updated_at', '>', $lastSync);
     }
 }

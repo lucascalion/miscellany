@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Datagrids\Filters\RaceFilter;
+use App\Datagrids\Sorters\RaceCharacterSorter;
+use App\Datagrids\Sorters\RaceRaceSorter;
 use App\Http\Requests\StoreRace;
 use App\Models\Race;
 use App\Models\Tag;
@@ -17,38 +20,11 @@ class RaceController extends CrudController
     protected $view = 'races';
     protected $route = 'races';
 
-    /**
-     * @var string
-     */
+    /** @var string Model */
     protected $model = \App\Models\Race::class;
 
-    /**
-     * RaceController constructor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-        $this->filters = [
-            'name',
-            'type',
-            [
-                'field' => 'race_id',
-                'label' => trans('characters.fields.race'),
-                'type' => 'select2',
-                'route' => route('races.find'),
-                'placeholder' =>  trans('crud.placeholders.race'),
-                'model' => Race::class,
-            ],
-            [
-                'field' => 'tag_id',
-                'label' => trans('crud.fields.tag'),
-                'type' => 'select2',
-                'route' => route('tags.find'),
-                'placeholder' =>  trans('crud.placeholders.tag'),
-                'model' => Tag::class,
-            ],
-        ];
-    }
+    /** @var string Filter */
+    protected $filter = RaceFilter::class;
 
     /**
      * Store a newly created resource in storage.
@@ -112,7 +88,9 @@ class RaceController extends CrudController
      */
     public function characters(Race $race)
     {
-        return $this->menuView($race, 'characters');
+        return $this
+            ->datagridSorter(RaceCharacterSorter::class)
+            ->menuView($race, 'characters');
     }
 
     /**
@@ -121,7 +99,9 @@ class RaceController extends CrudController
      */
     public function races(Race $race)
     {
-        return $this->menuView($race, 'races');
+        return $this
+            ->datagridSorter(RaceRaceSorter::class)
+            ->menuView($race, 'races');
     }
 
     /**

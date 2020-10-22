@@ -13,7 +13,6 @@ return [
     'user' => [
         'add_default_role_on_register' => true,
         'default_role'                 => 'user',
-        'namespace'                    => App\User::class,
         'default_avatar'               => 'users/default.png',
     ],
 
@@ -66,7 +65,8 @@ return [
     */
 
     'storage' => [
-        'disk' => 'public',
+        //'disk' => env('FILESYSTEM_DRIVER', 'public'),
+        'disk' => 's3-assets',
     ],
 
     /*
@@ -93,6 +93,7 @@ return [
         'tables' => [
             'hidden' => ['migrations', 'data_rows', 'data_types', 'menu_items', 'password_resets', 'permission_role', 'settings'],
         ],
+        'autoload_migrations' => true,
     ],
 
     /*
@@ -133,6 +134,8 @@ return [
          */
         'locales' => [
             'en',
+            'fr',
+            'de',
 //            'fr',
 //            'de',
 //            'es'

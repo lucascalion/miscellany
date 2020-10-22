@@ -2,12 +2,23 @@
 
 namespace App\Models;
 
+use App\Facades\CampaignLocalization;
+use App\Models\Concerns\SimpleSortableTrait;
 use App\Traits\CampaignTrait;
 use App\Traits\ExportableTrait;
 use App\Traits\VisibleTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Kalnoy\Nestedset\NodeTrait;
 
 class Race extends MiscModel
 {
+    use CampaignTrait,
+        VisibleTrait,
+        ExportableTrait,
+        NodeTrait,
+        SimpleSortableTrait,
+        SoftDeletes;
+
     /**
      * @var array
      */
@@ -44,6 +55,12 @@ class Race extends MiscModel
         'race_id',
         'tag_id',
         'is_private',
+        'tags',
+        'has_image',
+    ];
+
+    protected $sortableColumns = [
+        'race.name',
     ];
 
     /**
@@ -55,11 +72,23 @@ class Race extends MiscModel
     ];
 
     /**
-     * Traits
+     * @return string
      */
-    use CampaignTrait;
-    use VisibleTrait;
-    use ExportableTrait;
+    public function getParentIdName()
+    {
+        return 'race_id';
+    }
+
+
+    /**
+     * Specify parent id attribute mutator
+     * @param $value
+     * @throws \Exception
+     */
+    public function setRaceIdAttribute($value)
+    {
+        $this->setParentIdAttribute($value);
+    }
 
     /**
      * Performance with for datagrids
@@ -68,7 +97,11 @@ class Race extends MiscModel
      */
     public function scopePreparedWith($query)
     {
-        return $query->with(['entity']);
+        return $query->with([
+            'entity',
+            'races',
+            'characters',
+        ]);
     }
 
     /**
@@ -98,14 +131,28 @@ class Race extends MiscModel
         return $this->hasMany('App\Models\Race', 'race_id', 'id');
     }
 
+
+    /**
+     * Get all characters in the location and descendants
+     */
+    public function allCharacters()
+    {
+        $raceIds = [$this->id];
+        foreach ($this->descendants as $descendant) {
+            $raceIds[] = $descendant->id;
+        };
+
+        return Character::whereIn('race_id', $raceIds)->with('race');
+    }
+
     /**
      * @return array
      */
     public function menuItems($items = [])
     {
-        $campaign = $this->campaign;
+        $campaign = CampaignLocalization::getCampaign();
 
-        $count = $this->characters()->acl()->count();
+        $count = $this->characters()->count();
         if ($campaign->enabled('characters') && $count > 0) {
             $items['characters'] = [
                 'name' => 'races.show.tabs.characters',
@@ -113,7 +160,7 @@ class Race extends MiscModel
                 'count' => $count
             ];
         }
-        $count = $this->races()->acl()->count();
+        $count = $this->races()->count();
         if ($campaign->enabled('races') && $count > 0) {
             $items['races'] = [
                 'name' => 'races.show.tabs.races',
@@ -122,5 +169,14 @@ class Race extends MiscModel
             ];
         }
         return parent::menuItems($items);
+    }
+
+    /**
+     * Get the entity_type id from the entity_types table
+     * @return int
+     */
+    public function entityTypeId(): int
+    {
+        return (int) config('entities.ids.race');
     }
 }

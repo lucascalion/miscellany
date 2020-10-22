@@ -6,7 +6,8 @@
         ['url' => route($name . '.index'), 'label' => __($name . '.index.title')],
         ['url' => route($name . '.show', $model), 'label' => $model->name],
         trans('crud.tabs.map-points')
-    ]
+    ],
+    'mainTitle' => false,
 ])
 
 @section('content')
@@ -16,7 +17,7 @@
             @include($name . '._menu', ['active' => 'map-points'])
         </div>
         <div class="col-md-9">
-            <div class="box box-flat">
+            <div class="box box-solid">
                 <div class="box-body">
                     <h2 class="page-header with-border">
                         {{ trans('entities/map-points.title', ['name' => $model->name]) }}
@@ -33,10 +34,10 @@
                         @foreach ($data as $location)
                             <tr>
                                 <td>
-                                    <a class="entity-image" style="background-image: url('{{ $location->location->getImageUrl(true) }}');" title="{{ $location->location->name }}" href="{{ route('locations.show', $location->location_id) }}"></a>
+                                    <a class="entity-image" style="background-image: url('{{ $location->location->getImageUrl(40) }}');" title="{{ $location->location->name }}" href="{{ route('locations.show', $location->location_id) }}"></a>
                                 </td>
                                 <td>
-                                    <a href="{{ route('locations.show', $location->location_id) }}" data-toggle="tooltip" title="{{ $location->location->tooltip() }}">{{ $location->location->name }}</a>
+                                    {!! $location->location->tooltipedLink() !!}
                                 </td>
                                 <td>
                                     @if (!empty($location->location->map) && (!$location->location->is_map_private || (auth()->check() && auth()->user()->can('map', $location->location))))

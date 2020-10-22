@@ -23,7 +23,7 @@ class PatreonController extends Controller
      */
     public function __construct(PatreonService $patreon)
     {
-        $this->middleware(['auth', 'identity']);
+        $this->middleware(['auth', 'identity', 'shadow']);
         $this->patreon = $patreon;
     }
 
@@ -51,5 +51,13 @@ class PatreonController extends Controller
                     trans('settings.patreon.errors.' . $e->getMessage())
                 );
         }
+    }
+
+    public function unlink(Request $request)
+    {
+        $this->patreon->user($request->user())->unlink();
+        return redirect()->route('settings.patreon')
+            ->with('success', trans('settings.patreon.remove.success'));
+
     }
 }

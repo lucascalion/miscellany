@@ -1,13 +1,9 @@
 @inject('dateRenderer', 'App\Renderers\DateRenderer')
-<div class="box">
+<div class="box box-solid">
     <div class="box-body box-profile">
-        @include ('cruds._image')
-
-        <h3 class="profile-username text-center">{{ $model->name }}
-            @if ($model->is_private)
-                <i class="fas fa-lock" title="{{ trans('crud.is_private') }}"></i>
-            @endif
-        </h3>
+        @if (!View::hasSection('entity-header'))
+            @include ('cruds._image')
+        @endif
 
         <ul class="list-group list-group-unbordered">
             @if ($model->type)
@@ -22,22 +18,33 @@
                     <br class="clear" />
                 </li>
             @endif
+            @if (!empty($model->journal))
+                <li class="list-group-item">
+                    <b>{{ __('journals.fields.journal') }}</b>
+
+                    <span class="pull-right">
+                        {!! $model->journal->tooltipedLink() !!}
+                    </span>
+                    <br class="clear" />
+                </li>
+            @endif
             @if ($model->character)
                 <li class="list-group-item">
                     <b>{{ trans('journals.fields.author') }}</b>
                     <span class="pull-right">
-                                    <a href="{{ route('characters.show', $model->character_id) }}" data-toggle="tooltip" title="{{ $model->character->tooltip() }}">{{ $model->character->name }}</a>
-                                </span>
+                        {!! $model->character->tooltipedLink() !!}
+                    </span>
                     <br class="clear" />
                 </li>
             @endif
             @include('cruds.lists.location')
             @include('entities.components.calendar')
+            @include('entities.components.relations')
+            @include('entities.components.attributes')
             @include('entities.components.tags')
-            @include('entities.components.files')
         </ul>
-        @include('.cruds._actions')
     </div>
 </div>
 
 @include('entities.components.menu')
+@include('entities.components.actions')

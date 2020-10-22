@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'abilities'             => 'Abilità',
+    'ability'               => 'Abilità',
     'attribute_template'    => 'Template Attributi',
     'attribute_templates'   => 'Templates Attributi',
     'calendar'              => 'Calendario',
@@ -12,8 +14,9 @@ return [
     'conversation'          => 'Conversazione',
     'conversations'         => 'Conversazioni',
     'creator'               => [
+        'duplicate' => 'Ci sono altre entità di questo tipo con lo stesso nome.',
         'error'     => 'C\'è un errore nei valori inseriti. Per favore controlla nuovamente.',
-        'helper'    => 'Seleziona un tipo di entità da creare. Se non appare nessuna entità significa che non hai il permesso di crearne nessun tipo in questa campagna.',
+        'helper'    => 'Seleziona un tipo di entità da creare. Se non appare nessuna entità significa che non hai il permesso di crearne di nessun tipo in questa campagna.',
         'success'   => 'Nuova entità \':link\' creata.',
         'title'     => 'Nuova Entità',
     ],
@@ -29,6 +32,8 @@ return [
     'journals'              => 'Diari',
     'location'              => 'Luogo',
     'locations'             => 'Luoghi',
+    'map'                   => 'Mappa',
+    'maps'                  => 'Mappe',
     'menu_link'             => 'Menu Link',
     'menu_links'            => 'Menu Links',
     'note'                  => 'Nota',

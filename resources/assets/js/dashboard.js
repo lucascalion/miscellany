@@ -24,15 +24,16 @@ $(document).ready(function() {
     });
 
     $.each($('[data-toggle="preview"]'), function(i) {
-       // If we are exactly the height of 200, some content is hidden
-       if ($(this).height() === 200) {
-           $(this).next().removeClass('hidden')
-       } else {
-           $(this).removeClass('pinned-entity preview');
-       }
+        // If we are exactly the max-height, some content is hidden
+        // console.log('compare', $(this).height(), 'vs', $(this).css('max-height'));
+        if ($(this).height() === parseInt($(this).css('max-height'))) {
+            $(this).next().removeClass('hidden')
+        } else {
+            $(this).removeClass('pinned-entity preview');
+        }
     });
 
-    $.each($('[data-dismiss="alert"]'), function(i) {
+    $.each($('[data-widget="remove"]'), function(i) {
         $(this).click(function(e) {
             $.post({
                 url: $(this).data('url'),
@@ -55,6 +56,7 @@ $(document).ready(function() {
 
     initDashboardRecent();
     initDashboardCalendars();
+    initFollow();
 });
 
 /**
@@ -116,6 +118,7 @@ function loadModalForm(url) {
         modalContentTarget.html(data);
 
         window.initSelect2();
+        window.initCategories();
     });
 }
 
@@ -132,17 +135,19 @@ function initDashboardRecent()
             url: $(this).data('url'),
             context: this
         }).done(function(data) {
-            $(this).closest('.widget-recent-body').append(data);
+            $(this).closest('.widget-recent-list').append(data);
             $(this).remove();
+
             initDashboardRecent();
+            window.ajaxTooltip();
 
             // Reload tooltips
             // Inject the isMobile variable into the window. We don't want ALL of the javascript
             // for mobiles, namely the tooltip tool.
-            window.kankaIsMobile = window.matchMedia("only screen and (max-width: 760px)");
-            if (!window.kankaIsMobile.matches) {
-                $('[data-toggle="tooltip"]').tooltip();
-            }
+            // window.kankaIsMobile = window.matchMedia("only screen and (max-width: 760px)");
+            // if (!window.kankaIsMobile.matches) {
+            //     $('[data-toggle="tooltip"]').tooltip();
+            // }
 
         });
     });
@@ -177,6 +182,42 @@ function initDashboardCalendars()
                 var widget = $(this).data('widget');
                 $('#widget-body-' + widget).html(data);
                 initDashboardCalendars();
+            }
+        });
+    });
+}
+
+/**
+ * Follow / Unfollow a campaign
+ */
+function initFollow()
+{
+    var btn = $('#campaign-follow');
+    var text = $('#campaign-follow-text');
+
+    if (btn.length !== 1) {
+        return;
+    }
+
+    var status = btn.data('following');
+    if (status) {
+        text.html(btn.data('unfollow'));
+    } else {
+        text.html(btn.data('follow'));
+    }
+    btn.show();
+
+    btn.click(function (e) {
+        e.preventDefault();
+
+        $.post({
+            url: $(this).data('url'),
+            method: 'POST'
+        }).done(function(data) {
+            if (data.following) {
+                text.html(btn.data('unfollow'));
+            } else {
+                text.html(btn.data('follow'));
             }
         });
     });

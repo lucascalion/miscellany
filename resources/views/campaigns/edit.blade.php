@@ -1,24 +1,36 @@
 @extends('layouts.app', [
     'title' => trans('campaigns.edit.title', ['campaign' => $model->name]),
-    'description' => trans('campaigns.edit.description'),
+    'description' => '',
     'breadcrumbs' => [
         ['url' => route('campaigns.index'), 'label' => trans('campaigns.index.title')],
-        ['url' => route('campaigns.show', $model->id), 'label' => $model->name],
-        trans('crud.create')
-    ]
+        trans('crud.edit')
+    ],
+    'canonical' => true,
 ])
 
-@section('content')
-    @include('partials.errors')
-
+@section('fullpage-form')
     {!! Form::model($model, [
         'method' => 'PATCH',
         'enctype' => 'multipart/form-data',
         'route' => ['campaigns.update', $model->id],
-        'data-shortcut' => '1'
+        'data-shortcut' => '1',
+        'class' => 'entity-form',
     ]) !!}
-        @include('campaigns._form')
+@endsection
+
+@section('content')
+    @include('partials.errors')
+    @include('campaigns.forms.' . ($start ? 'start' : 'standard'))
+@endsection
+
+
+@section('fullpage-form-end')
     {!! Form::close() !!}
 @endsection
 
 @include('editors.editor')
+
+@section('scripts')
+    @parent
+    <script src="{{ mix('js/campaign.js') }}" defer></script>
+@endsection

@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
  * @property string $menu
  * @property string $type
  * @property string $filters
+ * @property integer $position
  * @property Entity $target
  * @property boolean $is_private
  */
@@ -42,6 +43,7 @@ class MenuLink extends MiscModel
         'is_private',
         'menu',
         'type',
+        'position'
     ];
 
     /**
@@ -63,6 +65,37 @@ class MenuLink extends MiscModel
     public $nullableForeignKeys = [
         'entity_id'
     ];
+
+    public $tooltipField = 'name';
+
+    /**
+     * Set to false if this entity type doesn't have relations
+     * @var bool
+     */
+    public $hasRelations = false;
+
+    /**
+     * Fields that can be sorted on
+     * @var array
+     */
+    public $sortableColumns = [
+        'position',
+        'menu',
+        'tab',
+    ];
+
+    /**
+     * Performance with for datagrids
+     * @param $query
+     * @return mixed
+     */
+    public function scopePreparedWith($query)
+    {
+        return $query->with([
+            'entity',
+            'target',
+        ]);
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -86,7 +119,7 @@ class MenuLink extends MiscModel
     public function getRouteParams()
     {
         $parameters = [
-            $this->target->child,
+            $this->target->entity_id,
         ];
 
         if (!empty($this->tab)) {
@@ -110,15 +143,25 @@ class MenuLink extends MiscModel
     /**
      * @return string
      */
-    protected function getEntityRoute()
+    protected function getEntityRoute(): string
     {
-        $route = $this->target->pluralType() . '.show';
+        $plural = $this->target->pluralType();
+        if (empty($plural)) {
+            return '';
+        }
+        $route = $plural . '.show';
         if (!empty($this->menu)) {
             $menuRoute = $this->target->pluralType() . '.' . $this->menu;
 
             // Inventories use a different url buildup
             if (Str::contains($this->menu, 'inventor')) {
                 return route('entities.inventory', $this->target->id);
+            }
+            elseif (Str::contains($this->menu, 'relation')) {
+                return route('entities.relations.index', $this->target->id);
+            }
+            elseif (Str::contains($this->menu, 'abilit')) {
+                return route('entities.entity_abilities.index', $this->target->id);
             }
             if (Route::has($menuRoute)) {
                 $route = $menuRoute;
@@ -132,17 +175,50 @@ class MenuLink extends MiscModel
      */
     protected function getIndexRoute()
     {
-        $filters = $this->filters . '&_clean=true';
-        return route(str_plural($this->type) . '.index', $filters);
+        $filters = $this->filters . '&_clean=true&_from=quicklink';
+        try {
+            return route(Str::plural($this->type) . '.index', $filters);
+        }
+        catch (\Exception $e) {
+            return '';
+        }
     }
 
     /**
      * Override the get link
-     * @param string $route
+     * @param string $route = 'show'
      * @return string
      */
-    public function getLink($route = 'show')
+    public function getLink(string $route = 'show'): string
     {
         return route('menu_links.' . $route, $this->id);
+    }
+
+    /**
+     * @param $query
+     * @return mixed
+     */
+    public function scopeOrdered($query) {
+        return $query
+            ->orderBy('position', 'ASC')
+            ->orderBy('name', 'ASC');
+    }
+
+    /**
+     * Get the entity_type id from the entity_types table
+     * @return int
+     */
+    public function entityTypeId(): int
+    {
+        return (int) config('entities.ids.menu_link');
+    }
+
+    /**
+     * @param $query
+     * @return mixed
+     */
+    public function scopeStandardWith($query)
+    {
+        return $query->with('entity');
     }
 }

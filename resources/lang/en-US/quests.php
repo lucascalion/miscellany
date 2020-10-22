@@ -6,4 +6,5 @@ return [
             'description'   => 'Add a character to a Quest',
         ],
     ],
+    'show'          => [],
 ];

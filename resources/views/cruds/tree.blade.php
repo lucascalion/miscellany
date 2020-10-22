@@ -1,22 +1,38 @@
 @extends('layouts.app', [
     'title' => trans($name . '.index.title', ['name' => CampaignLocalization::getCampaign()->name]),
-    'description' => trans($name . '.index.description',  ['name' => CampaignLocalization::getCampaign()->name]),
+    'description' => null,
     'breadcrumbs' => [
-        ['url' => route($name . '.index'), 'label' => trans($name . '.index.title')]
-    ]
+        ['url' => Breadcrumb::index($name), 'label' => trans($name . '.index.title')],
+    ],
+    'canonical' => true,
 ])
 @inject('campaign', 'App\Services\CampaignService')
-
 
 @section('content')
     <div class="row margin-bottom">
         <div class="col-md-12">
-            @include('layouts.datagrid.search', ['route' => route($name . '.index')])
+            @include('layouts.datagrid.search', ['route' => route($name . '.tree')])
 
             @can('create', $model)
-                <a href="{{ route($name . '.create') }}" class="btn btn-primary pull-right">
-                    <i class="fa fa-plus"></i> <span class="hidden-xs hidden-sm">{{ trans($name . '.index.add') }}</span>
-                </a>
+                <div class="btn-group pull-right">
+                    <a href="{{ route($name . '.create') }}" class="btn btn-primary">
+                        <i class="fa fa-plus"></i> <span class="hidden-xs hidden-sm">{{ trans($name . '.index.add') }}</span>
+                    </a>
+                    @if(!empty($templates) && !$templates->isEmpty())
+                        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            @foreach ($templates as $entityTemplate)
+                                <li>
+                                    <a href="{{ route($name . '.create', ['copy' => $entityTemplate->entity_id]) }}">
+                                        <i class="fa fa-star-o"></i> {{ $entityTemplate->name  }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
             @endcan
             @foreach ($actions as $action)
                 @if (empty($action['policy']) || (Auth::check() && Auth::user()->can($action['policy'], $model)))
@@ -30,6 +46,10 @@
 
     @include('partials.errors')
 
+    @if ($filter)
+        @include('cruds.datagrids.filters.datagrid-filter', ['route' => $route . '.tree'])
+    @endif
+
     <div class="box no-border">
         {!! Form::open(['url' => route('bulk.process'), 'method' => 'POST']) !!}
         <div class="box-body">
@@ -42,19 +62,13 @@
         </div>
         <div class="box-footer">
 
-            @if(auth()->check())
-                <div class="datagrid-bulk-actions" style="display: none">
-                @can('delete', $model)
-                    {!! Form::button('<i class="fa fa-trash"></i> ' . trans('crud.remove'), ['type' => 'submit', 'name' => 'delete', 'class' => 'btn btn-danger', 'id' => 'crud-multi-delete']) !!}
-                @endcan
-                    {!! Form::button('<i class="fa fa-download"></i> ' . trans('crud.export'), ['type' => 'submit', 'name' => 'export', 'class' => 'btn btn-primary', 'id' => 'crud-multi-export']) !!}
-                @if (Auth::user()->isAdmin())
-                    {!! Form::button('<i class="fas fa-lock"></i> ' . trans('crud.actions.private'), ['type' => 'submit', 'name' => 'private', 'class' => 'btn btn-primary', 'id' => 'crud-multi-private']) !!}
-                    {!! Form::button('<i class="fa fa-unlock"></i> ' . trans('crud.actions.public'), ['type' => 'submit', 'name' => 'public', 'class' => 'btn btn-primary', 'id' => 'crud-multi-public']) !!}
-                @endif
-                </div>
-            @endif
+            @include('cruds.datagrids.bulks.actions')
 
+            @if ($unfilteredCount != $filteredCount)
+                <p class="help-block">
+                    {{ __('crud.filters.filtered', ['count' => $filteredCount, 'total' => $unfilteredCount, 'entity' => __('entities.' . $name)]) }}
+                </p>
+            @endif
             <div class="pull-right">
                 {{ $models->appends('parent_id', request()->get('parent_id'))->links() }}
             </div>
@@ -63,5 +77,12 @@
         {!! Form::close() !!}
     </div>
 
-    <input type="hidden" id="{{ $view }}-treeview" value="1" data-url="{{ route($route . '.tree') }}">
+    @include('cruds.datagrids.bulks.modals')
+
+    <input type="hidden" class="list-treeview" id="{{ $view }}-treeview" value="1" data-url="{{ route($route . '.tree') }}">
+@endsection
+
+@section('scripts')
+    @parent
+    <script src="{{ mix('js/datagrids.js') }}" defer></script>
 @endsection

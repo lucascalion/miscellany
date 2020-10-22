@@ -2,13 +2,28 @@
 
 namespace App\Models;
 
+use App\Facades\CampaignLocalization;
+use App\Models\Concerns\SimpleSortableTrait;
 use App\Traits\CampaignTrait;
 use App\Traits\ExportableTrait;
 use App\Traits\VisibleTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Kalnoy\Nestedset\NodeTrait;
 
+/**
+ * Class Family
+ * @package App\Models
+ * @property Character[] $members
+ */
 class Family extends MiscModel
 {
+    use CampaignTrait,
+        VisibleTrait,
+        ExportableTrait,
+        NodeTrait,
+        SimpleSortableTrait,
+        SoftDeletes;
+
     /**
      * @var array
      */
@@ -20,7 +35,7 @@ class Family extends MiscModel
         'location_id',
         'family_id',
         'is_private',
-        //'type',
+        'type',
     ];
 
     /**
@@ -35,10 +50,22 @@ class Family extends MiscModel
      */
     protected $filterableColumns = [
         'name',
+        'type',
         'location_id',
         'family_id',
         'tag_id',
         'is_private',
+        'tags',
+        'has_image',
+    ];
+
+    /**
+     * Fields that can be sorted on
+     * @var array
+     */
+    protected $sortableColumns = [
+        'family.name',
+        'location.name',
     ];
 
     /**
@@ -57,11 +84,6 @@ class Family extends MiscModel
         'location_id',
         'family_id',
     ];
-
-    /**
-     * Traits
-     */
-    use CampaignTrait, VisibleTrait, ExportableTrait, NodeTrait;
 
     /**
      * Entity type
@@ -94,7 +116,13 @@ class Family extends MiscModel
      */
     public function scopePreparedWith($query)
     {
-        return $query->with(['entity', 'location', 'location.entity']);
+        return $query->with([
+            'entity',
+            'location',
+            'location.entity',
+            'families',
+            'members',
+        ]);
     }
 
     /**
@@ -167,30 +195,39 @@ class Family extends MiscModel
      */
     public function menuItems($items = [])
     {
-        $campaign = $this->campaign;
+        $campaign = CampaignLocalization::getCampaign();
 
         $items['families'] = [
             'name' => 'families.show.tabs.families',
             'route' => 'families.families',
-            'count' => $this->descendants()->acl()->count()
+            'count' => $this->descendants()->count()
         ];
 
-        $count = $this->members()->acl()->count();
-        if ($campaign->enabled('characters') && $count > 0) {
-            $items['members'] = [
-                'name' => 'families.show.tabs.members',
-                'route' => 'families.members',
-                'count' => $count
-            ];
-        }
-        $count = $this->allMembers()->acl()->count();
-        if ($campaign->enabled('characters') && $count > 0) {
-            $items['all_members'] = [
-                'name' => 'families.show.tabs.all_members',
-                'route' => 'families.all-members',
-                'count' => $count
-            ];
-        }
+//        $count = $this->members()->count();
+//        if ($campaign->enabled('characters') && $count > 0) {
+//            $items['members'] = [
+//                'name' => 'families.show.tabs.members',
+//                'route' => 'families.members',
+//                'count' => $count
+//            ];
+//        }
+//        $count = $this->allMembers()->count();
+//        if ($campaign->enabled('characters') && $count > 0) {
+//            $items['all_members'] = [
+//                'name' => 'families.show.tabs.all_members',
+//                'route' => 'families.all-members',
+//                'count' => $count
+//            ];
+//        }
         return parent::menuItems($items);
+    }
+
+    /**
+     * Get the entity_type id from the entity_types table
+     * @return int
+     */
+    public function entityTypeId(): int
+    {
+        return (int) config('entities.ids.family');
     }
 }

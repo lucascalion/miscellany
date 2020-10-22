@@ -74,7 +74,7 @@ class DatagridRenderer
 
         $this->filterService = $filterService;
 
-        $html = '<table id="' . $this->getOption('baseRoute') . '" class="table table-striped">';
+        $html = '<table id="' . $this->getOption('baseRoute') . '" class="table table-striped' . ($this->nestedFilter ? ' table-nested' : null). '">';
         $html .= '<thead><tr>';
         $html .= $this->renderColumns();
         $html .=  '</tr></thead>';
@@ -201,10 +201,18 @@ class DatagridRenderer
             $label = $this->trans($field);
         }
 
+        // If we are in public mode (bots) don't make this links
+        if (!auth()->check()) {
+            return $label;
+        }
+
         $routeOptions = [
-            'order' => $field,
+            'order' => $field ,
             'page' => request()->get('page')
         ];
+        if (request()->get('_from', false) == 'quicklink') {
+            $routeOptions['_from'] = 'quicklink';
+        }
 
         if (!empty($this->nestedFilter)) {
             $val = request()->get($this->nestedFilter, null);
@@ -295,9 +303,8 @@ class DatagridRenderer
         if (is_string($column)) {
             // Just for name, a link to the view
             if ($column == 'name') {
-                $route = route($this->getOption('baseRoute') . '.show', ['id' => $model->id]);
-                $content = '<a href="' . $route . '" data-toggle="tooltip" title="' . $model->tooltipWithName()
-                    . '" data-html="true">' . e($model->{$column}) . '</a>';
+                $route = route($this->getOption('baseRoute') . '.show', [$model]);
+                $content = $model->tooltipedLink();
             } else {
                 // Handle boolean values (has, is)
                 if ($this->isBoolean($column)) {
@@ -331,46 +338,31 @@ class DatagridRenderer
                             ? $column['parent_route']
                             : $column['parent_route']($model))
                         : $this->getOption('baseRoute');
-                    $route = route($whoRoute . '.show', ['id' => $who->id]);
-                    $content = '<a class="entity-image" style="background-image: url(\'' . $who->getImageUrl(true) .
+                    $route = route($whoRoute . '.show', [$who]);
+                    $content = '<a class="entity-image" style="background-image: url(\'' . $who->getImageUrl(40) .
                         '\');" title="' . e($who->name) . '" href="' . $route . '"></a>';
                 }
             } elseif ($type == 'location') {
                 $class = 'hidden-xs hidden-sm';
                 if ($model->location) {
-                    $content = '<a href="' . route('locations.show', $model->location->id)
-                        . '" data-toggle="tooltip" data-html="true" title="'
-                        . $model->location->tooltipWithName() . '">' .
-                        e($model->location->name) . '</a>';
+                    $content = $model->location->tooltipedLink();
                 } elseif ($model->parentLocation) {
-                    $content = '<a href="' . route('locations.show', $model->parentLocation->id)
-                        . '" data-toggle="tooltip" data-html="true" title="'
-                        . $model->parentLocation->tooltipWithName() . '">' .
-                        e($model->parentLocation->name) . '</a>';
+                    $content = $model->parentLocation->tooltipedLink();
                 }
             } elseif ($type == 'character') {
                 $class = 'hidden-xs hidden-sm';
                 if ($model->character) {
-                    $content = '<a href="' . route('characters.show', $model->character->id)
-                        . '" data-toggle="tooltip" data-html="true" title="'
-                        . $model->character->tooltipWithName() . '">' .
-                        e($model->character->name) . '</a>';
+                    $content = $model->character->tooltipedLink();
                 }
             } elseif ($type == 'organisation') {
                 $class = 'hidden-xs hidden-sm';
                 if ($model->organisation) {
-                    $content = '<a href="' . route('organisations.show', $model->organisation->id)
-                        . '" data-toggle="tooltip" data-html="true" title="'
-                        . $model->organisation->tooltipWithName() . '">' .
-                        e($model->organisation->name) . '</a>';
+                    $content = $model->organisation->tooltipedLink();
                 }
             } elseif ($type == 'entity') {
                 $class = 'hidden-xs hidden-sm';
                 if ($model->entity) {
-                    $content = '<a href="' . route($model->entity->pluralType()
-                            . '.show', $model->entity->child->id) . '" data-toggle="tooltip" data-html="true" title="'
-                        . $model->entity->child->tooltipWithName() . '">' .
-                        e($model->entity->child->name) . '</a>';
+                    $content = $model->entity->tooltipedLink();
                 }
             } elseif ($type == 'is_private') {
                 // Viewer can't see private
@@ -381,6 +373,7 @@ class DatagridRenderer
                     '<i class="fa fa-lock" title="' . trans('crud.is_private') . '"></i>' :
                     '<br />';
             } elseif ($type == 'calendar_date') {
+                $class = 'hidden-xs hidden-sm';
                 if ($model->hasCalendar()) {
                     $content = $this->dateRenderer->render($model->getDate());
                 }
@@ -433,14 +426,14 @@ class DatagridRenderer
     private function renderActionRow(Model $model)
     {
         $content = '
-        <a href="' . route($this->getOption('baseRoute') . '.show', ['id' => $model->id]) .
+        <a href="' . route($this->getOption('baseRoute') . '.show', [$model]) .
             '" title="' . trans('crud.view') . '">
             <i class="fa fa-eye" aria-hidden="true"></i>
         </a>';
 
         if ($this->user && $this->user->can('update', $model)) {
             $content .= ' <a href="'
-                . route($this->getOption('baseRoute') . '.edit', ['id' => $model->id])
+                . route($this->getOption('baseRoute') . '.edit', [$model])
                 . '" title="' . trans('crud.edit') . '">
                 <i class="fa fa-edit" aria-hidden="true"></i>
             </a>';
@@ -474,6 +467,8 @@ class DatagridRenderer
      */
     protected function renderFilters()
     {
+        return '';
+
         if (empty($this->filters)) {
             return '';
         }
@@ -485,16 +480,24 @@ class DatagridRenderer
             'name' => $this->getOption('trans')
         ]);
 
+
+        $filtersHtml = str_replace("&#039;", '&lsquo;', $filtersHtml);
         $filtersHtml = str_replace('"', '\'', $filtersHtml);
         $activeFilters = $this->filterService->activeFilters();
 
+        $route = route('helpers.filters');
         $html = '
-        <div class="table-filters" title="' . __('crud.filters.title') . '" data-toggle="popover" '
+        <div class="table-filters" title="' . __('crud.filters.title') . '
+            <a href=\'' . $route . '\' class=\'pull-right\' target=\'_blank\' title=\'' . __('helpers.filters.title') .'\'>
+                <i class=\'fa fa-question-circle\'></i>
+            </a>
+        " data-toggle="popover" '
             . 'data-html="true" data-placement="left" data-content="' . $filtersHtml . '">
             <i class="fa fa-filter"></i>
-            ' . (!empty($activeFilters) ? '<span class="label label-danger">' . $activeFilters . '</span>' : null) . '
+            ' . (!empty($activeFilters) ? '<span class="label label-danger">' . count($activeFilters) . '</span>' : null) . '
             <i class="fa fa-caret-down"></i>
         </div>';
+
 
         return $html;
     }

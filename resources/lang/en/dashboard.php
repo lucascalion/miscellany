@@ -1,9 +1,12 @@
 <?php
 
 return [
+    'actions'           => [
+        'follow'    => 'Follow',
+        'unfollow'  => 'Stop following',
+    ],
     'campaigns'         => [
-        'manage'    => 'Manage campaign',
-        'tabs'      => [
+        'tabs'  => [
             'modules'   => ':count Modules',
             'roles'     => ':count Roles',
             'users'     => ':count Users',
@@ -11,7 +14,8 @@ return [
     ],
     'description'       => 'The home for your creativity',
     'helpers'           => [
-        'setup' => 'Setup your campaign\'s dashboard.',
+        'follow'    => 'Following a campaign will make it appear in the campaign switcher (top-left) below your campaigns.',
+        'setup'     => 'Setup your campaign\'s dashboard.',
     ],
     'latest_release'    => 'Latest Release',
     'notifications'     => [
@@ -21,21 +25,10 @@ return [
         ],
     ],
     'recent'            => [
-        'add'           => 'Create new :name',
-        'no_entries'    => 'There are currently no entries of this type.',
-        'title'         => 'Recently modified :name',
-        'view'          => 'View All :name',
+        'title' => 'Recently modified :name',
     ],
     'settings'          => [
-        'description'   => 'Customise what you see on your dashboard',
-        'edit'          => [
-            'success'   => 'Your changes have been saved.',
-        ],
-        'fields'        => [
-            'helper'        => 'You can easily change what you see on your dashboard. Please be aware that this is for all your campaigns, regardless of the campaign\'s settings.',
-            'recent_count'  => 'Number of recent elements',
-        ],
-        'title'         => 'Dashboard Settings',
+        'title' => 'Dashboard Settings',
     ],
     'setup'             => [
         'actions'   => [
@@ -45,29 +38,16 @@ return [
         ],
         'title'     => 'Campaign Dashboard Setup',
         'widgets'   => [
-            'calendar'  => 'Calendar',
-            'preview'   => 'Entity Preview',
-            'recent'    => 'Recent',
+            'calendar'      => 'Calendar',
+            'preview'       => 'Entity preview',
+            'random'        => 'Random Entity',
+            'recent'        => 'Recently modified',
+            'unmentioned'   => 'Unmentioned entities',
         ],
     ],
     'title'             => 'Dashboard',
-    'welcome'           => [
-        'body'      => <<<'TEXT'
-Welcome to Kanka! Your first campaign has been created and we have included a couple of example entities as inspiration (you can delete them whenever).
-
-You'll probably want to get started by adding some entities of your own, so chose a category from the left and get started. You can disable unneeded categories of entity from the campaign settings, this will hide them from the menu.
-
-A few tips to get you started:
-- You can type @entityName to link to specific entities. The displayed link text will automatically update if you rename or update the linked entity.
-- You can configure account specific settings like themes and entities per page in your profile, accessible on the top right.
-- There is a growing list of tutorials on :youtube. Tutorials include attributes and how to share your campaign with other people. The :faq may also be useful.
-- If you have questions, suggestions or just want to chat, join us on :discord
-TEXT
-,
-        'header'    => 'Welcome',
-    ],
     'widgets'           => [
-        'calendar'  => [
+        'calendar'      => [
             'actions'           => [
                 'next'      => 'Change date to next day',
                 'previous'  => 'Change date to previous day',
@@ -76,19 +56,40 @@ TEXT
             'previous_events'   => 'Previous',
             'upcoming_events'   => 'Upcoming',
         ],
-        'create'    => [
+        'create'        => [
             'success'   => 'Widget added to the dashboard.',
         ],
-        'delete'    => [
+        'delete'        => [
             'success'   => 'Widget removed from the dashboard.',
         ],
-        'recent'    => [
-            'help'      => 'Only show the last updated entity, but show a whole preview of the entity',
-            'singular'  => 'Singular',
-            'title'     => 'Recently modified',
+        'fields'        => [
+            'width' => 'Width',
         ],
-        'update'    => [
+        'recent'        => [
+            'entity-header' => 'Use entity header as image',
+            'full'          => 'Full',
+            'help'          => 'Only show the last updated entity, but show a whole preview of the entity',
+            'helpers'       => [
+                'entity-header' => 'If your entity has an entity header (boosted campaign feature), set this widget to use that image instead of the entity\'s image.',
+                'full'          => 'Display the whole entity\'s entry by default instead of a preview.',
+            ],
+            'singular'      => 'Singular',
+            'tags'          => 'Filter the list of recently modified entities on specified tags.',
+            'title'         => 'Recently modified',
+        ],
+        'unmentioned'   => [
+            'title' => 'Unmentioned entities',
+        ],
+        'update'        => [
             'success'   => 'Widget modified.',
+        ],
+        'widths'        => [
+            '0' => 'Auto',
+            '12'=> 'Full (100%)',
+            '3' => 'Tiny (25%)',
+            '4' => 'Small (33%)',
+            '6' => 'Half (50%)',
+            '8' => 'Wide (66%)',
         ],
     ],
 ];

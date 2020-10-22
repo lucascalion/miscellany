@@ -4,7 +4,9 @@
     'breadcrumbs' => [
         ['url' => route('items.show', $model), 'label' => $model->name],
         trans('items.show.tabs.quests')
-    ]
+    ],
+    'mainTitle' => false,
+    'miscModel' => $model,
 ])
 
 @inject('campaign', 'App\Services\CampaignService')

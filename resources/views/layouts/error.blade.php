@@ -1,15 +1,7 @@
 <!doctype html>
 <html lang="{{ app()->getLocale() }}">
 <head>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-109130951-1"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'UA-109130951-1');
-    </script>
+@include('layouts._tracking', ['noads' => true])
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -32,6 +24,7 @@
 </head>
 
 <body id="page-top">
+@include('layouts._tracking-fallback')
 <!-- Custom styles for this template -->
 <link href="/css/front/new-age.min.css" rel="stylesheet">
 <link href="{{ mix('css/front.css') }}" rel="stylesheet">
@@ -41,7 +34,7 @@
 <!-- Navigation -->
 <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
     <div class="container">
-        <a class="navbar-brand js-scroll-trigger" href="/">{{ config('app.name', 'Laravel') }}</a>
+        <a class="navbar-brand" href="/">{{ config('app.name', 'Laravel') }}</a>
         <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
             {{ trans('front.menu.title') }}
             <i class="fa fa-bars"></i>
@@ -63,7 +56,7 @@
                     <p class="mb-5">{{ trans('errors.' . $error . '.body') }}</p>
                     @endif
 
-                    <p>{!! trans('errors.footer', ['discord' => link_to(config('discord.url'), 'Discord')]) !!}</p>
+                    <p>{!! trans('errors.footer', ['discord' => link_to(config('social.discord'), 'Discord')]) !!}</p>
 
                     <p><a href="/">{{ __('dashboard.setup.actions.back_to_dashboard') }}</a>.</p>
                 </div>
@@ -72,10 +65,10 @@
                 @if (!Auth::check())
                     <p>
                         <a href="/login" class="btn btn-outline btn-xl">{{ __('front.menu.login') }}</a>
-                    </p>
+                    </p>@if(config('auth.register_enabled'))
                     <p>
                         <a href="/register" class="btn btn-outline btn-xl">{{ __('front.menu.register') }}</a>
-                    </p>
+                    </p>@endif
                 @endif
 
                     <p>

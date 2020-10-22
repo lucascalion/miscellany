@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Models\Campaign;
 use App\Models\Event;
 use App\Http\Requests\StoreEvent as Request;
-use App\Http\Resources\Event as Resource;
-use App\Http\Resources\EventCollection as Collection;
+use App\Http\Resources\EventResource as Resource;
 
 class EventApiController extends ApiController
 {
@@ -18,9 +17,8 @@ class EventApiController extends ApiController
     public function index(Campaign $campaign)
     {
         $this->authorize('access', $campaign);
-        return new Collection($campaign
+        return Resource::collection($campaign
             ->events()
-            ->acl()
             ->with(['entity', 'entity.tags', 'entity.notes', 'entity.files',
                 'entity.events', 'entity.relationships', 'entity.attributes'])
             ->lastSync(request()->get('lastSync'))
@@ -50,6 +48,7 @@ class EventApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('create', Event::class);
         $model = Event::create($request->all());
+        $this->crudSave($model);
         return new Resource($model);
     }
 
@@ -64,6 +63,7 @@ class EventApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('update', $event);
         $event->update($request->all());
+        $this->crudSave($event);
 
         return new Resource($event);
     }

@@ -2,16 +2,25 @@
 
 namespace App\Models;
 
-use App\Traits\FilterableTrait;
-use App\Traits\OrderableTrait;
-use App\Traits\SearchableTrait;
+use App\Models\Concerns\Orderable;
+use App\Models\Concerns\Sortable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Faq extends Model
 {
     public $table = 'faq';
 
-    use FilterableTrait, SearchableTrait, OrderableTrait;
+    use  Orderable, Sortable;
+
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+
+
+        $this->defaultOrderField = 'question';
+        $this->defaultOrderDirection = 'asc';
+    }
 
     /**
      * Filterable fields
@@ -27,6 +36,10 @@ class Faq extends Model
     protected $searchableColumns = [
         'question',
         'answer'
+    ];
+
+    protected $sortableColumns = [
+        'question'
     ];
 
     protected $fillable = [
@@ -91,7 +104,7 @@ class Faq extends Model
      */
     public function slug()
     {
-        return str_slug($this->question);
+        return Str::slug($this->question);
     }
 
     public function scopeAdmin($query)

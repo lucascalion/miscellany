@@ -1,13 +1,8 @@
-
-<div class="box">
+<div class="box box-solid">
     <div class="box-body box-profile">
-        @include ('cruds._image')
-
-        <h3 class="profile-username text-center">{{ $model->name }}
-            @if ($model->is_private)
-                <i class="fas fa-lock" title="{{ trans('crud.is_private') }}"></i>
-            @endif
-        </h3>
+        @if (!View::hasSection('entity-header'))
+            @include ('cruds._image')
+        @endif
 
         <ul class="list-group list-group-unbordered">
             @if (!empty($model->type))
@@ -16,11 +11,34 @@
                     <br class="clear" />
                 </li>
             @endif
+            @if (!empty($model->note))
+                <li class="list-group-item">
+                    <b>{{ __('notes.fields.note') }}
+                    </b>
+
+                    <span class="pull-right">
+                    {!! $model->note->tooltipedLink() !!}
+                        </span>
+                    <br class="clear" />
+                </li>
+            @endif
+
+            @if(!$model->notes->isEmpty())
+                <li class="list-group-item">
+                    <b>{{ __('notes.fields.notes') }}</b>
+                    @foreach ($model->notes->sortBy('name') as $subNote)
+                        <span class="pull-right">
+                            {!! $subNote->tooltipedLink() !!}
+                        </span><br class="clear">
+                        @endforeach
+                </li>
+           @endif
+            @include('entities.components.relations')
+            @include('entities.components.attributes')
             @include('entities.components.tags')
-            @include('entities.components.files')
         </ul>
-        @include('.cruds._actions')
     </div>
 </div>
 
 @include('entities.components.menu')
+@include('entities.components.actions')

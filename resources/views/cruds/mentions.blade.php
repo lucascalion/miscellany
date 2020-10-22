@@ -1,6 +1,6 @@
 @section('og')
 <meta property="og:description" content="{{ $model->tooltip() }}" />
-@if ($model->image)<meta property="og:image" content="{{ Storage::url($model->image)  }}" />@endif
+@if ($model->image)<meta property="og:image" content="{{ $model->getImageUrl(0)  }}" />@endif
 
 <meta property="og:url" content="{{ $model->getLink()  }}" />
 @endsection
@@ -13,7 +13,7 @@
     </div>
 
     <div class="col-md-9">
-        <div class="box box-flat">
+        <div class="box box-solid">
             <div class="box-body">
                 <h2 class="page-header with-border">
                     {{ trans('crud.tabs.mentions') }}

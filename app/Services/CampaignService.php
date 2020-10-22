@@ -68,21 +68,13 @@ class CampaignService
         Session::put('campaign_id', $campaign->id);
         $user = Auth::user();
         $user->last_campaign_id = $campaign->id;
-        $user->campaign_role = $campaign->role();
         $user->save();
-    }
-
-    /**
-     * @param Campaign $campaign
-     */
-    public static function generateBoilerplate(Campaign $campaign)
-    {
-        // Do nothing
     }
 
     /**
      * Leave a campaign
      * @param Campaign $campaign
+     * @throws Exception
      */
     public function leave(Campaign $campaign)
     {
@@ -123,7 +115,7 @@ class CampaignService
             'yellow',
             [
                 'user' => e(Auth::user()->name),
-                'campaign' => e($campaign->name)
+                'campaign' => $campaign->name
             ]
         );
 
@@ -132,10 +124,15 @@ class CampaignService
 
     /**
      * Switch to the last campaign the user used
+     * @param null $userParam
      */
-    public static function switchToLast()
+    public static function switchToLast($userParam = null)
     {
-        $last = Auth::user()->lastCampaign;
+        $user = $userParam?:Auth::user();
+        if (!$user) {
+            return;
+        }
+        $last = $user->lastCampaign;
         if ($last) {
             self::switchCampaign($last);
         }
@@ -208,12 +205,12 @@ class CampaignService
 
     /**
      * @param Campaign $campaign
-     * @param $key
-     * @param $icon
-     * @param $colour
+     * @param string $key
+     * @param string $icon
+     * @param string $colour
      * @param array $params
      */
-    public function notify(Campaign $campaign, $key, $icon, $colour, array $params = [])
+    public function notify(Campaign $campaign, string $key, string $icon, string $colour, array $params = []): void
     {
         // Notify all admins
         foreach ($campaign->admins() as $user) {
@@ -231,6 +228,7 @@ class CampaignService
             throw new TranslatableException(trans('campaigns.export.errors.limit'));
         }
         $campaign->export_date = date('Y-m-d');
+        $campaign->withObservers = false;
         $campaign->save();
 
         CampaignExport::dispatch($campaign, $user, $service);

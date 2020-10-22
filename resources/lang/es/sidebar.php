@@ -1,14 +1,21 @@
 <?php
 
 return [
+    'abilities'             => 'Habilidades',
     'admin'                 => 'Administrar',
     'attribute_templates'   => 'Plantillas de atributos',
     'calendars'             => 'Calendarios',
     'campaign'              => 'Campaña',
+    'campaign_switcher'     => [
+        'created_campaigns' => 'Tus campañas',
+        'new_campaign'      => 'Nueva campaña',
+        'public_campaigns'  => 'Campañas públicas',
+        'updated'           => 'Actualizada',
+    ],
     'campaigns'             => 'Campañas',
     'characters'            => 'Personajes',
     'conversations'         => 'Conversaciones',
-    'custom_links'          => 'Enlaces personalizados',
+    'custom_links'          => 'Acceso rápido',
     'dashboard'             => 'Tablero',
     'dice_rolls'            => 'Tiradas de dados',
     'discord'               => 'Discord',
@@ -20,6 +27,7 @@ return [
     'locations'             => 'Lugares',
     'manage_links'          => 'Administrar enlaces',
     'navigation'            => 'Menú',
+    'new-entity'            => 'Crear nueva entidad',
     'notes'                 => 'Notas',
     'organisations'         => 'Organizaciones',
     'other'                 => 'Otros',
@@ -31,6 +39,8 @@ return [
     'support'               => 'Soporte / Comunidad',
     'tags'                  => 'Etiquetas',
     'team'                  => 'Equipo',
+    'timelines'             => 'Líneas de tiempo',
     'translations'          => 'Traducciones',
     'trello'                => 'Trello',
+    'world'                 => 'Mundo',
 ];

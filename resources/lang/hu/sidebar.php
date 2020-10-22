@@ -1,10 +1,17 @@
 <?php
 
 return [
+    'abilities'             => 'Képességek',
     'admin'                 => 'Adminisztráció',
     'attribute_templates'   => 'Tulajdonságsablonok',
     'calendars'             => 'Naptárak',
     'campaign'              => 'Kampány',
+    'campaign_switcher'     => [
+        'created_campaigns' => 'Kampányaid',
+        'new_campaign'      => 'Új kampány',
+        'public_campaigns'  => 'Nyilvános kampányok',
+        'updated'           => 'Frissítve',
+    ],
     'campaigns'             => 'Kampányok',
     'characters'            => 'Karakterek',
     'conversations'         => 'Beszélgetések',
@@ -20,6 +27,7 @@ return [
     'locations'             => 'Helyszínek',
     'manage_links'          => 'Hivatkozások kezelése',
     'navigation'            => 'Navigáció',
+    'new-entity'            => 'Új entitás létrehozása',
     'notes'                 => 'Jegyzetek',
     'organisations'         => 'Szervezetek',
     'other'                 => 'Egyéb',
@@ -31,6 +39,8 @@ return [
     'support'               => 'Támogatás / Közösség',
     'tags'                  => 'Címkék',
     'team'                  => 'Csapat',
+    'timelines'             => 'Idővonalak',
     'translations'          => 'Fordítások',
     'trello'                => 'Trello',
+    'world'                 => 'Világ',
 ];

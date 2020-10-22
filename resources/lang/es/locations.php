@@ -7,25 +7,28 @@ return [
     ],
     'create'        => [
         'description'   => 'Crear nuevo lugar',
-        'success'       => 'Lugar \':name\' creado.',
+        'success'       => 'Lugar ":name" creado.',
         'title'         => 'Nuevo lugar',
     ],
     'destroy'       => [
-        'success'   => 'Lugar \':name\' borrado.',
+        'success'   => 'Lugar ":name" eliminado.',
     ],
     'edit'          => [
-        'success'   => 'Lugar \':name\' actualizado.',
+        'success'   => 'Lugar ":name" actualizado.',
         'title'     => 'Editar lugar :name',
     ],
     'events'        => [
         'description'   => 'Eventos que ocurren en este lugar.',
         'title'         => 'Eventos en :name',
     ],
+    'families'      => [
+        'title' => 'Familias en :name',
+    ],
     'fields'        => [
         'characters'        => 'Personajes',
         'image'             => 'Imagen',
         'is_map_private'    => 'Mapa privado',
-        'location'          => 'Localización',
+        'location'          => 'Localización superior',
         'locations'         => 'Lugares',
         'map'               => 'Mapa',
         'name'              => 'Nombre',
@@ -33,10 +36,14 @@ return [
         'type'              => 'Tipo',
     ],
     'helpers'       => [
-        'characters'    => 'Muestra todos los personajes en este lugar y sus lugares anidados, o solo los que están aquí.',
-        'descendants'   => 'Esta lista contiene todas las localizaciones que son descendientes de estos lugares, además de las que están directamente por debajo.',
-        'map'           => 'Al añadir un mapa a un lugar, podrás crear puntos en él y enlazar a otras entidades de la campaña.',
-        'nested'        => 'En la vista anidada puedes ver tus lugares de forma anidada. Las localizaciones que no tengan ninguna superior se mostrarán aquí por defecto. Las que tengan localizaciones anidadas se pueden ir clicando para mostrarlas. Puedes seguir haciendo click hasta que no haya más lugares anidados que ver.',
+        'characters'        => 'Muestra todos los personajes en este lugar y sus lugares anidados, o solo los que están aquí.',
+        'descendants'       => 'Esta lista contiene todas las localizaciones que son descendientes de estos lugares, además de las que están directamente por debajo.',
+        'families'          => 'Hay lugares donde se asientan poderosas familias.',
+        'map'               => 'Al añadir un mapa a un lugar, podrás crear puntos en él y enlazar a otras entidades de la campaña.',
+        'map_deprecated'    => '¡Los mapas son ahora un módulo por sí mismos! Esta nueva función está actualmente disponible como acceso temprano a las :boosted. La interfaz previa dejará de estar disponible cuando se abra el acceso al nuevo módulo, pero seguirás pudiendo editar mapas antiguos.',
+        'map_deprecated_2'  => '¡Ahora los mapas tienen su propio módulo! Aún se pueden editar los mapas antiguos, pero todos los nuevos estarán en el nuevo módulo.',
+        'nested'            => 'En la vista anidada puedes ver tus lugares de forma anidada. Las localizaciones que no tengan ninguna superior se mostrarán aquí por defecto. Las que tengan localizaciones anidadas se pueden ir clicando para mostrarlas. Puedes seguir haciendo click hasta que no haya más lugares anidados que ver.',
+        'organisations'     => 'Ver todas las organizaciones de esta localización y sus sublocalizaciones, o solo las que están directamente aquí.',
     ],
     'hints'         => [
         'is_map_private'    => 'Un mapa privado solo será visible para los miembros con el rol "Admin".',
@@ -45,7 +52,7 @@ return [
         'actions'       => [
             'explore_view'  => 'Vista de exploración',
         ],
-        'add'           => 'Nuevo Lugar',
+        'add'           => 'Nuevo lugar',
         'description'   => 'Gestiona los lugares de :name.',
         'header'        => 'Lugares en :name',
         'title'         => 'Lugares',
@@ -64,16 +71,17 @@ return [
     ],
     'map'           => [
         'actions'   => [
-            'admin_mode'    => 'Habilitar modo de edición',
-            'big'           => 'Vista completa',
-            'download'      => 'Descargar',
-            'points'        => 'Editar puntos',
-            'toggle_hide'   => 'Ocultar puntos',
-            'toggle_show'   => 'Mostrar puntos',
-            'view_mode'     => 'Volver al modo de vista',
-            'zoom_in'       => 'Acercar',
-            'zoom_out'      => 'Alejar',
-            'zoom_reset'    => 'Resetear zoom',
+            'admin_mode'        => 'Habilitar modo de edición',
+            'big'               => 'Vista completa',
+            'confirm_delete'    => '¿Seguro que quieres eliminar este punto del mapa?',
+            'download'          => 'Descargar',
+            'points'            => 'Editar puntos',
+            'toggle_hide'       => 'Ocultar puntos',
+            'toggle_show'       => 'Mostrar puntos',
+            'view_mode'         => 'Volver al modo de vista',
+            'zoom_in'           => 'Acercar',
+            'zoom_out'          => 'Alejar',
+            'zoom_reset'        => 'Resetear zoom',
         ],
         'helper'    => 'Haz click en el mapa para añadir un nuevo punto a una localización, o selecciona un punto existente para editarlo o eliminarlo.',
         'helpers'   => [
@@ -82,12 +90,14 @@ return [
             'label' => 'Este punto es una descripción. Nada más y nada menos.',
             'view'  => 'Haz clic en cualquier punto del mapa para ver los detalles. Usa Ctrl+Rueda para acercarte y alejarte del mapa.',
         ],
+        'legend'    => 'Leyenda',
         'modal'     => [
             'submit'    => 'Añadir',
             'title'     => 'Selección de nuevo punto',
         ],
         'no_map'    => 'Por favor, sube el mapa de la localización primero.',
         'points'    => [
+            'empty_label'   => 'Punto sin nombre',
             'fields'        => [
                 'axis_x'    => 'Eje X',
                 'axis_y'    => 'Eje Y',
@@ -112,6 +122,8 @@ return [
                 'bridge'        => 'Puente',
                 'campfire'      => 'Hoguera',
                 'candle'        => 'Vela',
+                'capitol'       => 'Capitolio',
+                'castle-emblem' => 'Castillo',
                 'cat'           => 'Gato',
                 'cheese'        => 'Queso',
                 'cog'           => 'Engranaje',
@@ -151,6 +163,7 @@ return [
                 'tombstone'     => 'Lápida',
                 'torch'         => 'Antorcha',
                 'tower'         => 'Torre',
+                'vase'          => 'Jarrón',
                 'water-drop'    => 'Agua',
                 'wooden-sign'   => 'Cartel de madera',
                 'wrench'        => 'Llave inglesa',
@@ -164,6 +177,7 @@ return [
             'return'        => 'Volver a :name',
             'shapes'        => [
                 'circle'    => 'Círculo',
+                'custom'    => 'Personalizada',
                 'square'    => 'Cuadrado',
             ],
             'sizes'         => [
@@ -181,6 +195,9 @@ return [
             'title'         => 'Puntos del mapa de :name',
         ],
         'success'   => 'Puntos del mapa guardados.',
+    ],
+    'maps'          => [
+        'title' => 'Mapas de :name',
     ],
     'organisations' => [
         'description'   => 'Organizaciones situadas en la localización.',
@@ -203,11 +220,13 @@ return [
         'tabs'          => [
             'characters'    => 'Personajes',
             'events'        => 'Eventos',
+            'families'      => 'Familias',
             'information'   => 'Información',
             'items'         => 'Objetos',
             'journals'      => 'Diarios',
             'locations'     => 'Lugares',
             'map'           => 'Mapa',
+            'maps'          => 'Mapas',
             'menu'          => 'Menú',
             'organisations' => 'Organizaciones',
             'quests'        => 'Misiones',

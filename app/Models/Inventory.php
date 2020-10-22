@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Facades\CampaignLocalization;
 use App\Facades\UserPermission;
+use App\Models\Concerns\SimpleSortableTrait;
 use App\Traits\EntityAclTrait;
 use App\Traits\VisibilityTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -14,11 +15,13 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @property integer $entity_id
  * @property integer $item_id
+ * @property string $name
  * @property integer $amount
  * @property string $position
  * @property string $description
  * @property string $visibility
  * @property integer $created_by
+ * @property bool $is_equipped
  * @property Item $item
  * @property Entity $entity
  */
@@ -30,14 +33,16 @@ class Inventory extends Model
     public $fillable = [
         'entity_id',
         'item_id',
+        'name',
         'amount',
         'position',
         'description',
         'visibility',
         'created_by',
+        'is_equipped',
     ];
 
-    use VisibilityTrait;
+    use VisibilityTrait, SimpleSortableTrait;
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -109,8 +114,22 @@ class Inventory extends Model
             ->where('entities.is_private', false)
             ->where(function ($subquery) use ($service) {
                 return $subquery
-                    ->whereIn('entities.id', $service->entityIds())
-                    ->orWhereIn('entities.type', $service->entityTypes());
+                    ->where(function ($sub) use ($service) {
+                        return $sub->whereIn('entities.id', $service->entityIds())
+                            ->orWhereIn('entities.type', $service->entityTypes());
+                    })
+                    ->whereNotIn('entities.id', $service->deniedEntityIds());
             });
+    }
+
+    /**
+     * @return string
+     */
+    public function itemName(): string
+    {
+        if (!empty($this->item)) {
+            return $this->item->name;
+        }
+        return (string) $this->name;
     }
 }

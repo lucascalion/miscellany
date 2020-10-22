@@ -12,46 +12,27 @@
 */
 use Vsch\TranslationManager\Translator;
 
+
 Route::group([
     'prefix' => LaravelLocalization::setLocale(),
     'middleware' => [ 'localeSessionRedirect', 'localizationRedirect', 'localeViewPath', 'localizeDatetime' ]
 ], function () {
 
+//    Route::get('/mail', function () {
+////        return new App\Mail\WelcomeEmail(Auth::user());
+////    });
     Route::get('/', 'HomeController@index')->name('home');
 
     // Frontend stuff
-    Route::get('/about', 'FrontController@about')->name('about');
-    //Route::get('/terms-of-service', 'FrontController@tos')->name('tos');
-    Route::get('/privacy-policy', 'FrontController@privacy')->name('privacy');
-    Route::get('/help', 'FrontController@help')->name('help');
-    Route::get('/faq', 'FaqController@index')->name('faq.index');
-    Route::get('/faq/{key}/{slug?}', 'FaqController@show')->name('faq.show');
-    Route::get('/features', 'FrontController@features')->name('features');
-    Route::get('/roadmap', 'FrontController@roadmap')->name('roadmap');
-    Route::get('/community', 'FrontController@community')->name('community');
-    Route::get('/public-campaigns', 'FrontController@campaigns')->name('public_campaigns');
+    require base_path('routes/front.php');
 
-    Auth::routes();
+    Auth::routes(['register' => config('auth.register_enabled')]);
 
-    Route::get('/settings/profile', 'Settings\ProfileController@index')->name('settings.profile');
-    Route::patch('/settings/profile', 'Settings\ProfileController@update')->name('settings.profile');
+    require base_path('routes/profile.php');
 
-    Route::post('/settings/release/{release}', 'Settings\ReleaseController@read')->name('settings.release');
-    Route::post('/settings/welcome', 'Settings\WelcomeController@read')->name('settings.welcome');
-
-    Route::get('/settings/account', 'Settings\AccountController@index')->name('settings.account');
-    Route::patch('/settings/account/password', 'Settings\AccountController@password')->name('settings.account.password');
-    Route::patch('/settings/account/email', 'Settings\AccountController@email')->name('settings.account.email');
-    Route::patch('/settings/account/destroy', 'Settings\AccountController@destroy')->name('settings.account.destroy');
-    Route::patch('/settings/account/social', 'Settings\AccountController@social')->name('settings.account.social');
-
-    Route::get('/settings/patreon', 'Settings\PatreonController@index')->name('settings.patreon');
-    Route::get('/settings/patreon-callback', 'Settings\PatreonController@callback')->name('settings.patreon.callback');
-
-    Route::get('/settings/api', 'Settings\ApiController@index')->name('settings.api');
-
-    Route::get('/settings/layout', 'Settings\LayoutController@index')->name('settings.layout');
-    Route::patch('/settings/layout', 'Settings\LayoutController@update')->name('settings.layout');
+    Route::resources([
+        'campaign_boost' => 'CampaignBoostController',
+    ]);
 
     Route::post('/logout', 'Auth\AuthController@logout')->name('logout');
 
@@ -59,17 +40,12 @@ Route::group([
     Route::get('/helper/dice', 'HelperController@dice')->name('helpers.dice');
     Route::get('/helper/public', 'HelperController@public')->name('helpers.public');
     Route::get('/helper/map', 'HelperController@map')->name('helpers.map');
+    Route::get('/helper/filters', 'HelperController@filters')->name('helpers.filters');
+    Route::get('/helper/age', 'HelperController@age')->name('helpers.age');
+    Route::get('/helper/attributes', 'HelperController@attributes')->name('helpers.attributes');
 
     // OAuth Routes
     Route::get('auth/{provider}', 'Auth\AuthController@redirectToProvider')->name('auth.provider');
-    Route::get('auth/{provider}/callback', 'Auth\AuthController@handleProviderCallback')->name('auth.provider.callback');
-
-    // Slug
-    Route::get('/releases/{id}-{slug?}', 'ReleaseController@show');
-
-    Route::resources([
-        'releases' => 'ReleaseController',
-    ]);
 
     Route::get('/start', 'StartController@index')->name('start');
     Route::post('/start', 'StartController@store')->name('start');
@@ -82,8 +58,21 @@ Route::group([
         'middleware' => ['campaign']
     ], function() {
         Route::get('/', 'DashboardController@index')->name('dashboard');
-        Route::get('/dashboard/settings', 'DashboardController@edit')->name('dashboard.settings');
-        Route::patch('/dashboard/settings', 'DashboardController@update')->name('dashboard.settings.update');
+
+        Route::post('/follow', 'CampaignFollowController@update')->name('campaign.follow');
+
+        // Abilities
+        Route::get('/abilities/{ability}/map-points', 'AbilityController@mapPoints')->name('abilities.map-points');
+        Route::get('/abilities/{ability}/abilities', 'AbilityController@abilities')->name('abilities.abilities');
+        Route::get('/abilities/tree', 'AbilityController@tree')->name('abilities.tree');
+
+        // Maps
+        Route::get('/maps/{map}/maps', 'Maps\MapController@maps')->name('maps.maps');
+        Route::get('/maps/{map}/explore', 'Maps\MapController@explore')->name('maps.explore');
+        Route::get('/maps/{map}/ticker', 'Maps\MapController@ticker')->name('maps.ticker');
+        Route::get('/maps/{map}/{map_marker}/details', 'Maps\MapMarkerController@details')->name('maps.markers.details');
+        Route::post('/maps/{map}/{map_marker}/move', 'Maps\MapMarkerController@move')->name('maps.markers.move');
+        Route::get('/maps/tree', 'Maps\MapController@tree')->name('maps.tree');
 
         // Character
         Route::get('/characters/random', 'CharacterController@random')->name('characters.random');
@@ -104,12 +93,14 @@ Route::group([
         // Locations
         Route::get('/locations/tree', 'LocationController@tree')->name('locations.tree');
         Route::any('/locations/{location}/map', 'LocationController@map')->name('locations.map');
+        Route::any('/locations/{location}/maps', 'LocationController@maps')->name('locations.maps');
         Route::get('/locations/{location}/map-points', 'LocationController@mapPoints')->name('locations.map-points');
         Route::any('/locations/{location}/map/admin', 'LocationController@mapAdmin')->name('locations.map.admin');
         Route::post('/locations/{location}/map_points/{map_point}/move', 'LocationMapPointController@move')->name('locations.map_points.move');
 
         Route::get('/locations/{location}/events', 'LocationController@events')->name('locations.events');
         Route::get('/locations/{location}/characters', 'LocationController@characters')->name('locations.characters');
+        Route::get('/locations/{location}/families', 'LocationController@families')->name('locations.families');
         Route::get('/locations/{location}/items', 'LocationController@items')->name('locations.items');
         Route::get('/locations/{location}/locations', 'LocationController@locations')->name('locations.locations');
         Route::get('/locations/{location}/organisations', 'LocationController@organisations')->name('locations.organisations');
@@ -118,7 +109,6 @@ Route::group([
 
         // Organisation menu
         Route::get('/organisations/{organisation}/members', 'OrganisationController@members')->name('organisations.members');
-        Route::get('/organisations/{organisation}/all-members', 'OrganisationController@allMembers')->name('organisations.all-members');
         Route::get('/organisations/{organisation}/quests', 'OrganisationController@quests')->name('organisations.quests');
         Route::get('/organisations/{organisation}/organisations', 'OrganisationController@organisations')->name('organisations.organisations');
         Route::get('/organisations/tree', 'OrganisationController@tree')->name('organisations.tree');
@@ -127,6 +117,7 @@ Route::group([
         // Families menu
         Route::get('/families/{family}/members', 'FamilyController@members')->name('families.members');
         Route::get('/families/{family}/all-members', 'FamilyController@allMembers')->name('families.all-members');
+
         Route::get('/families/{family}/families', 'FamilyController@families')->name('families.families');
         Route::get('/families/tree', 'FamilyController@tree')->name('families.tree');
         Route::get('/families/{family}/map-points', 'FamilyController@mapPoints')->name('families.map-points');
@@ -152,6 +143,7 @@ Route::group([
 
         // Journal
         Route::get('/journals/{journal}/map-points', 'JournalController@mapPoints')->name('journals.map-points');
+        Route::get('/journals/{journal}/journals', 'JournalController@journals')->name('journals.journals');
 
         // Tag menus
         Route::get('/tags/tree', 'TagController@tree')->name('tags.tree');
@@ -159,19 +151,28 @@ Route::group([
         Route::get('/tags/{tag}/children', 'TagController@children')->name('tags.children');
         Route::get('/tags/{tag}/map-points', 'TagController@mapPoints')->name('tags.map-points');
 
+        // Tags Quick Add
+        Route::get('/tags/{tag}/entity-add', 'TagController@entityAdd')->name('tags.entity-add');
+        Route::post('/tags/{tag}/entity-add', 'TagController@entityStore')->name('tags.entity-add');
+
         // Multi-delete for cruds
         Route::post('/bulk/process', 'BulkController@process')->name('bulk.process');
+        Route::get('/bulk/modal', 'BulkController@modal')->name('bulk.modal');
 
         // Attribute Templates Menu
         Route::get('/attribute_templates/{attribute_template}/attribute_templates', 'AttributeTemplateController@attributeTemplates')->name('attribute_templates.attribute_templates');
 
         // Notes
         Route::get('/notes/{note}/map-points', 'NoteController@mapPoints')->name('notes.map-points');
+        Route::get('/notes/tree', 'NoteController@tree')->name('notes.tree');
+
+        Route::get('/journals/tree', 'JournalController@tree')->name('journals.tree');
 
         // Events
         Route::get('/events/{event}/map-points', 'EventController@mapPoints')->name('events.map-points');
 
         // Calendar
+        Route::get('/calendars/tree', 'CalendarController@tree')->name('calendars.tree');
         Route::get('/calendars/{calendar}/event', 'CalendarController@event')->name('calendars.event.create');
         Route::post('/calendars/{calendar}/event', 'CalendarController@eventStore')->name('calendars.event.store');
         Route::get('/calendars/{calendar}/month-list', 'CalendarController@monthList')->name('calendars.month-list');
@@ -179,74 +180,91 @@ Route::group([
         Route::get('/calendars/{calendar}/today', 'CalendarController@today')->name('calendars.today');
         Route::get('/calendars/{calendar}/map-points', 'CalendarController@mapPoints')->name('calendars.map-points');
 
+//        Route::get('/calendars/{calendar}/weather', 'Calendar\CalendarWeatherController@form')->name('calendars.weather.create');
+//        Route::post('/calendars/{calendar}/weather', 'Calendar\CalendarWeatherController@store')->name('calendars.weather.store');
+
         // Conversations
         Route::get('/conversations/{conversation}/map-points', 'ConversationController@mapPoints')->name('conversations.map-points');
 
         // Attribute multi-save
         Route::post('/entities/{entity}/attributes/saveMany', [\App\Http\Controllers\AttributeController::class, 'saveMany'])->name('entities.attributes.saveMany');
+        Route::post('/entities/{entity}/toggle-privacy', [\App\Http\Controllers\Entity\PrivacyController::class, 'toggle'])->name('entities.privacy.toggle');
+
+        Route::get('/entities/{entity}/relations_map', 'Entity\RelationController@map')->name('entities.relations_map');
 
         // Permission save
         Route::post('/campaign_roles/{campaign_role}/savePermissions', 'CampaignRoleController@savePermissions')->name('campaign_roles.savePermissions');
-
-        // Campaign Export
-        Route::post('/campaigns/{campaign}/export', 'CampaignController@export')->name('campaigns.export');
 
         // Impersonator
         Route::get('/members/switch/{campaign_user}', 'Campaign\MemberController@switch')->name('identity.switch');
         Route::get('/members/back', 'Campaign\MemberController@back')->name('identity.back');
 
+        // Recovery
+        Route::get('/recovery', 'Campaign\RecoveryController@index')->name('recovery');
+        Route::post('/recovery', 'Campaign\RecoveryController@recover')->name('recovery');
+
+
+        Route::get('/default-images', 'Campaign\DefaultImageController@index')->name('campaign.default-images');
+        Route::get('/default-images/create', 'Campaign\DefaultImageController@create')->name('campaign.default-images.create');
+        Route::post('/default-images/create', 'Campaign\DefaultImageController@store')->name('campaign.default-images.store');
+        Route::delete('/default-images', 'Campaign\DefaultImageController@destroy')->name('campaign.default-images');
+
+
+        // Entity Abilities API
+        Route::get('/entities/{entity}/entity_abilities/api', 'Entity\AbilityController@api')->name('entities.entity_abilities.api');
+        Route::post('/entities/{entity}/entity_abilities/{entity_ability}/use', 'Entity\AbilityController@useCharge')->name('entities.entity_abilities.use');
+        Route::get('/entities/{entity}/entity_abilities/reset', 'Entity\AbilityController@resetCharges')->name('entities.entity_abilities.reset');
+
         //Route::get('/my-campaigns', 'CampaignController@index')->name('campaign');
         Route::resources([
+            'abilities' => 'AbilityController',
             'calendars' => 'CalendarController',
             'calendar_event' => 'CalendarEventController',
-            'calendars.relations' => 'CalendarRelationController',
+            'calendars.calendar_weather' => 'Calendar\CalendarWeatherController',
             'campaigns' => 'CampaignController',
             'campaign_users' => 'CampaignUserController',
             'characters' => 'CharacterController',
             'characters.character_organisations' => 'CharacterOrganisationController',
-            'characters.relations' => 'CharacterRelationController',
             'conversations' => 'ConversationController',
             'conversations.conversation_participants' => 'ConversationParticipantController',
             'conversations.conversation_messages' => 'ConversationMessageController',
             'dice_rolls' => 'DiceRollController',
-            'dice_rolls.relations' => 'DiceRollRelationController',
             'dice_roll_results' => 'DiceRollResultController',
             'events' => 'EventController',
-            'events.relations' => 'EventRelationController',
             'locations' => 'LocationController',
-            'locations.relations' => 'LocationRelationController',
             'locations.map_points' => 'LocationMapPointController',
             'families' => 'FamilyController',
-            'families.relations' => 'FamilyRelationController',
             'items' => 'ItemController',
-            'items.relations' => 'ItemRelationController',
             'journals' => 'JournalController',
+            'maps' => 'Maps\MapController',
+            'maps.map_layers' => 'Maps\MapLayerController',
+            'maps.map_groups' => 'Maps\MapGroupController',
+            'maps.map_markers' => 'Maps\MapMarkerController',
             'menu_links' => 'MenuLinkController',
             'organisations' => 'OrganisationController',
-            'organisations.relations' => 'OrganisationRelationController',
-            //'organisation_member' => 'OrganisationMemberController',
             'organisations.organisation_members' => 'OrganisationMemberController',
             'notes' => 'NoteController',
-            'notes.relations' => 'NoteRelationController',
             'quests' => 'QuestController',
             'quests.quest_locations' => 'QuestLocationController',
             'quests.quest_characters' => 'QuestCharacterController',
             'quests.quest_items' => 'QuestItemController',
             'quests.quest_organisations' => 'QuestOrganisationController',
-            'quests.relations' => 'QuestRelationController',
             'tags' => 'TagController',
+            'timelines' => 'Timelines\TimelineController',
+            'timelines.timeline_eras' => 'Timelines\TimelineEraController',
+            'timelines.timeline_elements' => 'Timelines\TimelineElementController',
             'sections' => 'SectionController',
-            'tags.relations' => 'TagRelationController',
             'campaign_invites' => 'CampaignInviteController',
             'races' => 'RaceController',
-            'races.relations' => 'RaceRelationController',
 
             // Entities
             'entities.attributes' => 'AttributeController',
+            'entities.entity_abilities' => 'Entity\AbilityController',
             'entities.entity_notes' => 'EntityNoteController',
             'entities.entity_events' => 'EntityEventController',
             'entities.entity_files' => 'EntityFileController',
             'entities.inventories' => 'Entity\InventoryController',
+            'entities.relations' => 'Entity\RelationController',
 
             'attribute_templates' => 'AttributeTemplateController',
 
@@ -260,6 +278,18 @@ Route::group([
         Route::get('/campaigns/{campaign}/leave', 'CampaignController@leave')->name('campaigns.leave');
         Route::post('/campaigns/{campaign}/campaign_settings', 'CampaignSettingController@save')->name('campaigns.settings.save');
 
+        // Marketplace plugin route
+        if(config('marketplace.enabled')) {
+            Route::get('/plugins', 'Campaign\CampaignPluginController@index')->name('campaign_plugins.index');
+            Route::delete('/plugins/{plugin}/delete', 'Campaign\CampaignPluginController@delete')->name('campaign_plugins.destroy');
+            Route::get('/plugins/{plugin}/enable', 'Campaign\CampaignPluginController@enable')->name('campaign_plugins.enable');
+            Route::get('/plugins/{plugin}/disable', 'Campaign\CampaignPluginController@disable')->name('campaign_plugins.disable');
+            Route::get('/plugins/{plugin}/update', 'Campaign\CampaignPluginController@updateInfo')->name('campaign_plugins.update-info');
+            Route::post('/plugins/{plugin}/update', 'Campaign\CampaignPluginController@update')->name('campaign_plugins.update');
+
+        }
+
+        Route::post('/timelines/{timeline}/timeline-era/{timeline_era}/reorder', 'Timelines\TimelineEraController@reorder')->name('timelines.reorder');
         // Old Search
         Route::get('/search', 'SearchController@search')->name('search');
 
@@ -272,20 +302,28 @@ Route::group([
         Route::get('/search/item', 'Search\MiscController@items')->name('items.find');
         Route::get('/search/locations', 'Search\MiscController@locations')->name('locations.find');
         Route::get('/search/notes', 'Search\MiscController@notes')->name('notes.find');
+        Route::get('/search/journals', 'Search\MiscController@journals')->name('journals.find');
         Route::get('/search/organisations', 'Search\MiscController@organisations')->name('organisations.find');
         Route::get('/search/tags', 'Search\MiscController@tags')->name('tags.find');
         Route::get('/search/dice-rolls', 'Search\MiscController@diceRolls')->name('dice_rolls.find');
         Route::get('/search/quests', 'Search\MiscController@quests')->name('quests.find');
         Route::get('/search/conversations', 'Search\MiscController@conversations')->name('conversations.find');
         Route::get('/search/races', 'Search\MiscController@races')->name('races.find');
+        Route::get('/search/abilities', 'Search\MiscController@abilities')->name('abilities.find');
+        Route::get('/search/maps', 'Search\MiscController@maps')->name('maps.find');
         Route::get('/search/attribute-templates', 'Search\MiscController@attributeTemplates')->name('attribute_templates.find');
+
+        Route::get('/search/members', 'Search\CampaignSearchController@members')->name('find.campaign.members');
+        Route::get('/search/roles', 'Search\CampaignSearchController@roles')->name('find.campaign.roles');
 
         // Entity Search
         Route::get('/search/entity-calendars', 'Search\CalendarController@index')->name('search.calendars');
+        Route::get('/search/attributes/{entity}', 'Search\AttributeSearchController@index')->name('search.attributes');
 
         // Global Entity Search
         Route::get('/search/reminder-entities', 'Search\LiveController@reminderEntities')->name('search.entities-with-reminders');
         Route::get('/search/relation-entities', 'Search\LiveController@relationEntities')->name('search.entities-with-relations');
+        Route::get('/search/tag-children', 'Search\LiveController@tagChildren')->name('search.tag-children');
         Route::get('/search/months', 'Search\CalendarController@months')->name('search.calendar-months');
         Route::get('/search/live', 'Search\LiveController@index')->name('search.live');
 
@@ -296,6 +334,7 @@ Route::group([
         Route::post('/dashboard-setup', 'DashboardSetupController@save')->name('dashboard.setup');
         Route::post('/dashboard-setup/reorder', [\App\Http\Controllers\DashboardSetupController::class, 'reorder'])->name('dashboard.reorder');
         Route::get('/dashboard/widgets/recent/{id}', 'DashboardController@recent')->name('dashboard.recent');
+        Route::get('/dashboard/widgets/unmentioned/{id}', 'DashboardController@unmentioned')->name('dashboard.unmentioned');
         Route::post('/dashboard/widgets/calendar/{campaignDashboardWidget}/add', [\App\Http\Controllers\Widgets\CalendarWidgetController::class, 'add'])->name('dashboard.calendar.add');
         Route::post('/dashboard/widgets/calendar/{campaignDashboardWidget}/sub', [\App\Http\Controllers\Widgets\CalendarWidgetController::class, 'sub'])->name('dashboard.calendar.sub');
 
@@ -311,23 +350,27 @@ Route::group([
         Route::get('/entities/move/{entity}', 'EntityController@move')->name('entities.move');
         Route::post('/entities/move/{entity}', 'EntityController@post')->name('entities.move');
 
+        Route::get('/entities/{entity}/tooltip', 'EntityTooltipController@show')->name('entities.tooltip');
+
+        Route::get('/entities/{entity}/json-export', 'Entity\ExportController@json')->name('entities.json-export');
+
+        Route::get('/entities/copy-to-campaign/{entity}', 'EntityController@copyToCampaign')->name('entities.copy_to_campaign');
+        Route::post('/entities/copy-to-campaign/{entity}', 'EntityController@copyEntityToCampaign')->name('entities.copy_to_campaign');
+
         // Entity files
         Route::get('/entities/{entity}/files', 'EntityController@files')->name('entities.files');
         Route::get('/entities/{entity}/logs', 'Entity\LogController@index')->name('entities.logs');
         Route::get('/entities/{entity}/mentions', 'Entity\MentionController@index')->name('entities.mentions');
+        Route::get('/entities/{entity}/timelines', 'Entity\TimelineController@index')->name('entities.timelines');
         //Route::patch('/settings/profile', 'Settings\ProfileController@update')->name('settings.profile');
 
         // Inventory
         Route::get('/entities/{entity}/inventory', 'Entity\InventoryController@index')->name('entities.inventory');
-        /*Route::get('/entities/{entity}/inventory/create', 'Entity\InventoryController@create')->name('entities.inventory.create');
-        Route::post('/entities/{entity}/inventory/store', 'Entity\InventoryController@store')->name('entities.inventory.store');
-        Route::get('/entities/{entity}/inventory/update', 'Entity\InventoryController@edit')->name('entities.inventory.edit');
-        Route::post('/entities/{entity}/inventory/update', 'Entity\InventoryController@update')->name('entities.inventory.update');
-        Route::delete('/entities/{entity}/inventory/delete', 'Entity\InventoryController@delete')->name('entities.inventory.destroy');
-        */
 
         // Export
         Route::get('/entities/export/{entity}', 'EntityController@export')->name('entities.export');
+
+        Route::get('/entities/{entity}/template', 'EntityController@template')->name('entities.template');
 
         // Attribute template
         Route::get('/entities/{entity}/attribute/template', 'AttributeController@template')->name('entities.attributes.template');
@@ -343,6 +386,10 @@ Route::group([
         Route::post('/campaign/settings', 'CampaignSettingController@save')->name('campaign_settings.save');
         Route::get('/campaign/export', 'CampaignExportController@index')->name('campaign_export');
         Route::post('/campaign/export', 'CampaignExportController@export')->name('campaign_export.save');
+        Route::get('/campaign.styles', 'CampaignController@css')->name('campaign.css');
+        Route::get('/campaign_plugin.styles', 'Campaign\CampaignPluginController@css')->name('campaign_plugins.css');
+
+
 
         // Entity quick creator
         Route::get('/entity-creator', [\App\Http\Controllers\EntityCreatorController::class, 'selection'])->name('entity-creator.selection');
@@ -355,21 +402,17 @@ Route::group([
     Route::get('/notifications', 'NotificationController@index')->name('notifications');
     Route::get('/notifications/refresh', 'NotificationController@refresh')->name('notifications.refresh');
 
+    // Third party hooks
+    Route::get('/lfgm-hooks/sync/{uuid}', 'LFGM\HookController@sync')->name('lfgm.sync');
+    Route::post('/lfgm-hooks/sync/{uuid}', 'LFGM\HookController@saveSync')->name('lfgm.syncSave');
+
     // 3rd party
     Route::group(['middleware' => ['auth', 'translator'], 'prefix' => 'translations'], function () {
         Translator::routes();
     });
 
     // Admin/Moderation tools
-    Route::group(['prefix' => 'admin', ['middleware' => ['moderator']]], function () {
-        Route::get('/home', 'Admin\HomeController@index')->name('admin.home');
-        Route::get('/campaigns', 'Admin\CampaignController@index')->name('admin.campaigns.index');
-        //Route::resourc('/faqs', 'Admin\FaqController@index')->name('admin.faqs.index');
-
-        Route::resources([
-            'faqs' => 'Admin\FaqController',
-        ]);
-    });
+    require base_path('routes/admin.php');
 
     // API docs
     Route::group([
@@ -384,6 +427,28 @@ Route::group([
 
 });
 
+// Auth callback without language segment in url
+Route::get('auth/{provider}/callback', 'Auth\AuthController@handleProviderCallback')->name('auth.provider.callback');
+
+Route::group(['prefix' => 'subscription-api'], function () {
+    Route::get('setup-intent', 'Settings\SubscriptionApiController@setupIntent');
+    Route::post('payments', 'Settings\SubscriptionApiController@paymentMethods');
+    Route::get('payment-methods', 'Settings\SubscriptionApiController@getPaymentMethods');
+    Route::post('remove-payment', 'Settings\SubscriptionApiController@removePaymentMethod');
+});
+
 Route::group(['prefix' => 'admin'], function () {
     Voyager::routes();
 });
+
+// Stripe
+Route::post(
+    'stripe/webhook',
+    '\App\Http\Controllers\WebhookController@handleWebhook'
+);
+
+// Language sitemaps
+Route::get('/{locale}/sitemap.xml', 'Front\SitemapController@language')->name('front.sitemap');
+
+// Rss feeds
+Route::feeds();

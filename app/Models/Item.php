@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\Facades\CampaignLocalization;
+use App\Models\Concerns\SimpleSortableTrait;
 use App\Traits\CampaignTrait;
 use App\Traits\ExportableTrait;
 use App\Traits\VisibleTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Class Item
@@ -21,6 +23,12 @@ use App\Traits\VisibleTrait;
  */
 class Item extends MiscModel
 {
+    use CampaignTrait,
+        VisibleTrait,
+        ExportableTrait,
+        SimpleSortableTrait,
+        SoftDeletes;
+
     /**
      * @var array
      */
@@ -42,7 +50,7 @@ class Item extends MiscModel
      * Searchable fields
      * @var array
      */
-    protected $searchableColumns  = ['name', 'type', 'entry', 'price'];
+    protected $searchableColumns  = ['name', 'type', 'entry', 'price', 'size'];
 
     /**
      * Entity type
@@ -63,6 +71,27 @@ class Item extends MiscModel
         'is_private',
         'price',
         'size',
+        'tags',
+        'has_image',
+    ];
+
+    /**
+     * Fields that can be sorted on
+     * @var array
+     */
+    protected $sortableColumns = [
+        'price',
+        'size',
+        'location.name',
+        'character.name',
+    ];
+
+    /**
+     * Casting for order by
+     * @var array
+     */
+    protected $orderCasting = [
+        'price' => 'unsigned'
     ];
 
     /**
@@ -83,23 +112,16 @@ class Item extends MiscModel
         'quests',
     ];
 
-    /**
-     * Traits
-     */
-    use CampaignTrait;
-    use VisibleTrait;
-    use ExportableTrait;
-
     public function tooltip($limit = 250, $stripSpecial = true)
     {
         $tooltip = parent::tooltip($limit, $stripSpecial);
 
         $extra = [];
         if (!empty($this->price)) {
-            $extra[] = __('items.fields.price') . ': ' . $this->price;
+            $extra[] = __('items.fields.price') . ': ' . htmlentities($this->price);
         }
         if (!empty($this->size)) {
-            $extra[] = __('items.fields.size') . ': ' . $this->size;
+            $extra[] = __('items.fields.size') . ': ' . htmlentities($this->size);
         }
         if (!empty($extra)) {
             $tooltip .= '<br /><p>' . implode('<br />', $extra) . '</p>';
@@ -139,14 +161,33 @@ class Item extends MiscModel
      */
     public function quests()
     {
-        return $this->hasManyThrough(
-            'App\Models\Quest',
-            'App\Models\QuestItem',
-            'item_id',
-            'id',
-            'id',
-            'quest_id'
-        );
+        return $this->belongsToMany('App\Models\Quest', 'quest_items')
+            ->using('App\Models\Pivots\QuestItem')
+            ->withPivot('role', 'is_private');
+    }
+
+    /**
+     * @return mixed
+     */
+    public function relatedQuests()
+    {
+        $query = $this->quests()
+            ->orderBy('name', 'ASC')
+            ->with(['characters', 'locations', 'quests']);
+
+        if (!auth()->check() || !auth()->user()->isAdmin()) {
+            $query->where('quest_items.is_private', false);
+        }
+
+        return $query;
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function itemQuests()
+    {
+        return $this->hasMany('App\Models\QuestItem', 'item_id');
     }
 
     /**
@@ -162,9 +203,9 @@ class Item extends MiscModel
      */
     public function menuItems($items = [])
     {
-        $campaign = $this->campaign;
+        $campaign = CampaignLocalization::getCampaign();
 
-        $questCount = $this->quests()->acl()->count();
+        $questCount = $this->quests()->count();
         if ($campaign->enabled('quests') && $questCount > 0) {
             $items['quests'] = [
                 'name' => 'items.show.tabs.quests',
@@ -173,7 +214,7 @@ class Item extends MiscModel
             ];
         }
 
-        $inventoryCount = $this->inventories()->acl()->count();
+        $inventoryCount = $this->inventories()->with('item')->acl()->has('entity')->count();
         if ($inventoryCount > 0) {
             $items['inventories'] = [
                 'name' => 'items.show.tabs.inventories',
@@ -183,5 +224,14 @@ class Item extends MiscModel
         }
 
         return parent::menuItems($items);
+    }
+
+    /**
+     * Get the entity_type id from the entity_types table
+     * @return int
+     */
+    public function entityTypeId(): int
+    {
+        return (int) config('entities.ids.item');
     }
 }

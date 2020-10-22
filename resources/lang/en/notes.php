@@ -18,7 +18,12 @@ return [
         'image'         => 'Image',
         'is_pinned'     => 'Pinned',
         'name'          => 'Name',
+        'note'          => 'Parent Note',
+        'notes'         => 'Sub Notes',
         'type'          => 'Type',
+    ],
+    'helpers'       => [
+        'nested'    => 'Displaying notes that have no parent note first. Click on a note to explore it\'s sub notes.',
     ],
     'hints'         => [
         'is_pinned' => 'Up to 3 notes can be pinned to be displayed on the dashboard.',
@@ -31,6 +36,7 @@ return [
     ],
     'placeholders'  => [
         'name'  => 'Name of the note',
+        'note'  => 'Choose a parent note',
         'type'  => 'Religion, Race, Political system',
     ],
     'show'          => [

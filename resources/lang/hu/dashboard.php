@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'actions'           => [
+        'follow'    => 'Követés',
+        'unfollow'  => 'Követés visszavonása',
+    ],
     'campaigns'         => [
         'manage'    => 'Kampány kezelése',
         'tabs'      => [
@@ -11,7 +15,8 @@ return [
     ],
     'description'       => 'Otthon a kreativitásod számára',
     'helpers'           => [
-        'setup' => 'Állítsd be a kampányod főoldalát!',
+        'follow'    => 'Egy kampány követése esetén megjelenik majd a kampányválasztó menüben (jobbra fent) a saját kampányaid alatt.',
+        'setup'     => 'Állítsd be a kampányod főoldalát!',
     ],
     'latest_release'    => 'Legutóbbi frissítések',
     'notifications'     => [
@@ -45,14 +50,16 @@ return [
         ],
         'title'     => 'Kampány főoldalának beállítása',
         'widgets'   => [
-            'calendar'  => 'Naptár',
-            'preview'   => 'Entitás előnézete',
-            'recent'    => 'Mostanában',
+            'calendar'      => 'Naptár',
+            'preview'       => 'Entitás előnézete',
+            'random'        => 'Véletlen entitás',
+            'recent'        => 'Mostanában',
+            'unmentioned'   => 'Nem említett entitások',
         ],
     ],
     'title'             => 'Főoldal',
     'welcome'           => [
-        'body'      => <<<'TEXT'
+        'body'  => <<<'TEXT'
 Üdvözlünk a Kankában! Létrehoztuk az első kampányodat és bedobtunk pár példa-entitást inspirációként (törölheted őket, amikor csak szeretnéd).
 
 Valószínűleg először hozzá akarsz adni pár saját entitást. Ehhez válassz ki egy kategóriát balról. Azokat a kategóriákat, melyekre nincs szükséged, kikapcsolhatod a kampány beállításainál, elrejtve őket a menüből.
@@ -63,10 +70,9 @@ Néhány tipp az induláshoz:
 - Ha további kérdéseid vannak, vagy csak csevegni szeretnél, lépj be a :discord szerverünkre!
 TEXT
 ,
-        'header'    => 'Üdvözlünk',
     ],
     'widgets'           => [
-        'calendar'  => [
+        'calendar'      => [
             'actions'           => [
                 'next'      => 'Átállítás a következő napra',
                 'previous'  => 'Átállítás az előző napra',
@@ -75,19 +81,38 @@ TEXT
             'previous_events'   => 'Előző',
             'upcoming_events'   => 'Küszöbön álló',
         ],
-        'create'    => [
+        'create'        => [
             'success'   => 'Hozzáadtuk a widget-et a főoldalhoz.',
         ],
-        'delete'    => [
+        'delete'        => [
             'success'   => 'Eltávolítottuk a widget-et a főoldalról.',
         ],
-        'recent'    => [
-            'help'      => 'Csak az utoljára frissített entitást mutasd, de teljes előnézettel',
-            'singular'  => 'Csak az utolsót',
-            'title'     => 'Mostanában módosított',
+        'fields'        => [
+            'width' => 'Szélesség',
         ],
-        'update'    => [
+        'recent'        => [
+            'entity-header' => 'Használd az entitás fejlécet, mint képet',
+            'full'          => 'Teljes',
+            'help'          => 'Csak az utoljára frissített entitást mutasd, de teljes előnézettel',
+            'helpers'       => [
+                'entity-header' => 'Ha az entitásodnak van beállított entitás fejléce (boost-olt kampányok számára elérhető funkció), akkor beállíthatod ezt a widget-et, hogy használja azt a képet, az entitás képe helyett.',
+                'full'          => 'Az entitás teljes bejegyzését jelenítsd meg, az előnézet helyett.',
+            ],
+            'singular'      => 'Csak az utolsót',
+            'tags'          => 'Szűrés a mostanában módosított widget-ek között, meghatározott címkék alapján.',
+            'title'         => 'Mostanában módosított',
+        ],
+        'unmentioned'   => [
+            'title' => 'Nem említett entitások',
+        ],
+        'update'        => [
             'success'   => 'Módosítottuk a widget-et.',
+        ],
+        'widths'        => [
+            '0' => 'Auto',
+            '12'=> 'Teljes',
+            '4' => 'Apró',
+            '6' => 'Fél',
         ],
     ],
 ];

@@ -2,27 +2,45 @@
 
 namespace App\Models;
 
+use App\Facades\CampaignCache;
+use App\Facades\CampaignLocalization;
+use App\Facades\Img;
+use App\Facades\Mentions;
 use App\Models\Concerns\Filterable;
 use App\Models\Concerns\Orderable;
 use App\Models\Concerns\Paginatable;
 use App\Models\Concerns\Searchable;
+use App\Models\Concerns\Sortable;
+use App\Models\Concerns\Tooltip;
 use App\Models\Scopes\SubEntityScopes;
 use App\Traits\AclTrait;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Exception;
 
 /**
  * Class MiscModel
  * @package App\Models
  *
+ * @property integer $id
  * @property integer $campaign_id
  * @property string $name
+ * @property string $type
  * @property string $slug
  * @property Entity $entity
  * @property string $entry
  * @property string $image
+ * @property string $tooltip
+ * @property string $header_image
  * @property boolean $is_private
  * @property [] $nullableForeignKeys
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @mixin \Illuminate\Database\Eloquent\Builder
  */
 abstract class MiscModel extends Model
 {
@@ -31,13 +49,27 @@ abstract class MiscModel extends Model
         Searchable,
         Orderable,
         Filterable,
-        SubEntityScopes;
+        Tooltip,
+        Sortable,
+        SubEntityScopes
+    ;
 
     /**
      * If set to false, the saving observer in MiscObserver will be skipped
      * @var bool
      */
     public $savingObserver = true;
+
+    /**
+     * @var bool
+     */
+    public $forceSavedObserver = false;
+
+    /**
+     * If set to false, the save observer in MiscObserver will be skipped
+     * @var bool
+     */
+    public $saveObserver = true;
 
     /**
      * Eloquence trait for easy search
@@ -61,6 +93,12 @@ abstract class MiscModel extends Model
      * @var array
      */
     protected $filterableColumns = [];
+
+    /**
+     * Fields that can be ordered on
+     * @var array
+     */
+    protected $sortableColumns = [];
 
     /**
      * Casting order for mysql.
@@ -124,60 +162,6 @@ abstract class MiscModel extends Model
     }
 
     /**
-     * Wrapper for short entry
-     * @return mixed
-     */
-    public function tooltip($limit = 250, $stripSpecial = true)
-    {
-        // Always remove tags. ALWAYS.
-        $pureHistory = strip_tags($this->{$this->tooltipField});
-
-        if ($stripSpecial) {
-            $pureHistory = str_replace('"', '\'', $pureHistory);
-//            $pureHistory = str_replace('&gt;', null, $pureHistory);
-//            $pureHistory = str_replace('&lt;', null, $pureHistory);
-            //$pureHistory = htmlentities(htmlspecialchars($pureHistory));
-        }
-
-        $pureHistory = preg_replace("/\s/ui", ' ', $pureHistory);
-        $pureHistory = trim($pureHistory);
-
-        if (!empty($pureHistory)) {
-            if (strlen($pureHistory) > $limit) {
-                return mb_substr($pureHistory, 0, $limit) . '...';
-            }
-        }
-        return $pureHistory;
-    }
-
-    /**
-     * Short tooltip with location name
-     * @return mixed
-     */
-    public function tooltipWithName($limit = 250)
-    {
-        $text = $this->tooltip($limit);
-
-        // e() isn't enough, remove tags too to avoid ><script injections.
-        $name = $this->tooltipName();
-
-        if (empty($text)) {
-            return $name;
-        }
-        return '<h4>' . $name . '</h4>' . $text;
-    }
-
-    /**
-     * Tooltip name
-     * @return string
-     */
-    public function tooltipName(): string
-    {
-        // e() isn't enough, remove tags too to avoid ><script injections.
-        return e(strip_tags($this->name));
-    }
-
-    /**
      * @return mixed
      */
     public function permissions()
@@ -206,20 +190,51 @@ abstract class MiscModel extends Model
 
     /**
      * Get the image (or default image) of an entity
-     * @param bool $thumb
+     * @param int $width = 200
+     * @param int $width = null
+     * @param string $field = 'image'
      * @return string
      */
-    public function getImageUrl($thumb = false, $field = 'image')
+    public function getImageUrl(int $width = 400, int $height = null, string $field = 'image')
     {
         if (empty($this->$field)) {
-            // Patreons have nicer icons
-            if (auth()->check() && auth()->user()->isGoblinPatron()) {
-                return asset('/images/defaults/patreon/' . $this->getTable() . ($thumb ? '_thumb' : null) . '.png');
-            }
-            return asset('/images/defaults/' . $this->getTable() . ($thumb ? '_thumb' : null) . '.jpg');
-        } else {
-            return Storage::url(($thumb ? str_replace('.', '_thumb.', $this->$field) : $this->$field));
+            return $this->getImageFallback($width);
         }
+        return Img::crop($width, (!empty($height) ? $height : $width))->url($this->$field);
+    }
+
+    /**
+     * Get the original image url (for prod: aws link)
+     * @param string $field
+     * @return mixed
+     */
+    public function getOriginalImageUrl(string $field = 'image')
+    {
+        return Storage::url($this->$field);
+    }
+
+    /**
+     * Get the image fallback image
+     * @param int $width
+     * @return string
+     */
+    protected function getImageFallback(int $width = 400): string
+    {
+        // Campaign could have something set up
+        $campaign = CampaignLocalization::getCampaign();
+        // If campaign is empty, we might be calling the api/campaigns of the user.
+        if (empty($campaign) && $this instanceof Campaign) {
+            CampaignCache::campaign($this);
+            $campaign = $this;
+        }
+        if ($campaign->boosted() && Arr::has(CampaignCache::defaultImages(), $this->getEntityType())) {
+            return Img::crop(40, 40)->url(CampaignCache::defaultImages()[$this->getEntityType()]['path']);
+        }
+        // Patreons have nicer icons
+        if (auth()->check() && auth()->user()->isGoblinPatron()) {
+            return asset('/images/defaults/patreon/' . $this->getTable() . ($width !== 400 ? '_thumb' : null) . '.png');
+        }
+        return asset('/images/defaults/' . $this->getTable() . ($width !== 400 ? '_thumb' : null) . '.jpg');
     }
 
     /**
@@ -233,7 +248,7 @@ abstract class MiscModel extends Model
     }
 
     /**
-     * @return mixed
+     * @return string|null (menu links)
      */
     public function getEntityType()
     {
@@ -241,20 +256,17 @@ abstract class MiscModel extends Model
     }
 
     /**
-     * @param string $route
+     * @param string $route = 'show'
      * @return string
+     * @throws Exception
      */
-    public function getLink($route = 'show')
+    public function getLink(string $route = 'show'): string
     {
-        return route($this->entity->pluralType() . '.' . $route, $this->id);
-    }
-
-    /**
-     * @return array
-     */
-    public function filterableColumns()
-    {
-        return $this->filterableColumns;
+        try {
+            return route($this->entity->pluralType() . '.' . $route, $this->id);
+        } catch (Exception $e) {
+            return '#';
+        }
     }
 
     /**
@@ -275,8 +287,12 @@ abstract class MiscModel extends Model
     /**
      * @return bool
      */
-    public function hasEntry()
+    public function hasEntry(): bool
     {
+        $excludedTypes = ['dice_roll', 'conversation', 'attribute_template'];
+        if (in_array($this->getEntityType(), $excludedTypes)) {
+            return false;
+        }
         // If all that's in the entry is two \n, then there is no real content
         return strlen($this->entry) > 2;
     }
@@ -287,38 +303,153 @@ abstract class MiscModel extends Model
      */
     public function menuItems($items = [])
     {
-        $mapPoints = $this->entity->targetMapPoints()->acl()->count();
+        $campaign = CampaignLocalization::getCampaign();
+
+        // Todo: point to the new points
+        $mapPoints = $this->entity->targetMapPoints()->has('location')->count();
         if ($mapPoints > 0) {
             $items['map-points'] = [
                 'name' => 'crud.tabs.map-points',
                 'route' => $this->entity->pluralType() . '.map-points',
-                'count' => $mapPoints
+                'count' => $mapPoints,
+                'icon' => 'fa fa-map-marked',
             ];
+        }
+
+        // Each entity can have relations
+        if (!isset($this->hasRelations) || $this->hasRelations === true) {
+            $items['relations'] = [
+                'name' => 'crud.tabs.relations',
+                'route' => 'entities.relations.index',
+                'count' => $this->entity->relationships()->acl()->count(),
+                'entity' => true,
+                'icon' => 'fa fa-users',
+            ];
+        }
+
+        // Timelines
+        if ((!isset($this->hasTimelines) || $this->hasTimelines === true) && $campaign->enabled('timelines')) {
+            $timelines = $this->entity->timelines()->with('timeline')->has('timeline')->count();
+            if ($timelines > 0) {
+                $items['timelines'] = [
+                    'name' => 'crud.tabs.timelines',
+                    'route' => 'entities.timelines',
+                    'count' => $timelines,
+                    'entity' => true,
+                    'icon' => 'fas fa-hourglass-half',
+                ];
+            }
         }
 
         // Each entity can have an inventory
         $items['inventory'] = [
             'name' => 'crud.tabs.inventory',
             'route' => 'entities.inventory',
-            'count' => $this->entity->inventories()->acl()->count(),
+            'count' => $this->entity->inventories()->has('item')->count(),
             'entity' => true,
+            'icon' => 'ra ra-round-bottom-flask',
         ];
+
+        // Each entity can have abilities
+        if ($campaign->enabled('abilities') && $this->entityTypeId() != config('entities.ids.ability')) {
+            $items['abilities'] = [
+                'name' => 'crud.tabs.abilities',
+                'route' => 'entities.entity_abilities.index',
+                'count' => $this->entity->abilities()->has('ability')->count(),
+                'entity' => true,
+                'icon' => 'ra ra-fire-symbol',
+            ];
+        }
 
         return $items;
     }
 
     /**
      * List of types as suggestions for the type field
-     * @return mixed
+     * @param int $take = 20
+     * @return array
      */
-    public function entityTypeList()
+    public function entityTypeSuggestion(int $take = 20): array
     {
-        return $this->acl()
+        return $this
+            ->select(DB::raw('type, MAX(created_at) as cmat'))
             ->groupBy('type')
             ->whereNotNull('type')
-            ->orderBy('type', 'ASC')
-            ->limit(20)
+            ->orderBy('cmat', 'DESC')
+            ->take($take)
             ->pluck('type')
             ->all();
+    }
+
+    /**
+     * @return mixed
+     */
+    public function entry()
+    {
+        return Mentions::map($this);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getEntryForEditionAttribute()
+    {
+        $text = Mentions::edit($this);
+        return $text;
+    }
+
+    /**
+     * Get the entity link with ajax tooltip
+     * @return string
+     */
+    public function tooltipedLink(): string
+    {
+        if (empty($this->entity)) {
+            return e($this->name);
+        }
+        return '<a class="name" data-toggle="tooltip-ajax" data-id="' . $this->entity->id . '" ' .
+            'data-url="' . route('entities.tooltip', $this->entity->id) . '" href="' .
+            $this->getLink() . '">' .
+            e($this->name) .
+            '</a>';
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getEntityTooltipAttribute()
+    {
+        if ($this->entity) {
+            return $this->entity->tooltip;
+        }
+        return null;
+    }
+
+    /**
+     * Create the model's Entity
+     * @return Entity
+     */
+    public function createEntity(): Entity
+    {
+        $entity = Entity::create([
+            'entity_id' => $this->id,
+            'campaign_id' => $this->campaign_id,
+            'is_private' => $this->is_private,
+            'name' => $this->name,
+            'type' => $this->getEntityType()
+        ]);
+
+        return $entity;
+    }
+
+    /**
+     * Touch a model (update the timestamps) without any observers/events
+     * @return mixed
+     */
+    public function touchSilently()
+    {
+        return static::withoutEvents(function() {
+            return $this->touch();
+        });
     }
 }

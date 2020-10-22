@@ -29,9 +29,14 @@
 
     <section class="features" id="releases">
         <div class="container">
+            @admin
+            <a href="{{ route('voyager.posts.edit', $model) }}" style="float: right;" title="{{ __('crud.edit') }}">
+                <i class="fas fa-pencil-alt"></i>
+            </a>
+            @endadmin
             <h2>{{ $model->title }}</h2>
 
-            <p class="text-muted">
+            <p class="text-muted" title="{{ $model->updated_at }} UTC">
                 {{ trans('releases.post.footer', ['date' => $model->updated_at->diffForHumans(), 'name' => $model->authorId->name]) }}
             </p>
 

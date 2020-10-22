@@ -11,6 +11,7 @@ return [
     'fields'        => [
         'avatar'                    => 'Avatar',
         'email'                     => 'E-Mail',
+        'last_login_share'          => 'Condividi con gli altri membri della campagna l\'ultima volta che mi sono loggato.',
         'name'                      => 'Nome',
         'new_password'              => 'Nuova Password (opzionale)',
         'new_password_confirmation' => 'Conferma Nuova Password',
@@ -18,6 +19,18 @@ return [
         'password'                  => 'Password corrente',
         'settings'                  => 'Impostazioni',
         'theme'                     => 'Tema',
+    ],
+    'newsletter'    => [
+        'links'     => [
+            'community-vote'    => 'Voto della Community',
+            'news'              => 'News',
+        ],
+        'settings'  => [
+            'news'          => 'News - ricevi una notifica quando ci sono :news.',
+            'newsletter'    => 'Newsletter - ricevi la newsletter di Kanka.',
+            'votes'         => 'Voti della Community - ricevi una notifica appena un nuovo :vote è disponibile.',
+        ],
+        'title'     => 'Newsletters',
     ],
     'password'      => [
         'success'   => 'Password aggiornata',
@@ -41,11 +54,13 @@ return [
     ],
     'settings'      => [
         'fields'    => [
+            'advanced_mentions' => 'Menzioni avanzate',
             'date_format'       => 'Formato della data',
             'default_nested'    => 'Vista Nidificata come Predefinita',
             'pagination'        => 'Paginazione (elementi per pagina)',
         ],
         'hints'     => [
+            'advanced_mentions' => 'Se attivata, le menzioni saranno sempre mostrate come [entity:123] quando si modifica un\'entità.',
             'default_nested'    => 'Attiva questa opzione se desideri che la vista nidificzata sia utilizzata come vista di default (quando disponibile).',
         ],
         'success'   => 'Impostazioni aggiornate.',

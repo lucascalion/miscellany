@@ -4,7 +4,9 @@
     'breadcrumbs' => [
         ['url' => route('campaign'), 'label' => $campaign->name],
         trans('campaigns.show.tabs.members')
-    ]
+    ],
+    'canonical' => true,
+    'mainTitle' => false,
 ])
 
 @section('content')

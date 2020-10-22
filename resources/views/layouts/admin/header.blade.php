@@ -8,6 +8,10 @@
 
     <!-- Header Navbar -->
     <nav class="navbar navbar-static-top">
+        <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+            <span class="sr-only">{{ trans('header.toggle_navigation') }}</span>
+        </a>
+
         <!-- Navbar Right Menu -->
         <div class="navbar-custom-menu">
             <ul class="nav navbar-nav">
@@ -39,7 +43,7 @@
                     </ul>
                 </li>
 
-                <? /* added the test because sometimes the session exists but the user isn't authenticated */ ?>
+                <?php /* added the test because sometimes the session exists but the user isn't authenticated */ ?>
                 <li class="dropdown user user-menu">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                         <img src="{{ Auth::user()->getAvatarUrl() }}" class="user-image" alt="{{ trans('header.avatar') }}"/>

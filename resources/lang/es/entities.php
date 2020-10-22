@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'abilities'             => 'Habilidades',
+    'ability'               => 'Habilidad',
     'attribute_template'    => 'Plantilla de atributo',
     'attribute_templates'   => 'Plantillas de atributos',
     'calendar'              => 'Calendario',
@@ -12,9 +14,11 @@ return [
     'conversation'          => 'Conversación',
     'conversations'         => 'Conversaciones',
     'creator'               => [
+        'back'      => 'Volver a la selección',
+        'duplicate' => 'Ya existen otras entidades de este tipo con el mismo nombre.',
         'error'     => 'Ha habido un error con los valores que has introducido. Por favor, revísalos.',
         'helper'    => 'Selecciona el tipo de entidad que quieres crear. Si no aparece ninguna, quiere decir que no tienes permiso para crear entidades en esta campaña.',
-        'success'   => 'Nueva entidad \':link\' creada.',
+        'success'   => 'Nueva entidad ":link" creada.',
         'title'     => 'Nueva entidad',
     ],
     'dice_roll'             => 'Tirada de dados',
@@ -29,8 +33,10 @@ return [
     'journals'              => 'Diarios',
     'location'              => 'Lugar',
     'locations'             => 'Lugares',
-    'menu_link'             => 'Enlace de menú',
-    'menu_links'            => 'Enlaces del menú',
+    'map'                   => 'Mapa',
+    'maps'                  => 'Mapas',
+    'menu_link'             => 'Acceso rápido',
+    'menu_links'            => 'Acceso rápido',
     'note'                  => 'Nota',
     'notes'                 => 'Notas',
     'organisation'          => 'Organización',
@@ -41,4 +47,6 @@ return [
     'races'                 => 'Razas',
     'tag'                   => 'Etiqueta',
     'tags'                  => 'Etiquetas',
+    'timeline'              => 'Línea de tiempo',
+    'timelines'             => 'Líneas de tiempo',
 ];

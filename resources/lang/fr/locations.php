@@ -3,7 +3,7 @@
 return [
     'characters'    => [
         'description'   => 'Personnages qui se trouvent dans ce lieu.',
-        'title'         => 'Personnages situé dans :name',
+        'title'         => 'Personnages situés dans :name',
     ],
     'create'        => [
         'description'   => 'Créer un nouveau lieu',
@@ -18,14 +18,17 @@ return [
         'title'     => 'Modifier Lieu :name',
     ],
     'events'        => [
-        'description'   => 'Evénements qui se sont déroulé dans ce lieu.',
+        'description'   => 'Evénements qui se sont déroulés dans ce lieu.',
         'title'         => 'Evénements du lieu :name',
+    ],
+    'families'      => [
+        'title' => 'Familles du lieu :name',
     ],
     'fields'        => [
         'characters'        => 'Personnages',
         'image'             => 'Image',
         'is_map_private'    => 'Carte Privée',
-        'location'          => 'Lieu',
+        'location'          => 'Lieu Parent',
         'locations'         => 'Lieux',
         'map'               => 'Carte',
         'name'              => 'Nom',
@@ -33,10 +36,13 @@ return [
         'type'              => 'Type',
     ],
     'helpers'       => [
-        'characters'    => 'Afficher tous les personnages dans ce lieu et sous-lieux, ou simplement ceux directement ceux qui sont ici.',
-        'descendants'   => 'Cette liste contient tous les lieux qui sont descendants de celui-ci, pas uniquement ceux directes.',
-        'map'           => 'Ajouter une carte au lieu permet ensuite d\'ajouter des "Points" sur la carte, liant vers d\'autres entités de la campagne.',
-        'nested'        => 'Ce mode de naviguation permet d\'afficher tes lieux de manière imbriquée. Les lieux sans lieu parent seront affichés par défaut. Les lieux possédant des sous-lieux peuvent être cliqués pour afficher ces enfants. Tu peux continuer à cliquer jusqu\'à ce qu\'il n\'y ait plus d\'enfants à voir.',
+        'characters'        => 'Afficher tous les personnages dans ce lieu et sous-lieux, ou seulement ceux qui sont ici.',
+        'descendants'       => 'Cette liste contient tous les lieux descendants de celui-ci, pas uniquement les descendants directs.',
+        'families'          => 'Un lien peut être le siège d\'une puissante famille.',
+        'map'               => 'Ajouter une carte au lieu permet ensuite d\'ajouter des "Points" sur la carte, liant vers d\'autres entités de la campagne.',
+        'map_deprecated_2'  => 'Les cartes ont désormais leur propre module! Les anciennes cartes peuvent toujours être modifiées, mais toutes les nouvelles cartes vont dans le module de Carte.',
+        'nested'            => 'Ce mode de navigation permet d\'afficher tes lieux de manière imbriquée. Les lieux sans lieu parent seront affichés par défaut. Les lieux possédant des sous-lieux peuvent être cliqués pour afficher ces enfants. Tu peux continuer à cliquer jusqu\'à ce qu\'il n\'y ait plus d\'enfants à voir.',
+        'organisations'     => 'Afficher toutes les organisations dans ce lieu et sous-lieux, ou seulement ceux directement ici.',
     ],
     'hints'         => [
         'is_map_private'    => 'Une carte privée est seulement visible aux membres du rôle Admin de la campagne.',
@@ -55,7 +61,7 @@ return [
         'title'         => 'Objets du lieu :name',
     ],
     'journals'      => [
-        'description'   => 'Journaux écrit dans ce lieu.',
+        'description'   => 'Journaux écrits dans ce lieu.',
         'title'         => 'Journaux du lieu :name',
     ],
     'locations'     => [
@@ -64,21 +70,22 @@ return [
     ],
     'map'           => [
         'actions'   => [
-            'admin_mode'    => 'Activer le mode d\'édition',
-            'big'           => 'Vue Complète',
-            'download'      => 'Télécharger',
-            'points'        => 'Modifier les points',
-            'toggle_hide'   => 'Cacher les Points',
-            'toggle_show'   => 'Afficher les Points',
-            'view_mode'     => 'Retour au mode vue',
-            'zoom_in'       => 'Agrandir',
-            'zoom_out'      => 'Dézoomer',
-            'zoom_reset'    => 'Réinitialiser la vue',
+            'admin_mode'        => 'Activer le mode d\'édition',
+            'big'               => 'Vue Complète',
+            'confirm_delete'    => 'Confirmer la suppression de ce point.',
+            'download'          => 'Télécharger',
+            'points'            => 'Modifier les points',
+            'toggle_hide'       => 'Cacher les Points',
+            'toggle_show'       => 'Afficher les Points',
+            'view_mode'         => 'Retour au mode vue',
+            'zoom_in'           => 'Agrandir',
+            'zoom_out'          => 'Dézoomer',
+            'zoom_reset'        => 'Réinitialiser la vue',
         ],
-        'helper'    => 'Appuyes sur la carte pour ajouter un lien vers un lieu, ou appuie sur un lien pour le supprimer.',
+        'helper'    => 'Appuie sur la carte pour ajouter un lien vers un lieu, ou appuie sur un lien pour le supprimer.',
         'helpers'   => [
             'admin' => 'Cliquer pour activer le mode d\'édition qui permet d\'appuyer sur la carte pour ajouter de nouveaux points, appuyer sur des points pour les modifier, ou pour les déplacer.',
-            'info'  => 'Plus d\'infos sur le cartes.',
+            'info'  => 'Plus d\'infos sur les cartes.',
             'label' => 'Ce point est un label. Rien de plus, rien de moins.',
             'view'  => 'Appuyer sur un point pour voir les détails de celui-ci. Utiliser Ctrl+Zoom pour agrandir ou rétrécir la carte.',
         ],
@@ -91,8 +98,8 @@ return [
         'points'    => [
             'empty_label'   => 'Point sans nom',
             'fields'        => [
-                'axis_x'    => 'Axis X',
-                'axis_y'    => 'Axis Y',
+                'axis_x'    => 'Axe X',
+                'axis_y'    => 'Axe Y',
                 'colour'    => 'Couleur de fond',
                 'icon'      => 'Icône',
                 'name'      => 'Label',
@@ -103,7 +110,7 @@ return [
                 'location_or_name'  => 'Un point peut être soit un lieu existant, soit un label.',
             ],
             'icons'         => [
-                'anchor'        => 'Anchre',
+                'anchor'        => 'Ancre',
                 'anvil'         => 'Enclume',
                 'apple'         => 'Pomme',
                 'aura'          => 'Aura',
@@ -114,6 +121,8 @@ return [
                 'bridge'        => 'Pont',
                 'campfire'      => 'Feu de camp',
                 'candle'        => 'Bougie',
+                'capitol'       => 'Capitale',
+                'castle-emblem' => 'Château',
                 'cat'           => 'Chat',
                 'cheese'        => 'Fromage',
                 'cog'           => 'Pignon',
@@ -125,7 +134,7 @@ return [
                 'entity'        => 'Image de l\'entité cible',
                 'fire'          => 'Feu',
                 'flask'         => 'Fiole',
-                'flower'        => 'Fleure',
+                'flower'        => 'Fleur',
                 'horseshoe'     => 'Fer à cheval',
                 'hourglass'     => 'Sablier',
                 'hydra'         => 'Hydre',
@@ -140,7 +149,7 @@ return [
                 'player'        => 'Personnage',
                 'potion'        => 'Potion',
                 'reactor'       => 'Réacteur',
-                'repair'        => 'Réparature',
+                'repair'        => 'Réparation',
                 'sheep'         => 'Mouton',
                 'shield'        => 'Bouclier',
                 'skull'         => 'Crâne',
@@ -153,6 +162,7 @@ return [
                 'tombstone'     => 'Tombe',
                 'torch'         => 'Torche',
                 'tower'         => 'Tour',
+                'vase'          => 'Vase',
                 'water-drop'    => 'Eau',
                 'wooden-sign'   => 'Signalisation',
                 'wrench'        => 'Clé anglaise',
@@ -166,6 +176,7 @@ return [
             'return'        => 'Retour à :name',
             'shapes'        => [
                 'circle'    => 'Cercle',
+                'custom'    => 'Personnalisé',
                 'square'    => 'Carré',
             ],
             'sizes'         => [
@@ -184,9 +195,11 @@ return [
         ],
         'success'   => 'Points sauvegardés.',
     ],
+    'maps'          => [
+        'title' => 'Cartes du lieu :name',
+    ],
     'organisations' => [
-        'description'   => 'Organisations se situant à ce lieu.',
-        'title'         => 'Organisations du lieu :name',
+        'title' => 'Organisations du lieu :name',
     ],
     'panels'        => [
         'map'   => 'Carte',
@@ -205,11 +218,13 @@ return [
         'tabs'          => [
             'characters'    => 'Personnages',
             'events'        => 'Evénements',
+            'families'      => 'Familles',
             'information'   => 'Information',
             'items'         => 'Objets',
             'journals'      => 'Journaux',
             'locations'     => 'Lieux',
             'map'           => 'Carte',
+            'maps'          => 'Cartes',
             'menu'          => 'Menu',
             'organisations' => 'Organisations',
             'quests'        => 'Quêtes',

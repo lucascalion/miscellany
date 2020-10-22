@@ -8,6 +8,7 @@ use App\Models\Campaign;
 use App\Models\MiscModel;
 use App\Services\EntityService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 
 class EntityCreatorController extends Controller
 {
@@ -33,21 +34,7 @@ class EntityCreatorController extends Controller
      */
     public function selection()
     {
-        $entities = [];
-        /** @var Campaign $campaign */
-        $campaign = CampaignLocalization::getCampaign();
-
-        // Loop through the entities, check those enabled in the campaign, and where the user has create access.
-        foreach ($this->entityService->entities([
-            'calendars', 'conversations', 'tags', 'dice_rolls', 'menu_links'
-        ]) as $name => $class) {
-            if ($campaign->enabled($name)) {
-                if (auth()->user()->can('create', $class)) {
-                    $entities[$name] = $class;
-                }
-            }
-        }
-
+        $entities = $this->availableEntities();
         return view('entities.creator.selection', [
             'entities' => $entities
         ]);
@@ -66,7 +53,7 @@ class EntityCreatorController extends Controller
 
         return view('entities.creator.form', [
             'type' => $type,
-            'singularType' => str_singular($type),
+            'singularType' => Str::singular($type),
             'source' => null,
         ]);
     }
@@ -84,12 +71,14 @@ class EntityCreatorController extends Controller
 
         /** @var FormRequest $request */
         // This is dirty. Todo: change? We really need a entity -> icon, name, class, validator service somewhere
-        $requestValidator = '\App\Http\Requests\Store' . ucfirst(str_singular($type));
+        $requestValidator = '\App\Http\Requests\Store' . ucfirst(Str::singular($type));
         $request = app($requestValidator);
         $values = $request->all();
 
         if (!empty($values['entry'])) {
             $values['entry'] = nl2br($values['entry']);
+        } elseif ($values['entity'] == 'notes') {
+            $values['entry'] = '';
         }
 
         /** @var MiscModel $model */
@@ -102,5 +91,30 @@ class EntityCreatorController extends Controller
             'success' => true,
             'message' => __('entities.creator.success', ['link' => link_to($new->getLink(), e($new->name))])
         ]);
+    }
+
+    /**
+     * Build a list of available entities for the quick creator
+     * @return array
+     */
+    protected function availableEntities(): array
+    {
+
+        $entities = [];
+        /** @var Campaign $campaign */
+        $campaign = CampaignLocalization::getCampaign();
+
+        // Loop through the entities, check those enabled in the campaign, and where the user has create access.
+        foreach ($this->entityService->entities([
+            'calendars', 'conversations', 'tags', 'dice_rolls', 'menu_links'
+        ]) as $name => $class) {
+            if ($campaign->enabled($name)) {
+                if (auth()->user()->can('create', $class)) {
+                    $entities[$name] = $class;
+                }
+            }
+        }
+
+        return $entities;
     }
 }

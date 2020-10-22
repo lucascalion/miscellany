@@ -2,14 +2,22 @@
 
 namespace App\Models;
 
+use App\Facades\Mentions;
+use App\Models\Concerns\SimpleSortableTrait;
 use App\Traits\VisibleTrait;
 
-class QuestCharacter extends MiscModel
+/**
+ * Class QuestCharacter
+ * @package App\Models
+ * @property integer $character_id
+ * @property Character $character
+ * @property string $description
+ * @property string $role
+ * @property string $colour
+ * @property integer $impact
+ */
+class QuestCharacter extends QuestElement
 {
-    /**
-     * Traits
-     */
-    use VisibleTrait;
 
     /**
      * ACL Trait config
@@ -26,15 +34,15 @@ class QuestCharacter extends MiscModel
     /**
      * @var array
      */
-    protected $fillable = ['quest_id', 'character_id', 'description', 'is_private'];
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function quest()
-    {
-        return $this->belongsTo('App\Models\Quest', 'quest_id');
-    }
+    protected $fillable = [
+        'quest_id',
+        'character_id',
+        'description',
+        'role',
+        'colour',
+        'impact',
+        'is_private'
+    ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

@@ -3,6 +3,7 @@
 return [
     'actions'       => [
         'add_appearance'    => 'Megjelenés hozzáadása',
+        'add_organisation'  => 'Szervezet hozzáadása',
         'add_personality'   => 'Személyiség hozzáadása',
     ],
     'conversations' => [
@@ -33,6 +34,7 @@ return [
         'image'                     => 'Kép',
         'is_dead'                   => 'Halott',
         'is_personality_visible'    => 'Látható a személyiség',
+        'life'                      => 'Élet',
         'location'                  => 'Helyszín',
         'name'                      => 'Név',
         'physical'                  => 'Fizikum',
@@ -44,6 +46,7 @@ return [
         'type'                      => 'Típus',
     ],
     'helpers'       => [
+        'age'   => 'Összerendelheted ezt az entitást a kampányod egy naptárával, hogy az életkor automatikusan kerüljön számításra. :more.',
         'free'  => 'Hová tűnt a "Szabad" mező? Ha ennek a karakternek van egy, azt áttettük az új jegyzet fülre!',
     ],
     'hints'         => [
@@ -144,5 +147,8 @@ return [
             'quests'        => 'Küldetések',
         ],
         'title'         => ':name karakter',
+    ],
+    'warnings'      => [
+        'personality_hidden'    => 'Nincs jogosultságod szerkeszteni ennek a karakternek a Személyiség jellemzőit.',
     ],
 ];

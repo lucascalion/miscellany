@@ -2,18 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Character;
-use App\Http\Requests\StoreCharacter;
+use App\Datagrids\Filters\LocationFilter;
+use App\Datagrids\Sorters\LocationCharacterSorter;
+use App\Datagrids\Sorters\LocationFamilySorter;
+use App\Datagrids\Sorters\LocationLocationSorter;
 use App\Http\Requests\StoreLocation;
 use App\Models\Location;
-use App\Models\Tag;
 use App\Services\LocationService;
 use App\Traits\TreeControllerTrait;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Session;
 
 class LocationController extends CrudController
 {
@@ -29,15 +27,14 @@ class LocationController extends CrudController
     protected $view = 'locations';
     protected $route = 'locations';
 
-    /**
-     * @var string
-     */
+    /** @var string Model */
     protected $model = \App\Models\Location::class;
 
-    /**
-     * @var LocationService
-     */
+    /** @var LocationService */
     protected $locationService;
+
+    /** @var string Filter */
+    protected $filter = LocationFilter::class;
 
     /**
      * LocationController constructor.
@@ -47,27 +44,6 @@ class LocationController extends CrudController
         parent::__construct();
 
         $this->locationService = $locationService;
-
-        $this->filters = [
-            'name',
-            'type',
-            [
-                'field' => 'parent_location_id',
-                'label' => trans('crud.fields.location'),
-                'type' => 'select2',
-                'route' => route('locations.find'),
-                'placeholder' =>  trans('crud.placeholders.location'),
-                'model' => Location::class,
-            ],
-            [
-                'field' => 'tag_id',
-                'label' => trans('crud.fields.tag'),
-                'type' => 'select2',
-                'route' => route('tags.find'),
-                'placeholder' =>  trans('crud.placeholders.tag'),
-                'model' => Tag::class,
-            ],
-        ];
     }
 
     /**
@@ -183,7 +159,8 @@ class LocationController extends CrudController
      */
     public function characters(Location $location)
     {
-        return $this->menuView($location, 'characters');
+        return $this->datagridSorter(LocationCharacterSorter::class)
+            ->menuView($location, 'characters');
     }
 
 
@@ -204,7 +181,22 @@ class LocationController extends CrudController
      */
     public function locations(Location $location)
     {
-        return $this->menuView($location, 'locations');
+        return $this
+            ->datagridSorter(LocationLocationSorter::class)
+            ->menuView($location, 'locations');
+    }
+
+
+    /**
+     * @param Location $location
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function families(Location $location)
+    {
+        return $this
+            ->datagridSorter(LocationFamilySorter::class)
+            ->menuView($location, 'families');
     }
 
     /**
@@ -235,6 +227,16 @@ class LocationController extends CrudController
     public function journals(Location $location)
     {
         return $this->menuView($location, 'journals');
+    }
+
+    /**
+     * @param Location $location
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function maps(Location $location)
+    {
+        return $this->menuView($location, 'maps');
     }
 
     /**

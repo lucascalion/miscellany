@@ -3,15 +3,15 @@
 return [
     'create'        => [
         'description'   => 'Crear nueva organización',
-        'success'       => 'Organización \':name\' creada.',
-        'title'         => 'Nueva Organización',
+        'success'       => 'Organización ":name" creada.',
+        'title'         => 'Nueva organización',
     ],
     'destroy'       => [
-        'success'   => 'Organización \':name\' borrada.',
+        'success'   => 'Organización ":name" borrada.',
     ],
     'edit'          => [
-        'success'   => 'Organización \':name\' actualizada.',
-        'title'     => 'Editar organización \':name\'',
+        'success'   => 'Organización ":name" actualizada.',
+        'title'     => 'Editar organización ":name"',
     ],
     'fields'        => [
         'image'         => 'Imagen',
@@ -28,7 +28,7 @@ return [
         'nested'        => 'Con la vista anidada, puedes ver tus organizaciones de forma anidada. Las organizaciones que no tengan organización superior se mostrarán por defecto. A las organizaciones con suborganizaciones se les puede hacer click para mostrar sus descendientes. Puedes seguir haciendo click hasta que no haya más descendientes que mostrar.',
     ],
     'index'         => [
-        'add'           => 'Nueva Organización',
+        'add'           => 'Nueva organización',
         'description'   => 'Gestiona las organizaciones de :name.',
         'header'        => 'Organizaciones de :name',
         'title'         => 'Organizaciones',
@@ -39,14 +39,14 @@ return [
         ],
         'create'        => [
             'description'   => 'Añadir miembro a la organización',
-            'success'       => 'Miembro añadido a la organización',
-            'title'         => 'Nuevo miembro para :name',
+            'success'       => 'Miembro añadido a la organización.',
+            'title'         => 'Nuevo miembro de :name',
         ],
         'destroy'       => [
-            'success'   => 'Miembro borrado de la organización',
+            'success'   => 'Miembro borrado de la organización.',
         ],
         'edit'          => [
-            'success'   => 'Miembro actualizado',
+            'success'   => 'Miembro de la organización actualizado.',
             'title'     => 'Actualizar miembro de :name',
         ],
         'fields'        => [
@@ -55,10 +55,9 @@ return [
             'role'          => 'Rol',
         ],
         'helpers'       => [
-            'all_members'       => 'Esta lista contiene todos los personajes que forman parte de esta organización y de todas las organizaciones inferiores.',
-            'direct_members'    => 'Las organizaciones necesitan miembros para funcionar bien. Esta lista contiene todos los personajes que forman parte de esta organización.',
+            'all_members'   => 'Todos los personajes que son miembros de la organización y de los descendientes de esta.',
+            'members'       => 'Todos los personajes que pertenecen a esta organización.',
         ],
-        'hint'          => 'Muchas organizaciones necesitan miembros para funcionar bien.',
         'placeholders'  => [
             'character' => 'Elegir personaje',
             'role'      => 'Líder, Miembro, Maestro de Espías, Septón Supremo...',
@@ -69,7 +68,7 @@ return [
         'title' => 'Organizaciones de :name',
     ],
     'placeholders'  => [
-        'location'  => 'Elegir una localización',
+        'location'  => 'Elegir localización',
         'name'      => 'Nombre de la organización',
         'type'      => 'Culto, banda, Rebelión, Gremio...',
     ],
@@ -80,8 +79,6 @@ return [
     'show'          => [
         'description'   => 'Vista detallada de la organización',
         'tabs'          => [
-            'all_members'   => 'Todos los miembros',
-            'members'       => 'Miembros directos',
             'organisations' => 'Organizaciones',
             'quests'        => 'Misiones',
             'relations'     => 'Relaciones',

@@ -27,7 +27,10 @@ class StoreRelation extends FormRequest
             'owner_id' => 'required|exists:entities,id',
             'target_id' => 'required|exists:entities,id|different:owner_id',
             'relation' => 'required|max:255',
-            'is_private' => 'nullable',
+            'visibility' => 'required',
+            'attitude' => 'min:-100|max:100',
+            'colour' => 'nullable|max:7',
+            'is_star' => 'boolean'
         ];
     }
 }

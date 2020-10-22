@@ -6,7 +6,7 @@ use App\User;
 use App\Models\Character;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class CharacterPolicy extends EntityPolicy
+class CharacterPolicy extends MiscPolicy
 {
     protected $model = 'character';
 
@@ -35,7 +35,6 @@ class CharacterPolicy extends EntityPolicy
      */
     public function organisation(User $user, $entity, $subAction = 'browse')
     {
-        return  $user->campaign->id == $entity->campaign_id &&
-            $this->checkPermission('organisation_' . $subAction, $user, $entity);
+        return  $this->update($user, $entity);
     }
 }

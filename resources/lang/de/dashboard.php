@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'actions'           => [
+        'follow'    => 'Folgen',
+        'unfollow'  => 'Nicht mehr folgen',
+    ],
     'campaigns'         => [
         'manage'    => 'Kampagnen verwalten',
         'tabs'      => [
@@ -11,7 +15,8 @@ return [
     ],
     'description'       => 'Das Zuhause deiner Kreativität',
     'helpers'           => [
-        'setup' => 'Richte dein Kampagnen Dashboard ein.',
+        'follow'    => 'Wenn du einer Kampagne folgst, wird sie im Kampagnenwähler (oben rechts) unter deinen Kampagnen angezeigt.',
+        'setup'     => 'Richte dein Kampagnen Dashboard ein.',
     ],
     'latest_release'    => 'Letztes Release',
     'notifications'     => [
@@ -45,14 +50,16 @@ return [
         ],
         'title'     => 'Kampagnen Dashboard Einrichtung',
         'widgets'   => [
-            'calendar'  => 'Kalender',
-            'preview'   => 'Objekt Vorschau',
-            'recent'    => 'Kürzlich',
+            'calendar'      => 'Kalender',
+            'preview'       => 'Objekt Vorschau',
+            'random'        => 'zufälliges Objekt',
+            'recent'        => 'Kürzlich',
+            'unmentioned'   => 'Unerwähntes Objekt',
         ],
     ],
     'title'             => 'Dashboard',
     'welcome'           => [
-        'body'      => <<<'TEXT'
+        'body'  => <<<'TEXT'
 Willkommen bei Kanka! Deine erste Kampagne wurde erstellt und wir haben zur Inspiration ein paar Beispielobjekte mit angelegt (kannst du jederzeit löschen).
 
 Du willst wahrscheinlich mit ein paar eigenen Objekten starten, also such dir links eine Kategorie aus und leg los. Kategorien, die du nicht brauchst lassen sich in den Kampagnen Einstellungen ausblenden.
@@ -64,10 +71,9 @@ Ein paar Tipps für den Anfang:
 - Wenn du Fragen oder Vorschläge hast - oder einfach nur plaudern willst -, dann schau vorbei auf unserem :discord.
 TEXT
 ,
-        'header'    => 'Willkommen',
     ],
     'widgets'           => [
-        'calendar'  => [
+        'calendar'      => [
             'actions'           => [
                 'next'      => 'Datum auf nächsten Tag ändern',
                 'previous'  => 'Datum auf vorigen Tag ändern',
@@ -76,17 +82,40 @@ TEXT
             'previous_events'   => 'Vorige',
             'upcoming_events'   => 'Bevorstehende',
         ],
-        'create'    => [
+        'create'        => [
             'success'   => 'Widget zum Dashboard hinzugefügt.',
         ],
-        'delete'    => [
+        'delete'        => [
             'success'   => 'Widget vom Dashboard entfernt.',
         ],
-        'recent'    => [
-            'title' => 'Vor kurzem aktualisiert',
+        'fields'        => [
+            'width' => 'Breite',
         ],
-        'update'    => [
+        'recent'        => [
+            'entity-header' => 'Verwenden Sie den Objekt-Header als Bild',
+            'full'          => 'Voll',
+            'help'          => 'Nur das zuletzt aktualisierte Objekt anzeigen, aber eine vollständige Vorschau des Objektes anzeigen',
+            'helpers'       => [
+                'entity-header' => 'Wenn Ihr Objekt über einen Objekt-Header verfügt (erweiterte Kampagnenfunktion), stellen Sie dieses Widget so ein, dass dieses Bild anstelle des Bilds des Objektes verwendet wird.',
+                'full'          => 'Zeigen Sie standardmäßig den Eintrag des gesamten Objektes anstelle einer Vorschau an.',
+            ],
+            'singular'      => 'Einzelnes Objekt',
+            'tags'          => 'Filtern Sie die Liste der zuletzt geänderten Objekte nach bestimmten Tags.',
+            'title'         => 'Vor kurzem aktualisiert',
+        ],
+        'unmentioned'   => [
+            'title' => 'Unerwähnte Objekte',
+        ],
+        'update'        => [
             'success'   => 'Widget angepasst.',
+        ],
+        'widths'        => [
+            '0' => 'automatisch',
+            '12'=> 'Komplett (100%)',
+            '3' => 'winzig (25%)',
+            '4' => 'Klein (33%)',
+            '6' => 'Halb (50%)',
+            '8' => 'Weit (66%)',
         ],
     ],
 ];

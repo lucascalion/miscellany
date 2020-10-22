@@ -1,14 +1,11 @@
 <div class="row">
     <div class="col-md-6">
-        <div class="form-group required">
-            <label>{{ trans('organisations.fields.name') }}</label>
-            {!! Form::text('name', $formService->prefill('name', $source), ['placeholder' => trans('organisations.placeholders.name'), 'class' => 'form-control', 'maxlength' => 191]) !!}
-        </div>
+        @include('cruds.fields.name', ['trans' => 'organisations'])
         @include('cruds.fields.type', ['base' => \App\Models\Organisation::class, 'trans' => 'organisations'])
         <div class="form-group">
             {!! Form::select2(
                 'organisation_id',
-                (isset($model) && $model->organisation ? $model->organisation : $formService->prefillSelect('organisation', $source)),
+                (isset($model) && $model->organisation ? $model->organisation : FormCopy::field('organisation')->select(true, \App\Models\Organisation::class)),
                 App\Models\Organisation::class,
                 true,
                 'organisations.fields.organisation'
@@ -23,14 +20,14 @@
                 {!! Form::members(
                     'id',
                     [
-                        'model' => isset($model) ? $model : $formService->prefillModel($source)
+                        'model' => isset($model) ? $model : FormCopy::model(),
+                        'source' => $source
                     ]
                 ) !!}
             </div>
         @endif
 
         @include('cruds.fields.tags')
-        @include('cruds.fields.attribute_template')
 
         @include('cruds.fields.private')
     </div>

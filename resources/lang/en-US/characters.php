@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'actions'       => [],
     'fields'        => [
         'eye'   => 'Eye color',
     ],

@@ -1,9 +1,12 @@
 <?php
 
 return [
+    'actions'           => [
+        'follow'    => 'Suivre',
+        'unfollow'  => 'Ne plus suivre',
+    ],
     'campaigns'         => [
-        'manage'    => 'Gérer la campagne',
-        'tabs'      => [
+        'tabs'  => [
             'modules'   => ':count modules',
             'roles'     => ':count rôles',
             'users'     => ':count membres',
@@ -11,7 +14,8 @@ return [
     ],
     'description'       => 'Place à la créativité',
     'helpers'           => [
-        'setup' => 'Configurer le tableau de bord de la campagne',
+        'follow'    => 'Suivre une campagne la rend visibile dans le changeur de campagne (en haut à droite) après tes campagnes.',
+        'setup'     => 'Configurer le tableau de bord de la campagne',
     ],
     'latest_release'    => 'Dernière modification',
     'notifications'     => [
@@ -21,21 +25,10 @@ return [
         ],
     ],
     'recent'            => [
-        'add'           => 'Nouveau :name',
-        'no_entries'    => 'Aucun élément de ce type pour l\'instant.',
-        'title'         => 'Modifications récentes sur les :name',
-        'view'          => 'Tous les :name',
+        'title' => 'Modifications récentes sur les :name',
     ],
     'settings'          => [
-        'description'   => 'Personnalisation du tableau de bord',
-        'edit'          => [
-            'success'   => 'Paramètres modifiés.',
-        ],
-        'fields'        => [
-            'helper'        => 'Il est possible changer le comportement du tableau de bord. Cela concerne toutes les campagnes dont le compte est membre.',
-            'recent_count'  => 'Nombre d\'élément récents',
-        ],
-        'title'         => 'Paramètre du tableau de bord',
+        'title' => 'Paramètres du tableau de bord',
     ],
     'setup'             => [
         'actions'   => [
@@ -45,29 +38,17 @@ return [
         ],
         'title'     => 'Configuration du tableau de bord de campagne',
         'widgets'   => [
-            'calendar'  => 'Calendrier',
-            'preview'   => 'Extrait d\'entité',
-            'recent'    => 'Récent',
+            'calendar'      => 'Calendrier',
+            'preview'       => 'Extrait d\'entité',
+            'random'        => 'Entité au hasard',
+            'recent'        => 'Récent',
+            'unmentioned'   => 'Entités non-mentionnées',
         ],
     ],
     'title'             => 'Tableau de bord',
-    'welcome'           => [
-        'body'      => <<<'TEXT'
-Bienvenue sur Kanka! Ta première campagne a été créée et nous avons inclus quelques examples d'entités pour t'inspirer (tu peux les supprimer à tout moment).
-
-Tu voudras probablement commencer par ajouter tes propres entités. Choisi une catégorie sur le menu à gauche pour commencer. Les catégories dont tu n'as pas besoin peuvent être disactivées dans la configuration de la campagne. Désactiver une catégorie la retire du menu.
-
-Voici quelques conseils pour t'aider à commencer:
-- Tu peux écrire @nom dans la description d'une entité pour lier vers d'autres entités. Le lien sera automatiquement mis à jour en cas de modifications de l'entité mentionnée.
-- Tu peux configurer ton profile pour changer de thème ou le nombre d'entité affiché par page. L'accès à la configuration du profile se fait en cliquant en haut à droite. 
-- Il y a des tutoriaux sur :youtube. Les tutoriaux couvrent la thématique des attributs ou comment partager la campagne avec tes amis. La :faq peut aussi t'être utile.
-- Si tu as des questions, suggestions ou simplement envie de discuter, rejoins-nous sur :discord
-TEXT
-,
-        'header'    => 'Bienvenue',
-    ],
+    'welcome'           => [],
     'widgets'           => [
-        'calendar'  => [
+        'calendar'      => [
             'actions'           => [
                 'next'      => 'Changer la date au prochain jour',
                 'previous'  => 'Changer la date au jour précédent',
@@ -76,19 +57,40 @@ TEXT
             'previous_events'   => 'Précédents',
             'upcoming_events'   => 'Prochainement',
         ],
-        'create'    => [
+        'create'        => [
             'success'   => 'Widget ajouté au tableau de bord.',
         ],
-        'delete'    => [
+        'delete'        => [
             'success'   => 'Widget retiré du tableau de bord.',
         ],
-        'recent'    => [
-            'help'      => 'Afficher seulement la dernière entité modifiée avec un aperçu de celle-ci.',
-            'singular'  => 'Singulier',
-            'title'     => 'Récemment modifié',
+        'fields'        => [
+            'width' => 'Largeur',
         ],
-        'update'    => [
+        'recent'        => [
+            'entity-header' => 'Utiliser l\'image d\'en-tête de l\'entité',
+            'full'          => 'Entier',
+            'help'          => 'Afficher seulement la dernière entité modifiée avec un aperçu de celle-ci.',
+            'helpers'       => [
+                'entity-header' => 'Si l\'entité à une image d\'en-tête (limité aux campagnes boostées), le widget utilisera cette image au lieu de l\'image principale de l\'entité.',
+                'full'          => 'Afficher le contenu entier de l\'entité au lieu d\'un aperçu.',
+            ],
+            'singular'      => 'Singulier',
+            'tags'          => 'Filtrer la liste des entités récemment modifiées sur une ou plusieurs étiquettes.',
+            'title'         => 'Récemment modifié',
+        ],
+        'unmentioned'   => [
+            'title' => 'Entité non mentionnées',
+        ],
+        'update'        => [
             'success'   => 'Widget modifié.',
+        ],
+        'widths'        => [
+            '0' => 'Automatique',
+            '12'=> 'Complet',
+            '3' => 'Minuscule (25%)',
+            '4' => 'Petit',
+            '6' => 'Moitié',
+            '8' => 'Large (66%)',
         ],
     ],
 ];

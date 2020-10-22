@@ -1,6 +1,6 @@
 @if(Auth::check() && !isset($exporting))
     @can('update', $model)
-        <a href="{{ route($name . '.edit', ['id' => $model->id]) }}" class="btn btn-primary btn-sm">
+        <a href="{{ route($name . '.edit', [$model]) }}" class="btn btn-primary btn-sm">
             <i class="fa fa-edit" aria-hidden="true"></i> {{ trans('crud.update') }}
         </a>
     @endcan
@@ -22,8 +22,15 @@
                 </a>
             </li>
             @endcan
+            @if ((empty($disableCopyCampaign) || !$disableCopyCampaign) && getenv('APP_ENV') !== 'shadow' && Auth::check() && Auth::user()->hasOtherCampaigns($model->campaign_id))
+                <li>
+                    <a href="{{ route('entities.copy_to_campaign', $model->entity->id) }}">
+                        <i class="fa fa-clone" aria-hidden="true"></i> {{ trans('crud.actions.copy_to_campaign') }}
+                    </a>
+                </li>
+            @endif
 
-            @if ((empty($disableMove) || !$disableMove) && Auth::user()->can('move', $model))
+            @if ((empty($disableMove) || !$disableMove) && getenv('APP_ENV') !== 'shadow' && Auth::user()->can('move', $model))
             <li>
                 <a href="{{ route('entities.move', $model->entity->id) }}">
                     <i class="fa fa-exchange-alt" aria-hidden="true"></i> {{ trans('crud.actions.move') }}
@@ -39,11 +46,11 @@
             </li>
             @endif
             @can('delete', $model)
+            <li class="divider"></li>
             <li>
-                <br />
-                <button class="btn btn-danger btn-flat delete-confirm btn-block" data-name="{{ $model->name }}" data-toggle="modal" data-target="#delete-confirm">
+                <a href="#" class="delete-confirm text-red" data-name="{{ $model->name }}" data-toggle="modal" data-target="#delete-confirm">
                     <i class="fa fa-trash" aria-hidden="true"></i> {{ trans('crud.remove') }}
-                </button>
+                </a>
                 {!! Form::open(['method' => 'DELETE','route' => [$name . '.destroy', $model->id], 'style'=>'display:inline', 'id' => 'delete-confirm-form']) !!}
                 {!! Form::close() !!}
             </li>

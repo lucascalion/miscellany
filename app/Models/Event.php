@@ -5,9 +5,15 @@ namespace App\Models;
 use App\Traits\CampaignTrait;
 use App\Traits\ExportableTrait;
 use App\Traits\VisibleTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Event extends MiscModel
 {
+    use CampaignTrait,
+        VisibleTrait,
+        ExportableTrait,
+        SoftDeletes;
+
     /**
      * @var array
      */
@@ -16,6 +22,7 @@ class Event extends MiscModel
         'name',
         'slug',
         'type',
+        'image',
         'date',
         'entry',
         'is_private',
@@ -33,6 +40,17 @@ class Event extends MiscModel
         'location_id',
         'tag_id',
         'is_private',
+        'tags',
+        'has_image',
+    ];
+
+    /**
+     * Fields that can be sorted on
+     * @var array
+     */
+    protected $sortableColumns = [
+        'date',
+        'location.name',
     ];
 
     /**
@@ -42,13 +60,6 @@ class Event extends MiscModel
     public $nullableForeignKeys = [
         'location_id',
     ];
-
-    /**
-     * Traits
-     */
-    use CampaignTrait;
-    use VisibleTrait;
-    use ExportableTrait;
 
     /**
      * Performance with for datagrids
@@ -111,5 +122,14 @@ class Event extends MiscModel
         }
 
         return parent::detach();
+    }
+
+    /**
+     * Get the entity_type id from the entity_types table
+     * @return int
+     */
+    public function entityTypeId(): int
+    {
+        return (int) config('entities.ids.event');
     }
 }

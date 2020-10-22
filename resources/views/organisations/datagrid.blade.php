@@ -13,17 +13,24 @@
         'name',
         'type',
         [
+            'type' => 'organisation',
+        ],
+        // Location
+        [
+            'type' => 'avatar',
+            'parent' => 'location',
+            'parent_route' => 'locations',
+            'visible' => $campaign->enabled('locations'),
+        ],
+        [
             'type' => 'location',
             'visible' => $campaign->enabled('locations'),
         ],
         [
-            'type' => 'organisation',
-        ],
-        [
-            'label' => trans('organisations.fields.members'),
+            'label' => '<i class="fa fa-users" title="' . trans('organisations.fields.members') . '"></i>',
             'visible' => $campaign->enabled('characters'),
             'render' => function($model) {
-                return $model->members()->count();
+                return $model->members->count();
             },
             'disableSort' => true,
         ],

@@ -4,10 +4,9 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Models\Campaign;
 use App\Models\Entity;
-use App\Http\Requests\StoreTag as Request;
-use App\Http\Resources\EntityTag as Resource;
-use App\Http\Resources\EntityTagCollection as Collection;
-use App\Models\Tag;
+use App\Http\Requests\StoreEntityTag as Request;
+use App\Http\Resources\EntityTagResource as Resource;
+use App\Models\EntityTag;
 
 class EntityTagApiController extends ApiController
 {
@@ -20,7 +19,7 @@ class EntityTagApiController extends ApiController
     {
         $this->authorize('access', $campaign);
         $this->authorize('view', $entity->child);
-        return new Collection($entity->tags);
+        return Resource::collection($entity->entityTags);
     }
 
     /**

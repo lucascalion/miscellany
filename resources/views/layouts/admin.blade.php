@@ -1,16 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
 <head>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-109130951-1"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'UA-109130951-1');
-    </script>
-
+@include('layouts._tracking', ['noads' => true])
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>{{ $title ?? "" }} - {{ config('app.name') }}</title>
@@ -38,6 +29,7 @@
     @yield('styles')
 </head>
 <body class="skin-black sidebar-mini">
+@include('layouts._tracking-fallback')
     <div id="app" class="wrapper">
         <!-- Header -->
         @include('layouts.admin.header')
@@ -135,10 +127,11 @@
         </div>
     </div>
 
+@yield('modals')
+
 
     <!-- Scripts -->
     <script src="{{ mix('js/app.js') }}"></script>
-    <script src="https://cdn.ckeditor.com/4.7.3/standard/ckeditor.js"></script>
     @yield('scripts')
 </body>
 </html>

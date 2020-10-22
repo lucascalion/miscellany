@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'abilities'             => 'Pouvoirs',
+    'ability'               => 'Pouvoir',
     'attribute_template'    => 'Modèle d\'attributs',
     'attribute_templates'   => 'Modèles d\'attributs',
     'calendar'              => 'Calendrier',
@@ -12,15 +14,17 @@ return [
     'conversation'          => 'Conversation',
     'conversations'         => 'Conversations',
     'creator'               => [
-        'error'     => 'Erreure lors de la saisie, prière de vérifier les données.',
-        'helper'    => 'Sélection d\'un type d\'entité. Si aucun type n\'apparait, cela signifie que tu n\'as pas les permissions nécessaires pour créer des entités dans cette campagne.',
+        'back'      => 'Retour à la sélection',
+        'duplicate' => 'Il y a d\'autres entités de ce type avec le même nom.',
+        'error'     => 'Erreur lors de la saisie, prière de vérifier les données.',
+        'helper'    => 'Sélection d\'un type d\'entité. Si aucun type n\'apparaît, cela signifie que tu n\'as pas les permissions nécessaires pour créer des entités dans cette campagne.',
         'success'   => 'Nouvelle entité \':link\' créée.',
         'title'     => 'Nouvelle Entité',
     ],
     'dice_roll'             => 'Jet de dés',
     'dice_rolls'            => 'Jets de dés',
-    'event'                 => 'Evénement',
-    'events'                => 'Evénements',
+    'event'                 => 'Événement',
+    'events'                => 'Événements',
     'families'              => 'Familles',
     'family'                => 'Famille',
     'item'                  => 'Objet',
@@ -29,6 +33,8 @@ return [
     'journals'              => 'Journaux',
     'location'              => 'Lieu',
     'locations'             => 'Lieux',
+    'map'                   => 'Carte',
+    'maps'                  => 'Cartes',
     'menu_link'             => 'Lien personnalisé',
     'menu_links'            => 'Liens personnalisés',
     'note'                  => 'Note',
@@ -41,4 +47,6 @@ return [
     'races'                 => 'Races',
     'tag'                   => 'Etiquette',
     'tags'                  => 'Etiquettes',
+    'timeline'              => 'Chronologie',
+    'timelines'             => 'Chronologies',
 ];

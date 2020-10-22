@@ -18,7 +18,7 @@ return [
         'messages'      => 'Messages',
         'name'          => 'Nom',
         'participants'  => 'Participants',
-        'target'        => 'CIble',
+        'target'        => 'Cible',
         'type'          => 'Type',
     ],
     'hints'         => [
@@ -31,7 +31,11 @@ return [
         'title'         => 'Conversations',
     ],
     'messages'      => [
-        'load_previous' => 'Messages précédants',
+        'destroy'       => [
+            'success'   => 'Message supprimé.',
+        ],
+        'is_updated'    => 'Modifié',
+        'load_previous' => 'Messages précédents',
         'placeholders'  => [
             'message'   => 'Ton message',
         ],

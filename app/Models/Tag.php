@@ -2,18 +2,43 @@
 
 namespace App\Models;
 
+use App\Facades\CampaignLocalization;
+use App\Models\Concerns\SimpleSortableTrait;
+use App\Models\Scopes\TagScopes;
 use App\Traits\CampaignTrait;
 use App\Traits\ExportableTrait;
 use App\Traits\VisibleTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Kalnoy\Nestedset\NodeTrait;
 
+/**
+ * Class Tag
+ * @package App\Models
+ *
+ * @property string $colour
+ */
 class Tag extends MiscModel
 {
+    use CampaignTrait,
+        VisibleTrait,
+        NodeTrait,
+        ExportableTrait,
+        TagScopes,
+        SimpleSortableTrait,
+        SoftDeletes;
+
     /**
      * Searchable fields
      * @var array
      */
-    protected $searchableColumns  = ['name', 'type', 'entry'];
+    protected $searchableColumns  = [
+        'name',
+        'type',
+        'entry',
+        'colour'
+    ];
 
     /**
      * Entity type
@@ -32,6 +57,17 @@ class Tag extends MiscModel
         'type',
         'tag_id',
         'is_private',
+        'colour',
+        'has_image',
+    ];
+
+    /**
+     * Fields that can be sorted on
+     * @var array
+     */
+    protected $sortableColumns = [
+        'tag.name',
+        'colour',
     ];
 
     /**
@@ -41,6 +77,7 @@ class Tag extends MiscModel
         'name',
         'slug',
         'type',
+        'colour',
         'image',
         'entry',
         'tag_id',
@@ -55,24 +92,6 @@ class Tag extends MiscModel
     public $nullableForeignKeys = [
         'tag_id',
     ];
-
-    /**
-     * Traits
-     */
-    use CampaignTrait;
-    use VisibleTrait;
-    use NodeTrait;
-    use ExportableTrait;
-
-    /**
-     * Performance with for datagrids
-     * @param $query
-     * @return mixed
-     */
-    public function scopePreparedWith($query)
-    {
-        return $query->with(['entity', 'tag', 'tag.entity']);
-    }
 
     /**
      * Parent
@@ -101,6 +120,7 @@ class Tag extends MiscModel
     /**
      * Specify parent id attribute mutator
      * @param $value
+     * @throws \Exception
      */
     public function setTagIdAttribute($value)
     {
@@ -124,6 +144,7 @@ class Tag extends MiscModel
 
     /**
      * Get all the children
+     * @param bool $withTags
      * @return array
      */
     public function allChildren($withTags = false)
@@ -160,13 +181,22 @@ class Tag extends MiscModel
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function entityTags()
+    {
+        return $this->hasMany(EntityTag::class);
+    }
+
+    /**
+     * @param array $items
      * @return array
      */
     public function menuItems($items = [])
     {
-        $campaign = $this->campaign;
+        $campaign = CampaignLocalization::getCampaign();
 
-        $count = $this->descendants()->acl()->count();
+        $count = $this->descendants->count();
         if ($count > 0) {
             $items['tags'] = [
                 'name' => 'tags.show.tabs.tags',
@@ -174,7 +204,7 @@ class Tag extends MiscModel
                 'count' => $count
             ];
         }
-        $count = $this->allChildren()->acl()->count();
+        $count = $this->allChildren()->count();
         if ($campaign->enabled('characters')) {
             $items['children'] = [
                 'name' => 'tags.show.tabs.children',
@@ -183,5 +213,82 @@ class Tag extends MiscModel
             ];
         }
         return parent::menuItems($items);
+    }
+
+    /**
+     * Get the entity_type id from the entity_types table
+     * @return int
+     */
+    public function entityTypeId(): int
+    {
+        return (int) config('entities.ids.tag');
+    }
+
+    /**
+     * Get the tag's colour class
+     * @return string colour css class
+     */
+    public function colourClass()
+    {
+        if (!$this->hasColour()) {
+            return 'color-white';
+        }
+
+        $mappings = config('colours.mappings');
+        $colour = $this->colour;
+        if (isset($mappings[$this->colour])) {
+            $colour = $mappings[$this->colour];
+        }
+
+        return 'bg-' . $colour .  ' color-palette color-tag';
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasColour()
+    {
+        return !empty($this->colour);
+    }
+
+    /**
+     * Attach an entity to the tag
+     * @param array $request
+     * @return bool
+     */
+    public function attachEntity(array $request): bool
+    {
+        $entityId = Arr::get($request, 'entity_id');
+        $entity = Entity::with('tags')->findOrFail($entityId);
+
+        // Make sure the tag isn't already attached to the entity
+        foreach ($entity->entityTags as $tag) {
+            if ($tag->tag_id == $this->id) {
+                return true;
+            }
+        }
+
+        $entityTag = EntityTag::create([
+            'tag_id' => $this->id,
+            'entity_id' => $entityId
+        ]);
+
+        return $entityTag !== false;
+    }
+
+    /**
+     * Get the tag's html
+     * @return string
+     */
+    public function html(): string
+    {
+        return '<span class="label ' . ($this->hasColour() ? $this->colourClass() : 'label-default') . '">'
+            . e($this->name) . '</span>';
+    }
+
+    public function bubble(): string
+    {
+        return '<span class="label label-tag-bubble ' . ($this->hasColour() ? $this->colourClass() : 'label-default') . '" title="'
+            . e($this->name) . '">' . ucfirst(substr(e($this->name), 0, 1)) . '</span>';
     }
 }

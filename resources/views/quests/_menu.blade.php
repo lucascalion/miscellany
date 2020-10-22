@@ -1,12 +1,11 @@
-<div class="box">
-    <div class="box-body box-profile">
-        @include ('cruds._image')
+<?php /** @var \App\Models\Quest $model */?>
+@inject('dateRenderer', 'App\Renderers\DateRenderer')
 
-        <h3 class="profile-username text-center">{{ $model->name }}
-            @if ($model->is_private)
-                <i class="fas fa-lock" title="{{ trans('crud.is_private') }}"></i>
-            @endif
-        </h3>
+<div class="box box-solid">
+    <div class="box-body box-profile">
+        @if (!View::hasSection('entity-header'))
+            @include ('cruds._image')
+        @endif
 
         <ul class="list-group list-group-unbordered">
             @if ($model->type)
@@ -15,14 +14,18 @@
                     <br class="clear" />
                 </li>
             @endif
+            @if ($model->date)
+                <li class="list-group-item">
+                    <b>{{ trans('quests.fields.date') }}</b> <span class="pull-right">{{ $dateRenderer->render($model->date) }}</span>
+                    <br class="clear" />
+                </li>
+            @endif
             @if ($model->quest)
                 <li class="list-group-item">
                     <b>{{ trans('quests.fields.quest') }}</b>
                     <span class="pull-right">
-                                <a href="{{ route('quests.show', $model->quest->id) }}" data-toggle="tooltip" title="{{ $model->quest->tooltip() }}">
-                                    {{ $model->quest->name }}
-                                </a>
-                            </span>
+                        {!! $model->quest->tooltipedLink() !!}
+                    </span>
                     <br class="clear" />
                 </li>
             @endif
@@ -30,10 +33,8 @@
                 <li class="list-group-item">
                     <b>{{ trans('quests.fields.character') }}</b>
                     <span  class="pull-right">
-                            <a href="{{ route('characters.show', $model->character->id) }}" data-toggle="tooltip" title="{{ $model->character->tooltip() }}">
-                                {{ $model->character->name }}
-                            </a>
-                        </span>
+                        {!! $model->character->tooltipedLink() !!}
+                    </span>
                     <br class="clear" />
                 </li>
             @endif
@@ -45,12 +46,12 @@
             @endif
 
             @include('entities.components.calendar')
-            @include('entities.components.tags')
-            @include('entities.components.files')
+            @include('entities.components.relations')
+            @include('entities.components.attributes')
+                @include('entities.components.tags')
         </ul>
-
-        @include('.cruds._actions', ['disableMove' => true])
     </div>
 </div>
 
 @include('entities.components.menu')
+@include('entities.components.actions', ['disableMove' => true])

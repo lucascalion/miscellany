@@ -1,12 +1,8 @@
-<div class="box">
+<div class="box box-solid">
     <div class="box-body box-profile">
+        @if (!View::hasSection('entity-header'))
         @include ('cruds._image')
-
-        <h3 class="profile-username text-center">{{ $model->name }}
-            @if ($model->is_private)
-                <i class="fas fa-lock" title="{{ trans('crud.is_private') }}"></i>
-            @endif
-        </h3>
+        @endif
 
         <ul class="list-group list-group-unbordered">
             @if ($model->type)
@@ -24,15 +20,18 @@
             @include('cruds.lists.location')
             @if ($campaign->enabled('characters') && !empty($model->character))
                 <li class="list-group-item">
-                    <b>{{ trans('events.fields.character') }}</b> <a class="pull-right" href="{{ route('characters.show', $model->character_id) }}" data-toggle="tooltip" title="{{ $model->character->tooltip() }}">{{ $model->character->name }}</a>
+                    <b>{{ trans('events.fields.character') }}</b>
+                    <span class="pull-right">
+                        {!! $model->character->tooltipedLink() !!}
+                    </span>
                     <br class="clear" />
                 </li>
             @endif
+            @include('entities.components.relations')
+            @include('entities.components.attributes')
             @include('entities.components.tags')
-            @include('entities.components.files')
         </ul>
-
-        @include('.cruds._actions')
     </div>
 </div>
 @include('entities.components.menu')
+@include('entities.components.actions')

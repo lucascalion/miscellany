@@ -18,7 +18,7 @@
         [
             'label' => trans('locations.fields.locations'),
             'render' => function($model) {
-                return $model->locations()->count();
+                return $model->locations->count();
             },
             'disableSort' => true,
         ],
@@ -64,7 +64,7 @@
         'row' => [
             'data' => [
                 'data-children' => function($model) {
-                    return $model->locations()->count();
+                    return $model->locations->count();
                 }
             ],
         ]

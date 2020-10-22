@@ -17,13 +17,15 @@
             <div class="tab-content">
                 <div class="tab-pane {{ (request()->get('tab') == null ? ' active' : '') }}" id="entry">
                     @if (!empty($model->entry))
-                        <p>{!! $model->entry !!}</p>
+                        <p>{!! $model->entry() !!}</p>
                     @endif
                     @include('cruds.partials.mentions')
                 </div>
                 @include('cruds._panes')
             </div>
         </div>
+        @include('races.panels.characters')
+
         @include('cruds.boxes.history')
     </div>
 </div>

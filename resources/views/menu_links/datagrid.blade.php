@@ -7,6 +7,7 @@
     [
         // Name
         'name',
+        'position',
         // Entity
         [
             'type' => 'avatar',
@@ -19,9 +20,12 @@
             'label' => __('menu_links.fields.entity'),
             'render' => function($model) {
                 if ($model->target) {
-                    return '<a href="' . $model->target->url('show') . '" data-toggle="tooltip" data-html="true" title="' . $model->target->tooltipWithName() . '">' . e($model->target->name) . '</a>';
+                    return $model->target->tooltipedLink();
+                } elseif (empty($model->type)) {
+                    // Link to a no-longer existing entity
+                    return '';
                 }
-                return __('entities.' . str_plural($model->type));
+                return __('entities.' . \Illuminate\Support\Str::plural($model->type));
             },
             'disableSort' => true,
         ],

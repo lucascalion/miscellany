@@ -2,16 +2,18 @@
 
 namespace App\Policies;
 
+use App\Facades\CampaignCache;
 use App\Facades\Identity;
+use App\Facades\UserCache;
 use App\Traits\AdminPolicyTrait;
+use App\Traits\EnvTrait;
 use App\User;
 use App\Models\Campaign;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class CampaignPolicy
 {
-    use HandlesAuthorization;
-    use AdminPolicyTrait;
+    use HandlesAuthorization, AdminPolicyTrait, EnvTrait;
 
     /**
      * Determine whether the user can view the campaign.
@@ -20,7 +22,7 @@ class CampaignPolicy
      * @param  Campaign  $campaign
      * @return mixed
      */
-    public function view(User $user, Campaign $campaign)
+    public function view(User $user, Campaign $campaign): bool
     {
         return $user->campaign->id == $campaign->id;
     }
@@ -32,12 +34,12 @@ class CampaignPolicy
      * @param Campaign $campaign
      * @return bool
      */
-    public function access(User $user, Campaign $campaign)
+    public function access(User $user, Campaign $campaign): bool
     {
         if ($campaign->visibility == 'public') {
             return true;
         }
-        return $campaign->user();
+        return $campaign->userIsMember();
     }
 
     /**
@@ -46,7 +48,7 @@ class CampaignPolicy
      * @param  User  $user
      * @return mixed
      */
-    public function create(User $user)
+    public function create(User $user): bool
     {
         return !Identity::isImpersonating();
     }
@@ -58,10 +60,10 @@ class CampaignPolicy
      * @param  Campaign  $campaign
      * @return mixed
      */
-    public function update(User $user, Campaign $campaign)
+    public function update(User $user, Campaign $campaign): bool
     {
         return
-            $user->campaign->id == $campaign->id && $this->isAdmin($user);
+            $user->campaign->id == $campaign->id && UserCache::user($user)->admin();
     }
 
     /**
@@ -71,10 +73,12 @@ class CampaignPolicy
      * @param  Campaign  $campaign
      * @return mixed
      */
-    public function delete(User $user, Campaign $campaign)
+    public function delete(User $user, Campaign $campaign): bool
     {
         return
-            $user->campaign->id == $campaign->id && $this->isAdmin($user) && $campaign->members()->count() == 1;
+            $user->campaign->id == $campaign->id &&
+            UserCache::user($user)->admin() &&
+            CampaignCache::members()->count() == 1;
     }
 
     /**
@@ -82,9 +86,9 @@ class CampaignPolicy
      * @param Campaign $campaign
      * @return bool
      */
-    public function invite(User $user, Campaign $campaign)
+    public function invite(User $user, Campaign $campaign): bool
     {
-        return $user->campaign->id == $campaign->id && $this->isAdmin($user);
+        return $user->campaign->id == $campaign->id && UserCache::user($user)->admin();
     }
 
     /**
@@ -92,9 +96,9 @@ class CampaignPolicy
      * @param Campaign $campaign
      * @return bool
      */
-    public function setting(User $user, Campaign $campaign)
+    public function setting(User $user, Campaign $campaign): bool
     {
-        return $user->campaign->id == $campaign->id && $this->isAdmin($user);
+        return $user->campaign->id == $campaign->id && UserCache::user($user)->admin();
     }
 
     /**
@@ -102,9 +106,29 @@ class CampaignPolicy
      * @param Campaign $campaign
      * @return bool
      */
-    public function dashboard(User $user, Campaign $campaign)
+    public function recover(User $user, Campaign $campaign): bool
     {
-        return $user->campaign->id == $campaign->id && $this->isAdmin($user);
+        return $user->campaign->id == $campaign->id && UserCache::user($user)->admin();
+    }
+
+    /**
+     * @param User $user
+     * @param Campaign $campaign
+     * @return bool
+     */
+    public function dashboard(User $user, Campaign $campaign): bool
+    {
+        return $user->campaign->id == $campaign->id && UserCache::user($user)->admin();
+    }
+
+    /**
+     * @param User $user
+     * @param Campaign $campaign
+     * @return bool
+     */
+    public function search(User $user, Campaign $campaign): bool
+    {
+        return $user->campaign->id == $campaign->id && UserCache::user($user)->admin();
     }
 
     /**
@@ -116,10 +140,41 @@ class CampaignPolicy
      */
     public function leave(User $user, Campaign $campaign)
     {
-        return $user->campaign->id == $campaign->id &&
+        return
+            $user->campaign->id == $campaign->id &&
             // If we are not the owner, or that we are an owner but there are other owners
-            $campaign->user() && (!$this->isAdmin($user) || count($campaign->admins()) > 1) &&
+            $campaign->userIsMember() && (!UserCache::user($user)->admin() || count($campaign->admins()) > 1) &&
             // We also can't leave a campaign if we are not the real user
             !Identity::isImpersonating();
+    }
+
+    /**
+     * Determine if a user can follow a campaign
+     * @param User|null $user
+     * @param Campaign $campaign
+     * @return bool
+     */
+    public function follow(User $user, Campaign $campaign)
+    {
+        if (empty($user)) {
+            return false;
+        }
+
+        if ($campaign->visibility != Campaign::VISIBILITY_PUBLIC) {
+            return false;
+        }
+
+        return !$campaign->userIsMember();
+    }
+
+    /**
+     * Permission to view the members of a campaign
+     * @param User $user
+     * @param Campaign $campaign
+     * @return bool
+     */
+    public function members(?User $user, Campaign $campaign)
+    {
+        return UserCache::user($user)->admin() || !($campaign->boosted() && $campaign->hide_members);
     }
 }

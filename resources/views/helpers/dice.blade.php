@@ -1,6 +1,5 @@
 @extends('layouts.app', [
     'title' => trans('helpers.title'),
-    'description' => trans('helpers.description'),
     'breadcrumbs' => [
         trans('helpers.link.title')
     ]
@@ -9,7 +8,7 @@
 @section('content')
     <div class="row">
         <div class="col-md-6 col-xs-12">
-            <div class="box">
+            <div class="box box-solid">
                 <div class="box-header with-border">
                     <h4>{{ trans('helpers.dice.title') }}</h4>
                 </div>

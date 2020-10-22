@@ -19,10 +19,11 @@ class DiceRollResultController extends CrudController
     protected $view = 'dice_roll_results';
     protected $route = 'dice_roll_results';
 
-    /**
-     * @var string
-     */
+    /** @var string Model */
     protected $model = \App\Models\DiceRollResult::class;
+
+    /** @var string Filter */
+    protected $filter = DiceRollResult::class;
 
     /**
      * SectionController constructor.
@@ -36,25 +37,6 @@ class DiceRollResultController extends CrudController
             'class' => 'default',
             'label' => '<i class="fa fa-square"></i> ' . trans('dice_rolls.index.actions.dice')
         ];
-
-        $this->filters = [
-            [
-                'field' => 'dice_roll_id',
-                'label' => trans('crud.fields.dice_roll'),
-                'type' => 'select2',
-                'route' => route('dice_rolls.find'),
-                'placeholder' =>  trans('dice_rolls.placeholders.dice_roll'),
-                'model' => DiceRoll::class,
-            ],
-            [
-                'field' => 'diceRoll-character_id',
-                'label' => trans('crud.fields.character'),
-                'type' => 'select2',
-                'route' => route('characters.find'),
-                'placeholder' =>  trans('crud.placeholders.character'),
-                'model' => Character::class,
-            ],
-        ];
     }
     /**
      * Display a listing of the resource.
@@ -65,25 +47,36 @@ class DiceRollResultController extends CrudController
     {
         //$this->authorize('browse', $this->model);
 
-        // Add the is_private filter only for admins.
-        if (Auth::check() && Auth::user()->isAdmin()) {
-            //$this->filters[] = 'is_private';
-        }
-
         $model = new $this->model;
-        $this->filterService->prepare($this->view, request()->all(), $model->filterableColumns());
+        $this->filterService->make($this->view, request()->all(), $model);
         $name = $this->view;
         $actions = $this->indexActions;
         $filters = $this->filters;
         $filterService = $this->filterService;
 
-        $models = $model
+        $base = $model
             ->search(request()->get('search'))
-            ->filter($this->filterService->filters())
-            ->acl()
             ->order($this->filterService->order())
-            ->paginate();
-        return view('cruds.index', compact('models', 'name', 'model', 'actions', 'filters', 'filterService'));
+        ;
+        $unfilteredCount = $base->count();
+        $base = $base->filter($this->filterService->filters());
+        $filteredCount =  $base->count();
+        $filter = false; //new $this->filter;
+        $route = 'dice_roll_results';
+
+        $models = $base->paginate();
+        return view('cruds.index', compact(
+            'models',
+            'name',
+            'model',
+            'actions',
+            'route',
+            'filter',
+            'filters',
+            'filterService',
+            'filteredCount',
+            'unfilteredCount'
+        ));
     }
 
     /**

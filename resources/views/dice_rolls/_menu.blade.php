@@ -1,8 +1,8 @@
-<div class="box">
+<div class="box box-solid">
     <div class="box-body box-profile">
-        @include ('cruds._image')
-
-        <h3 class="profile-username text-center">{{ $model->name }}</h3>
+        @if (!View::hasSection('entity-header'))
+            @include ('cruds._image')
+        @endif
 
         <ul class="list-group list-group-unbordered">
             @if ($campaign->enabled('characters') && $model->character)
@@ -20,11 +20,11 @@
                     <br class="clear" />
                 </li>
             @endif
+            @include('entities.components.relations')
+            @include('entities.components.attributes')
             @include('entities.components.tags')
-            @include('entities.components.files')
         </ul>
-
-        @include('.cruds._actions')
     </div>
 </div>
 @include('entities.components.menu')
+@include('entities.components.actions')

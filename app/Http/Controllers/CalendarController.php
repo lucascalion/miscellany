@@ -2,18 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Datagrids\Filters\CalendarFilter;
+use App\Datagrids\Sorters\CalendarEventSorter;
 use App\Http\Requests\AddCalendarEvent;
 use App\Http\Requests\StoreCalendar;
 use App\Models\Calendar;
 use App\Models\CalendarEvent;
 use App\Models\Tag;
 use App\Services\CalendarService;
+use App\Traits\TreeControllerTrait;
 use Illuminate\Http\Request;
 use Response;
 use Illuminate\Support\Facades\Session;
 
 class CalendarController extends CrudController
 {
+    use TreeControllerTrait;
+    
     /**
      * @var string
      */
@@ -22,30 +27,19 @@ class CalendarController extends CrudController
 
     protected $calendarService;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $model = \App\Models\Calendar::class;
+
+    /** @var string */
+    protected $filter = CalendarFilter::class;
 
     /**
      * CalendarController constructor.
+     * @param CalendarService $calendarService
      */
     public function __construct(CalendarService $calendarService)
     {
         parent::__construct();
-        $this->filters = [
-            'name',
-            'type',
-            [
-                'field' => 'tag_id',
-                'label' => trans('crud.fields.tag'),
-                'type' => 'select2',
-                'route' => route('tags.find'),
-                'placeholder' =>  trans('crud.placeholders.tag'),
-                'model' => Tag::class,
-            ],
-        ];
-
         $this->calendarService = $calendarService;
     }
 
@@ -118,7 +112,7 @@ class CalendarController extends CrudController
             $year = -$year;
         }
 
-        return view('calendars.events.' . ($ajax ? '_' : null) . 'create', compact(
+        return view('calendars.events.create', compact(
             'calendar',
             'day',
             'month',
@@ -176,7 +170,9 @@ class CalendarController extends CrudController
      */
     public function events(Calendar $calendar)
     {
-        return $this->menuView($calendar, 'events');
+        return $this
+            ->datagridSorter(CalendarEventSorter::class)
+            ->menuView($calendar, 'events');
     }
 
     /**
@@ -197,8 +193,7 @@ class CalendarController extends CrudController
         }
 
         return redirect()->back()
-            ->with('success', trans('calendars.edit.date'));
-
+            ->with('success', trans('calendars.edit.today'));
     }
 
     /**

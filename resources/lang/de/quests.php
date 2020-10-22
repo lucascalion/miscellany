@@ -37,6 +37,8 @@ return [
     'fields'        => [
         'character'     => 'Auslöser',
         'characters'    => 'Charaktere',
+        'copy_elements' => 'Kopiere Elemente, die an die Queste angehängt sind',
+        'date'          => 'Datum',
         'description'   => 'Beschreibung',
         'image'         => 'Bild',
         'is_completed'  => 'Abgeschlossen',
@@ -44,8 +46,9 @@ return [
         'locations'     => 'Orte',
         'name'          => 'Name',
         'organisations' => 'Organisationen',
-        'quest'         => 'Elternquest',
-        'quests'        => 'Subquest',
+        'quest'         => 'Übergeordnete Queste',
+        'quests'        => 'Untergeornete Queste',
+        'role'          => 'Rolle',
         'type'          => 'Typ',
     ],
     'helpers'       => [
@@ -121,8 +124,10 @@ return [
         'title'     => 'Organisationen in :name',
     ],
     'placeholders'  => [
+        'date'  => 'Reales Datum der Quest',
         'name'  => 'Name des Quests',
         'quest' => 'Elternquest',
+        'role'  => 'Die Rolle des Objekts in der Quest',
         'type'  => 'Charakterentwicklung, Sidequest, Hauptquest',
     ],
     'show'          => [

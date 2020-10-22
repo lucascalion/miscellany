@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Models\Campaign;
 use App\Models\Location;
 use App\Http\Requests\StoreLocation as Request;
-use App\Http\Resources\Location as Resource;
-use App\Http\Resources\LocationCollection as Collection;
+use App\Http\Resources\LocationResource as Resource;
 
 class LocationApiController extends ApiController
 {
@@ -18,11 +17,10 @@ class LocationApiController extends ApiController
     public function index(Campaign $campaign)
     {
         $this->authorize('access', $campaign);
-        return new Collection($campaign
+        return Resource::collection($campaign
             ->locations()
             ->with(['entity', 'entity.tags', 'entity.notes', 'entity.files',
                 'entity.events', 'entity.relationships', 'entity.attributes'])
-            ->acl()
             ->lastSync(request()->get('lastSync'))
             ->paginate());
     }
@@ -36,6 +34,7 @@ class LocationApiController extends ApiController
     {
         $this->authorize('access', $campaign);
         $this->authorize('view', $location);
+
         return new Resource($location);
     }
 
@@ -50,6 +49,8 @@ class LocationApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('create', Location::class);
         $model = Location::create($request->all());
+        $this->crudSave($model);
+
         return new Resource($model);
     }
 
@@ -64,6 +65,7 @@ class LocationApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('update', $location);
         $location->update($request->all());
+        $this->crudSave($location);
 
         return new Resource($location);
     }

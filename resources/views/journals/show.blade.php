@@ -10,17 +10,17 @@
                     <a href="#entry" data-toggle="tooltip" title="{{ trans('crud.fields.entry') }}">
                         <i class="fa fa-align-justify"></i> <span class="hidden-sm hidden-xs">{{ trans('crud.fields.entry') }}</span></a>
                 </li>
-                @include('cruds._tabs', ['relations' => false])
+                @include('cruds._tabs')
             </ul>
 
             <div class="tab-content">
                 <div class="tab-pane {{ (request()->get('tab') == null ? ' active' : '') }}" id="entry">
                     @if (!empty($model->entry))
-                        <p>{!! $model->entry !!}</p>
+                        <p>{!! $model->entry() !!}</p>
                     @endif
                     @include('cruds.partials.mentions')
                 </div>
-                @include('cruds._panes', ['relations' => false])
+                @include('cruds._panes')
             </div>
         </div>
         @include('cruds.boxes.history')

@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'abilities'             => 'Képességek',
+    'ability'               => 'Képesség',
     'attribute_template'    => 'Tulajdonságsablon',
     'attribute_templates'   => 'Tulajdonságsablonok',
     'calendar'              => 'Naptár',
@@ -12,10 +14,12 @@ return [
     'conversation'          => 'Beszélgetés',
     'conversations'         => 'Beszélgetések',
     'creator'               => [
+        'back'      => 'Vissza a listához',
+        'duplicate' => 'Már létezik ilyen típusú entitás ugyanezzel a névvel.',
         'error'     => 'Valami hiba van az értékeidnél. Kérjük, ellenőrizd újra!',
         'helper'    => 'Válassz ki egy entitástípust a létrehozásához! Ha nem jelennek meg entitások, az jelenti, hogy nincs engedélyed semmilyen entitás létrehozásához ebben a kampányban.',
         'success'   => '\':link\', amit új entitásként létrehoztunk.',
-        'title'     => 'Új entitás',
+        'title'     => 'Új entitás létrehozása',
     ],
     'dice_roll'             => 'Dobás',
     'dice_rolls'            => 'Dobások',
@@ -29,6 +33,8 @@ return [
     'journals'              => 'Naplóbejegyzések',
     'location'              => 'Helyszín',
     'locations'             => 'Helyszínek',
+    'map'                   => 'Térkép',
+    'maps'                  => 'Térképek',
     'menu_link'             => 'Menühivatkozás',
     'menu_links'            => 'Menühivatkozások',
     'note'                  => 'Jegyzet',
@@ -41,4 +47,6 @@ return [
     'races'                 => 'Fajok',
     'tag'                   => 'Címke',
     'tags'                  => 'Címkék',
+    'timeline'              => 'Idővonal',
+    'timelines'             => 'Idővonalak',
 ];

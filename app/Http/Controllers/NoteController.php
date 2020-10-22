@@ -2,43 +2,32 @@
 
 namespace App\Http\Controllers;
 
+use App\Datagrids\Filters\NoteFilter;
 use App\Http\Requests\StoreNote;
 use App\Models\Note;
 use App\Models\Tag;
+use App\Traits\TreeControllerTrait;
 use Illuminate\Support\Facades\Session;
 
 class NoteController extends CrudController
 {
+    /**
+     * Tree / Nested Mode
+     */
+    use TreeControllerTrait;
+    protected $treeControllerParentKey = 'note_id';
+
     /**
      * @var string
      */
     protected $view = 'notes';
     protected $route = 'notes';
 
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $model = \App\Models\Note::class;
 
-    /**
-     * NoteController constructor.
-     */
-    public function __construct()
-    {
-        parent::__construct();
-        $this->filters = [
-            'name',
-            'type',
-            [
-                'field' => 'tag_id',
-                'label' => trans('crud.fields.tag'),
-                'type' => 'select2',
-                'route' => route('tags.find'),
-                'placeholder' =>  trans('crud.placeholders.tag'),
-                'model' => Tag::class,
-            ],
-        ];
-    }
+    /** @var string Filter */
+    protected $filter = NoteFilter::class;
 
     /**
      * Store a newly created resource in storage.

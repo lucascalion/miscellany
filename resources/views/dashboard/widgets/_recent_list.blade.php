@@ -1,18 +1,23 @@
+<?php /** @var \App\Models\Entity $entity */?>
 @foreach ($entities as $entity)
-    <?php if (empty($entity->child)) continue; ?>
-    <div class="entity">
-        <span class="pull-right elapsed" title="{{ $entity->child->updated_at }}">
-            <i class="far fa-clock"></i> {{ $entity->child->updated_at->diffForHumans() }}
-        </span>
+    <div class="flex">
+            <a class="entity-image" style="background-image: url('{{ $entity->avatar(true) }}');"
+               title="{{ $entity->name }}"
+               href="{{ $entity->url() }}"></a>
 
-        <a class="entity-image" style="background-image: url('{{ $entity->child->getImageUrl(true) }}');"
-           title="{{ $entity->name }}"
-           href="{{ $entity->child->getLink() }}"></a>
-
-        <a class="name" data-toggle="tooltip" title="{{ $entity->tooltipWithName() }}" data-html="true" href="{{ $entity->child->getLink() }}">
-            {{ $entity->name }}
-        </a>
+            {!! $entity->tooltipedLink() !!}
+        <div class="blame">
+            {{ !empty($entity->updated_by) ? \App\Facades\UserCache::name($entity->updated_by) : trans('crud.history.unknown') }}<br class="hidden-xs" />
+@can('history', [$entity, $campaign])
+            @if (!empty($entity->updated_at))
+            <span class="elapsed" title="{{ $entity->updated_at }}">
+                {{ $entity->updated_at->diffForHumans() }}
+            </span>
+            @endif
+@endcan
+        </div>
     </div>
+
 @endforeach
 <div class="text-center">
     <a href="#" class="text-center widget-recent-more"

@@ -1,4 +1,9 @@
-<div class="box box-flat">
+<?php
+/**
+ * @var \App\Models\Organisation $model
+ * @var \App\Models\Organisation $r
+ */
+?><div class="box box-solid">
     <div class="box-body">
         <h2 class="page-header with-border">
             {{ trans('organisations.show.tabs.organisations') }}
@@ -6,7 +11,9 @@
 
         <p class="help-block">{{ trans('organisations.helpers.descendants') }}</p>
 
-        <?php $r = $model->descendants()->with('parent')->acl()->orderBy('name', 'ASC')->paginate(); ?>
+        @include('cruds.datagrids.sorters.simple-sorter')
+
+    <?php $r = $model->descendants()->with('parent')->simpleSort($datagridSorter)->paginate(); ?>
         <p class="export-{{ $r->count() === 0 ? 'visible export-hidden' : 'visible' }}">{{ trans('organisations.show.tabs.organisations') }}</p>
         <table id="organisations" class="table table-hover {{ $r->count() === 0 ? 'export-hidden' : '' }}">
             <tbody><tr>
@@ -19,17 +26,17 @@
             @foreach ($r as $model)
                 <tr>
                     <td>
-                        <a class="entity-image" style="background-image: url('{{ $model->getImageUrl(true) }}');" title="{{ $model->name }}" href="{{ route('organisations.show', $model->id) }}"></a>
+                        <a class="entity-image" style="background-image: url('{{ $model->getImageUrl(40) }}');" title="{{ $model->name }}" href="{{ route('organisations.show', $model->id) }}"></a>
                     </td>
                     <td>
-                        <a href="{{ route('organisations.show', $model->id) }}" data-toggle="tooltip" title="{{ $model->tooltip() }}">{{ $model->name }}</a>
+                        {!! $model->tooltipedLink() !!}
                     </td>
                     <td>
                         {{ $model->type }}
                     </td>
                     <td>
                         @if ($model->parent)
-                            <a href="{{ route('organisations.show', $model->parent->id) }}" data-toggle="tooltip" title="{{ $model->parent->tooltip() }}">{{ $model->parent->name }}</a>
+                            {!! $model->parent->tooltipedLink() !!}
                         @endif
                     </td>
                 </tr>

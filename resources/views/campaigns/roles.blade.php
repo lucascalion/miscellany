@@ -4,7 +4,9 @@
     'breadcrumbs' => [
         ['url' => route('campaign'), 'label' => $campaign->name],
         trans('campaigns.show.tabs.roles')
-    ]
+    ],
+    'canonical' => true,
+    'mainTitle' => false,
 ])
 
 @section('content')
@@ -14,10 +16,8 @@
             @include('campaigns._menu', ['active' => 'roles'])
         </div>
         <div class="col-md-9">
-            <div class="box box-flat">
-                <div class="box-body">
-                    @include('campaigns._roles')
-                </div>
+            <div class="box box-solid">
+                @include('campaigns._roles')
             </div>
         </div>
     </div>

@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use App\Facades\CampaignLocalization;
+use App\Models\Concerns\SimpleSortableTrait;
 use App\Traits\CampaignTrait;
 use App\Traits\ExportableTrait;
 use App\Traits\VisibleTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use Kalnoy\Nestedset\NodeTrait;
+use Exception;
 
 /**
  * Class Location
@@ -18,25 +23,24 @@ use Kalnoy\Nestedset\NodeTrait;
  * @var boolean $is_private
  * @var boolean $is_map_private
  * @var integer $parent_location_id
+ * @var Location $parentLocation
+ * @var Map[] $maps
  */
 class Location extends MiscModel
 {
+    use CampaignTrait,
+        VisibleTrait,
+        ExportableTrait,
+        NodeTrait,
+        SimpleSortableTrait,
+        SoftDeletes;
+
     /**
      * Searchable fields
      * @var array
      */
     protected $searchableColumns  = ['name', 'entry', 'type'];
 
-    /**
-     * Fields that can be filtered on
-     * @var array
-     */
-    protected $filterableColumns = [
-        'name',
-        'type',
-        'parent_location_id',
-        'is_private',
-    ];
 
     /**
      * @var array
@@ -55,6 +59,29 @@ class Location extends MiscModel
     ];
 
     /**
+     * Fields that can be filtered on
+     * @var array
+     */
+    protected $filterableColumns = [
+        'name',
+        'type',
+        'parent_location_id',
+        'tag_id',
+        'is_private',
+        'tags',
+        'has_image',
+    ];
+
+    /**
+     * Fields that can be sorted on
+     * @var array
+     */
+    protected $sortableColumns = [
+        'map',
+        'parentLocation.name',
+    ];
+
+    /**
      * Entity type
      * @var string
      */
@@ -68,13 +95,7 @@ class Location extends MiscModel
         'parent_location_id',
     ];
 
-    /**
-     * Traits
-     */
-    use CampaignTrait;
-    use VisibleTrait;
-    use NodeTrait;
-    use ExportableTrait;
+    public $cachedImageFields = ['map'];
 
     /**
      * @return string
@@ -91,7 +112,13 @@ class Location extends MiscModel
      */
     public function scopePreparedWith($query)
     {
-        return $query->with(['entity', 'parentLocation', 'parentLocation.entity']);
+        return $query->with([
+            'entity',
+            'parentLocation',
+            'parentLocation.entity',
+            'locations',
+            'characters'
+        ]);
     }
 
     /**
@@ -137,6 +164,14 @@ class Location extends MiscModel
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
+    public function maps()
+    {
+        return $this->hasMany('App\Models\Map', 'location_id', 'id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function locations()
     {
         return $this->hasMany('App\Models\Location', 'parent_location_id', 'id');
@@ -160,7 +195,8 @@ class Location extends MiscModel
             $locationIds[] = $descendant->id;
         };
 
-        return Character::whereIn('location_id', $locationIds)->with('location');
+        $table = new Character();
+        return Character::whereIn($table->getTable() . '.location_id', $locationIds)->with('location');
     }
 
     /**
@@ -169,6 +205,20 @@ class Location extends MiscModel
     public function families()
     {
         return $this->hasMany('App\Models\Family', 'location_id', 'id');
+    }
+
+    /**
+     * Get all families in the location and descendants
+     */
+    public function allFamilies()
+    {
+        $locationIds = [$this->id];
+        foreach ($this->descendants as $descendant) {
+            $locationIds[] = $descendant->id;
+        };
+
+        $table = new Family();
+        return Family::whereIn($table->getTable() . '.location_id', $locationIds)->with('location');
     }
 
     /**
@@ -188,6 +238,19 @@ class Location extends MiscModel
     }
 
     /**
+     * Get all characters in the location and descendants
+     */
+    public function allOrganisations()
+    {
+        $locationIds = [$this->id];
+        foreach ($this->descendants as $descendant) {
+            $locationIds[] = $descendant->id;
+        };
+
+        return Organisation::whereIn('location_id', $locationIds)->with('location');
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function mapPoints()
@@ -195,20 +258,30 @@ class Location extends MiscModel
         return $this->hasMany('App\Models\MapPoint', 'location_id', 'id');
     }
 
-
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function quests()
     {
-        return $this->hasManyThrough(
-            'App\Models\Quest',
-            'App\Models\QuestLocation',
-            'location_id',
-            'id',
-            'id',
-            'quest_id'
-        );
+        return $this->belongsToMany('App\Models\Quest', 'quest_locations')
+            ->using('App\Models\Pivots\QuestLocation')
+            ->withPivot('role', 'is_private');
+    }
+
+    /**
+     * @return mixed
+     */
+    public function relatedQuests()
+    {
+        $query = $this->quests()
+            ->orderBy('name', 'ASC')
+            ->with(['characters', 'locations', 'quests']);
+
+        if (!auth()->check() || !auth()->user()->isAdmin()) {
+            $query->where('quest_locations.is_private', false);
+        }
+
+        return $query;
     }
 
     /**
@@ -262,28 +335,50 @@ class Location extends MiscModel
      * Quick check to see if the image might be an svg
      * @return bool
      */
-    public function isMapSvg()
+    public function isMapSvg(): bool
     {
         return (substr(strtolower($this->map), -4) == '.svg');
     }
+
+    /**
+     * Get the size of the svg image
+     * @return int
+     */
+    public function mapWidth(): int
+    {
+        if (empty($this->map) || !$this->isMapSvg()) {
+            return 0;
+        }
+        try {
+            $content = Storage::get($this->map);
+            $xml = simplexml_load_string($content);
+
+            return (int) $xml->attributes()->width;
+        } catch (Exception $e) {
+            dd($e->getMessage());
+        }
+
+        return 100;
+    }
+
 
     /**
      * @return array
      */
     public function menuItems($items = [])
     {
-        $campaign = $this->campaign;
+        $campaign = CampaignLocalization::getCampaign();
 
         if (!empty($this->map)) {
             if (!$this->is_map_private || (auth()->check() && auth()->user()->can('map', $this))) {
                 $items['map'] = [
                     'name' => 'locations.show.tabs.map',
-                    'route' => 'locations.map'
+                    'route' => 'locations.map',
                 ];
             }
         }
 
-        $count = $this->descendants()->acl()->count();
+        $count = $this->descendants()->has('location')->count();
         if ($count > 0) {
             $items['locations'] = [
                 'name' => 'locations.show.tabs.locations',
@@ -291,7 +386,17 @@ class Location extends MiscModel
                 'count' => $count
             ];
         }
-        $count = $this->allCharacters()->acl()->count();
+
+        $count = $this->maps()->count();
+        if ($campaign->enabled('maps') && $count > 0) {
+            $items['maps'] = [
+                'name' => 'locations.show.tabs.maps',
+                'route' => 'locations.maps',
+                'count' => $count
+            ];
+        }
+
+        $count = $this->allCharacters()->count();
         if ($campaign->enabled('characters') && $count > 0) {
             $items['characters'] = [
                 'name' => 'locations.show.tabs.characters',
@@ -299,7 +404,15 @@ class Location extends MiscModel
                 'count' => $count
             ];
         }
-        $count = $this->events()->acl()->count();
+        $count = $this->allFamilies()->count();
+        if ($campaign->enabled('families') && $count > 0) {
+            $items['families'] = [
+                'name' => 'locations.show.tabs.families',
+                'route' => 'locations.families',
+                'count' => $count
+            ];
+        }
+        $count = $this->events()->count();
         if ($campaign->enabled('events') && $count > 0) {
             $items['events'] = [
                 'name' => 'locations.show.tabs.events',
@@ -307,7 +420,7 @@ class Location extends MiscModel
                 'count' => $count
             ];
         }
-        $count = $this->items()->acl()->count();
+        $count = $this->items()->count();
         if ($campaign->enabled('items') && $count > 0) {
             $items['items'] = [
                 'name' => 'locations.show.tabs.items',
@@ -315,7 +428,7 @@ class Location extends MiscModel
                 'count' => $count
             ];
         }
-        $count = $this->organisations()->acl()->count();
+        $count = $this->organisations()->count();
         if ($campaign->enabled('organisations') && $count > 0) {
             $items['organisations'] = [
                 'name' => 'locations.show.tabs.organisations',
@@ -323,7 +436,7 @@ class Location extends MiscModel
                 'count' => $count
             ];
         }
-        $count = $this->quests()->acl()->count();
+        $count = $this->relatedQuests()->with('quest')->count();
         if ($campaign->enabled('quests') && $count > 0) {
             $items['quests'] = [
                 'name' => 'locations.show.tabs.quests',
@@ -331,7 +444,7 @@ class Location extends MiscModel
                 'count' => $count
             ];
         }
-        $count = $this->journals()->acl()->count();
+        $count = $this->journals()->count();
         if ($campaign->enabled('journals') && $count > 0) {
             $items['journals'] = [
                 'name' => 'locations.show.tabs.journals',
@@ -359,5 +472,14 @@ class Location extends MiscModel
             return strcmp($a->label(), $b->label());
         });
         return $sortedPoints;
+    }
+
+    /**
+     * Get the entity_type id from the entity_types table
+     * @return int
+     */
+    public function entityTypeId(): int
+    {
+        return (int) config('entities.ids.location');
     }
 }

@@ -11,13 +11,14 @@
         ],
         // Name
         'name',
+        'type',
         [
             'label' => trans('families.fields.family'),
             'field' => 'family.name',
             'visible' => $campaign->enabled('families'),
             'render' => function($model) {
                 if ($model->family) {
-                    return '<a href="' . route('families.show', $model->family->id) . '" data-toggle="tooltip" title="' . $model->family->tooltip() . '">' . e($model->family->name) . '</a>';
+                    return $model->family->tooltipedLink();
                 }
             }
         ],
@@ -33,10 +34,10 @@
             'visible' => $campaign->enabled('locations'),
         ],
         [
-            'label' => trans('families.fields.members'),
+            'label' => '<i class="fa fa-users" title="' . trans('families.fields.members') . '"></i>',
             'visible' => $campaign->enabled('characters'),
             'render' => function($model) {
-                return $model->members()->count();
+                return $model->members->count();
             },
             'disableSort' => true,
         ],

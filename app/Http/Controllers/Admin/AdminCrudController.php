@@ -13,6 +13,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use LogicException;
 
+/**
+ * Class AdminCrudController
+ * @package App\Http\Controllers\Admin
+ */
 class AdminCrudController extends Controller
 {
     /**
@@ -28,6 +32,13 @@ class AdminCrudController extends Controller
      * @var string
      */
     protected $route = '';
+
+    /**
+     * The translation key for the resource
+     *
+     * @var string
+     */
+    protected $trans = '';
 
     /**
      * @var Model
@@ -50,6 +61,12 @@ class AdminCrudController extends Controller
      * @var FilterService
      */
     protected $filterService;
+
+    /**
+     * If the create index action button is available
+     * @var bool
+     */
+    public $createAction = true;
 
     /**
      * Create a new controller instance.
@@ -77,12 +94,14 @@ class AdminCrudController extends Controller
     public function crudIndex(Request $request)
     {
         $model = new $this->model;
-        $this->filterService->prepare($this->view, request()->all(), $model->filterableColumns());
+        $this->filterService->make($this->view, request()->all(), $model);
         $name = $this->view;
         $actions = $this->indexActions;
         $filters = $this->filters;
         $filterService = $this->filterService;
         $route = $this->route;
+        $trans = $this->trans;
+        $createAction = $this->createAction;
 
         $models = $model
             ->preparedWith()
@@ -91,11 +110,14 @@ class AdminCrudController extends Controller
             ->order($this->filterService->order())
             ->admin()
             ->paginate();
+
         return view('admin.cruds.index', compact(
             'models',
             'name',
+            'trans',
             'model',
             'actions',
+            'createAction',
             'filters',
             'filterService',
             'route'
@@ -115,6 +137,7 @@ class AdminCrudController extends Controller
     {
         $params['ajax'] = request()->ajax();
         $params['route'] = $this->route;
+        $params['trans'] = $this->trans;
 
         return view('admin.cruds.create', array_merge(['name' => $this->view], $params));
     }
@@ -132,7 +155,7 @@ class AdminCrudController extends Controller
             $model = new $this->model;
             $new = $model->create($request->all());
 
-            $success = trans($this->view . '.create.success', [
+            $success = trans($this->trans . '.create.success', [
                 'name' => link_to_route(
                     $this->route . '.index',
                     e($new->name),
@@ -147,9 +170,24 @@ class AdminCrudController extends Controller
             return redirect()->route($this->route . '.index')
                 ->with('success_raw', $success);
         } catch (LogicException $exception) {
+            dd($exception);
             $error =  str_replace(' ', '_', strtolower($exception->getMessage()));
             return redirect()->back()->withInput()->with('error', trans('crud.errors.' . $error));
         }
+    }
+
+    /**
+     * @param Model $model
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function crudShow(Model $model, array $with = [])
+    {
+        return view('admin.cruds.show', array_merge([
+            'model' => $model,
+            'view' => $this->view,
+            'trans' => $this->trans,
+            'route' => $this->route,
+        ], $with));
     }
 
     /**
@@ -163,8 +201,9 @@ class AdminCrudController extends Controller
         $name = $this->view;
         $ajax = request()->ajax();
         $route = $this->route;
+        $trans = $this->trans;
 
-        return view('admin.cruds.edit', compact('model', 'name', 'ajax', 'route'));
+        return view('admin.cruds.edit', compact('model', 'name', 'ajax', 'route', 'trans'));
     }
 
     /**
@@ -172,13 +211,14 @@ class AdminCrudController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Character  $character
+     * @param  array $fields
      * @return \Illuminate\Http\Response
      */
-    public function crudUpdate(Request $request, Model $model)
+    public function crudUpdate(Request $request, Model $model, array $fields = [])
     {
         try {
-            $model->update($request->all());
-            $success = trans($this->view . '.edit.success', [
+            $model->update(empty($fields) ? $request->all() : $request->only($fields));
+            $success = trans($this->trans . '.edit.success', [
                 'name' => link_to_route(
                     $this->route . '.index',
                     e($model->name),
@@ -206,6 +246,6 @@ class AdminCrudController extends Controller
 
         $model->delete();
         return redirect()->route($this->route . '.index')
-            ->with('success', trans($this->view . '.destroy.success', ['name' => $model->name]));
+            ->with('success', trans($this->trans . '.destroy.success', ['name' => $model->name]));
     }
 }

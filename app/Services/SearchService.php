@@ -4,7 +4,18 @@ namespace App\Services;
 
 use App\Models\Calendar;
 use App\Models\Campaign;
+use App\Models\Character;
 use App\Models\Entity;
+use App\Models\Event;
+use App\Models\Family;
+use App\Models\Item;
+use App\Models\Location;
+use App\Models\Note;
+use App\Models\Organisation;
+use App\Models\Race;
+use App\Models\Tag;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class SearchService
 {
@@ -44,6 +55,12 @@ class SearchService
     protected $excludedTypes = [];
 
     /**
+     * List of excluded entity ids
+     * @var array
+     */
+    protected $excludeIds = [];
+
+    /**
      * List of the only entity types desired
      * @var array
      */
@@ -54,6 +71,12 @@ class SearchService
      * @var bool
      */
     protected $full = false;
+
+    /**
+     * Set to true to return new entity options
+     * @var bool
+     */
+    protected $new = false;
 
     /**
      * SearchService constructor.
@@ -99,6 +122,16 @@ class SearchService
     }
 
     /**
+     * @param bool $new = false
+     * @return $this
+     */
+    public function new(bool $new = false)
+    {
+        $this->new = $new;
+        return $this;
+    }
+
+    /**
      * @param int $limit
      * @return $this
      */
@@ -115,6 +148,16 @@ class SearchService
     public function exclude($types)
     {
         $this->excludedTypes = is_array($types) ? $types : [$types];
+        return $this;
+    }
+
+    /**
+     * @param array $ids
+     * @return $this
+     */
+    public function excludeIds(array $ids): self
+    {
+        $this->excludeIds = $ids;
         return $this;
     }
 
@@ -151,18 +194,22 @@ class SearchService
         if (!empty($this->onlyTypes)) {
             $availableEntityTypes = $this->onlyTypes;
         }
+        // If a list of excluded types are provided, remove them from the results
+        if (!empty($this->excludedTypes)) {
+            $availableEntityTypes = array_diff($availableEntityTypes, $this->excludedTypes);
+        }
 
         $query = Entity::whereIn('type', $availableEntityTypes);
-        if (empty($this->term)) {
-            $query->orderBy('updated_at', 'DESC');
-        } else {
+        if (!empty($this->term)) {
             $query->where('name', 'like', '%' . $this->term . '%');
         }
 
 
         $query
+            ->whereNotIn('id', $this->excludeIds)
             ->acl()
-            ->limit($this->limit);
+            ->limit($this->limit)
+            ->orderBy('updated_at', 'DESC');
 
         $searchResults = [];
         foreach ($query->get() as $model) {
@@ -171,26 +218,32 @@ class SearchService
                 $img = '';
                 if (!empty($model->child->image)) {
                     $img = '<span class="entity-image-mention" style="background-image: url(\''
-                        . $model->child->getImageUrl(true) . '\');"></span> ';
+                        . $model->child->getImageUrl(40) . '\');"></span> ';
                 }
 
+                $parsedName = str_replace('&#039;', '\'', e($model->name));
                 if ($this->full) {
                     $searchResults[] = [
                         'id' => $model->id,
-                        'fullname' => e($model->name),
+                        'fullname' => $parsedName,
                         'image' => $img,
-                        'name' => e($model->name),
+                        'name' => $parsedName,
                         'type' => __('entities.' . $model->type),
+                        'model_type' => $model->type,
                         'tooltip' => $model->tooltip(),
                         'url' => $model->url()
                     ];
                 } else {
                     $searchResults[] = [
                         'id' => $model->id,
-                        'text' => e($model->name) . ' (' . trans('entities.' . $model->type) . ')'
+                        'text' => $parsedName . ' (' . trans('entities.' . $model->type) . ')'
                     ];
                 }
             }
+        }
+
+        if (empty($searchResults) && $this->new) {
+            return $this->newOptions();
         }
 
         return $searchResults;
@@ -205,7 +258,7 @@ class SearchService
         $searchResults = [];
 
         // Load up the calendars of a campaign to get the month names
-        $calendars = Calendar::acl()->get();
+        $calendars = Calendar::get();
         foreach ($calendars as $calendar) {
             $months = $calendar->months();
 
@@ -220,5 +273,26 @@ class SearchService
         }
 
         return $searchResults;
+    }
+
+    /**
+     * List of elements that can be created on the fly
+     * @return array
+     */
+    protected function newOptions()
+    {
+        $options = [];
+        $term = str_replace('_', ' ', $this->term);
+        foreach ($this->entityService->newEntityTypes() as $type => $class) {
+            $options[] = [
+                'new' => true,
+                'inject' => '[new:' . $type . '|' . $term . ']',
+                'fullname' => $term,
+                'type' => __('entities.new.' . $type),
+                'text' => $term
+            ];
+        }
+
+        return $options;
     }
 }

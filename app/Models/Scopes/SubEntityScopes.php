@@ -3,6 +3,7 @@
 namespace App\Models\Scopes;
 
 use App\Models\Campaign;
+use Illuminate\Database\Eloquent\Builder;
 
 trait SubEntityScopes
 {
@@ -14,7 +15,9 @@ trait SubEntityScopes
      */
     public function scopePreparedWith($query)
     {
-        return $query->with('entity');
+        return $query->with([
+            'entity',
+        ]);
     }
 
     /**
@@ -32,11 +35,20 @@ trait SubEntityScopes
      * @param $lastSync
      * @return mixed
      */
-    public function scopeLastSync($query, $lastSync)
+    public function scopeLastSync(Builder $query, $lastSync)
     {
         if (empty($lastSync)) {
             return $query;
         }
         return $query->where('updated_at', '>', $lastSync);
+    }
+
+    /**
+     * @param $query
+     * @return mixed
+     */
+    public function scopeStandardWith($query)
+    {
+        return $query->with('entity', 'entitiy.tags');
     }
 }

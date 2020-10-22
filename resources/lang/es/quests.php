@@ -23,20 +23,22 @@ return [
     ],
     'create'        => [
         'description'   => 'Crear nueva misión',
-        'success'       => 'Misión \':name\' creada.',
-        'title'         => 'Nueva Misión',
+        'success'       => 'Misión ":name" creada.',
+        'title'         => 'Nueva misión',
     ],
     'destroy'       => [
-        'success'   => 'Misión \':name\' borrada.',
+        'success'   => 'Misión ":name" eliminada.',
     ],
     'edit'          => [
         'description'   => 'Editar misión',
-        'success'       => 'Misión \':name\' actualizada.',
+        'success'       => 'Misión ":name" actualizada.',
         'title'         => 'Editar misión :name',
     ],
     'fields'        => [
         'character'     => 'Instigador',
         'characters'    => 'Personajes',
+        'copy_elements' => 'Copiar elementos vinculados a la misión',
+        'date'          => 'Fecha',
         'description'   => 'Descripción',
         'image'         => 'Imagen',
         'is_completed'  => 'Completada',
@@ -46,6 +48,7 @@ return [
         'organisations' => 'Organizaciones',
         'quest'         => 'Misión superior',
         'quests'        => 'Submisiones',
+        'role'          => 'Rol',
         'type'          => 'Tipo',
     ],
     'helpers'       => [
@@ -55,7 +58,7 @@ return [
         'quests'    => 'Se puede crear una red de misiones entrelazadas usando el campo Misión Superior.',
     ],
     'index'         => [
-        'add'           => 'Nueva Misión',
+        'add'           => 'Nueva misión',
         'description'   => 'Gestiona las misiones de :name.',
         'header'        => 'Misiones de :name',
         'title'         => 'Misiones',
@@ -121,8 +124,10 @@ return [
         'title'     => 'Organizaciones en :name',
     ],
     'placeholders'  => [
+        'date'  => 'Fecha real de la misión',
         'name'  => 'Nombre de la misión',
         'quest' => 'Misión superior',
+        'role'  => 'El papel que juega la entidad en la misión',
         'type'  => 'Historia Principal, Arco de Personaje, Misión Secundaria...',
     ],
     'show'          => [

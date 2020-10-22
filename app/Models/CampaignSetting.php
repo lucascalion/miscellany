@@ -16,6 +16,7 @@ class CampaignSetting extends Model
      * @var array
      */
     protected $fillable = [
+        'abilities',
         'campaign_id',
         'characters',
         'events',
@@ -32,6 +33,8 @@ class CampaignSetting extends Model
         'menu_links',
         'conversations',
         'races',
+        'maps',
+        'timelines',
     ];
 
     /**
@@ -46,7 +49,7 @@ class CampaignSetting extends Model
      * Count the number of activated modules
      * @return int
      */
-    public function countEnabledModules()
+    public function countEnabledModules(): int
     {
         $count = 0;
         foreach ($this->fillable as $col) {

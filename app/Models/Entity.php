@@ -2,13 +2,23 @@
 
 namespace App\Models;
 
+use App\Facades\CampaignLocalization;
+use App\Facades\EntityCache;
+use App\Facades\Img;
+use App\Facades\Mentions;
+use App\Models\Concerns\EntityLogs;
+use App\Models\Concerns\Picture;
 use App\Models\Concerns\Searchable;
+use App\Models\Concerns\SimpleSortableTrait;
+use App\Models\Relations\EntityRelations;
 use App\Models\Scopes\EntityScopes;
 use App\Traits\CampaignTrait;
 use App\Traits\EntityAclTrait;
+use App\Traits\TooltipTrait;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use DateTime;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 use RichanFongdasen\EloquentBlameable\BlameableTrait;
 
 /**
@@ -23,16 +33,17 @@ use RichanFongdasen\EloquentBlameable\BlameableTrait;
  * @property integer $created_by
  * @property integer $updated_by
  * @property boolean $is_private
- * @property Tag[] $tags
- * @property EntityMention[] $mentions
- * @property Inventory[] $inventories
- * @property EntityMention[] $targetMentions
- * @property MiscModel $child
+ * @property boolean $is_attributes_private
+ * @property string $tooltip
+ * @property string $header_image
+ * @property boolean $is_template
+ *
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property Carbon $deleted_at
  */
 class Entity extends Model
 {
-    const TYPE_LOCATION = 'location';
-
     /**
      * @var array
      */
@@ -42,16 +53,26 @@ class Entity extends Model
         'name',
         'type',
         'is_private',
+        'is_attributes_private',
+        'header_image',
+        'is_template',
     ];
 
     /**
      * Traits
      */
     use CampaignTrait,
+        EntityRelations,
         BlameableTrait,
         EntityAclTrait,
         EntityScopes,
-        Searchable;
+        Searchable,
+        TooltipTrait,
+        Picture,
+        SimpleSortableTrait,
+        SoftDeletes,
+        EntityLogs
+    ;
 
     /**
      * Searchable fields
@@ -70,6 +91,12 @@ class Entity extends Model
     ];
 
     /**
+     * True if the user granted themselves permission to read/write when creating the entity
+     * @var bool
+     */
+    public $permissionGrantSelf = false;
+
+    /**
      * Get the child entity
      * @return \Illuminate\Database\Eloquent\Relations\HasMany|\Illuminate\Database\Eloquent\Relations\HasOne
      */
@@ -79,160 +106,32 @@ class Entity extends Model
             return $this->attributeTemplate();
         } elseif ($this->type == 'dice_roll') {
             return $this->diceRoll();
+        } else {
+            return $this->{$this->type}();
+        }
+    }
+
+    /**
+     * Child attribute
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany|\Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function getChildAttribute()
+    {
+        return EntityCache::child($this);
+    }
+
+    /**
+     * @return Entity
+     */
+    public function reloadChild()
+    {
+        if ($this->type == 'attribute_template') {
+            return $this->load('attributeTemplate');
+        } elseif ($this->type == 'dice_roll') {
+            return $this->load('diceRoll');
         }
 
-        return $this->{$this->type}();
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function attributes()
-    {
-        return $this->hasMany('App\Models\Attribute', 'entity_id', 'id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function attributeTemplate()
-    {
-        return $this->hasOne('App\Models\AttributeTemplate', 'id', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    public function character()
-    {
-        return $this->hasOne('App\Models\Character', 'id', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    public function diceRoll()
-    {
-        return $this->hasOne('App\Models\DiceRoll', 'id', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    public function event()
-    {
-        return $this->hasOne('App\Models\Event', 'id', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    public function family()
-    {
-        return $this->hasOne('App\Models\Family', 'id', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    public function item()
-    {
-        return $this->hasOne('App\Models\Item', 'id', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    public function journal()
-    {
-        return $this->hasOne('App\Models\Journal', 'id', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    public function location()
-    {
-        return $this->hasOne('App\Models\Location', 'id', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    public function note()
-    {
-        return $this->hasOne('App\Models\Note', 'id', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    public function organisation()
-    {
-        return $this->hasOne('App\Models\Organisation', 'id', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    public function quest()
-    {
-        return $this->hasOne('App\Models\Quest', 'id', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
-     */
-    public function calendar()
-    {
-        return $this->hasOne('App\Models\Calendar', 'id', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\hasOne
-     */
-    public function tag()
-    {
-        return $this->hasOne('App\Models\Tag', 'id', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
-     */
-    public function tags()
-    {
-        return $this->belongsToMany(
-            'App\Models\Tag',
-            'entity_tags',
-            'entity_id',
-            'tag_id',
-            'id',
-            'id'
-        );
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\hasOne
-     */
-    public function inventories()
-    {
-        return $this->hasMany('App\Models\Inventory', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\hasOne
-     */
-    public function conversation()
-    {
-        return $this->hasOne('App\Models\Conversation', 'id', 'entity_id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\hasOne
-     */
-    public function race()
-    {
-        return $this->hasOne('App\Models\Race', 'id', 'entity_id');
+        return $this->load($this->type);
     }
 
     /**
@@ -269,14 +168,67 @@ class Entity extends Model
      */
     public function tooltipWithName()
     {
-        $text = $this->tooltip();
-        $name = e(strip_tags($this->child->name));
-        if (empty($text)) {
-            return $name;
-        }
-        // Replace double quotes with real quotes again, as they break tinymce
-        return '<h4>' . $name . '</h4>' . str_replace('&amp;quot;', '"', $text);
+        return $this->child ? $this->child->tooltipWithName(250, $this->tags) : null;
     }
+
+    /**
+     * Full tooltip used for ajax calls
+     * @return string|null
+     */
+    public function fullTooltip()
+    {
+        if (!$this->child) {
+            return null;
+        }
+
+        $avatar = $text = null;
+
+        if ($this->campaign->boosted()) {
+            $boostedTooltip = strip_tags($this->tooltip);
+            if (!empty(trim($boostedTooltip))) {
+                $text = Mentions::mapEntity($this);
+                $text = strip_tags($text);
+            }
+            if ($this->campaign->tooltip_image) {
+                $avatar = '<div class=\'entity-image\' style=\'background-image: url(' . $this->child->getImageUrl(60) . ');\'></div>';
+            }
+        }
+        if (empty($text)) {
+            $text = Str::limit($this->child->entry(), 500);
+            $text = strip_tags($text);
+        }
+
+        $name = '<span class="entity-name">' . $this->child->tooltipName() . '</span>';
+        $subtitle = $this->child->tooltipSubtitle();
+        if (!empty($subtitle)) {
+            $subtitle = "<span class='entity-subtitle'>$subtitle</span>";
+        }
+        $text = $this->child->tooltipAddTags($text, $this->tags);
+
+        return "<div class='entity-header'>$avatar<div class='entity-names'>" . $name . $subtitle . '</div></div>' . $text;
+    }
+
+    /**
+     * Preview of the entity with mapped mentions. For map markers
+     * @return string
+     */
+    public function mappedPreview(): string
+    {
+        if (empty($this->child)) {
+            return '';
+        }
+        $campaign = CampaignLocalization::getCampaign();
+        if ($campaign->boosted()) {
+            $boostedTooltip = strip_tags($this->tooltip);
+            if (!empty(trim($boostedTooltip))) {
+                $text = Mentions::mapEntity($this);
+                return (string) strip_tags($text);
+            }
+        }
+        $text = Str::limit($this->child->entry(), 500);
+        return (string) strip_tags($text);
+    }
+
 
     /**
      * @param string $action
@@ -284,127 +236,91 @@ class Entity extends Model
      */
     public function url($action = 'show', $tab = null)
     {
-        if ($action == 'index') {
-            return route($this->pluralType() . '.index');
+        try {
+            if ($action == 'index') {
+                return route($this->pluralType() . '.index');
+            }
+            if (!empty($tab)) {
+                return route($this->pluralType() . '.' . $action, [$this->entity_id, '#' . $tab]);
+            }
+            return route($this->pluralType() . '.' . $action, $this->entity_id);
+        } catch (\Exception $e) {
+            return route('dashboard');
         }
-        if (!empty($tab)) {
-            return route($this->pluralType() . '.' . $action, [$this->child->id, '#' . $tab]);
-        }
-        return route($this->pluralType() . '.' . $action, $this->child->id);
     }
 
     /**
      * @return string
      */
-    public function pluralType()
+    public function pluralType(): string
     {
-        if ($this->type == 'family') {
-            return 'families';
+        return Str::plural($this->type);
+    }
+
+    /**
+     * Get the entity's type id
+     * @return \Illuminate\Config\Repository|mixed
+     */
+    public function typeId()
+    {
+        return config('entities.ids.' . $this->type);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function starredAttributes()
+    {
+        return $this->attributes()->stared()->ordered();
+    }
+
+    /**
+     * @return mixed
+     */
+    public function starredRelations()
+    {
+        return $this->relationships()
+            ->stared()
+            ->ordered()
+            ->with('target')
+            ->has('target')
+            ->acl();
+    }
+
+    /**
+     * Get the image (or default image) of an entity
+     * @param int $width = 200
+     * @param int $height = null (null takes width)
+     * @return string
+     */
+    public function getImageUrl(int $width = 400, $height = null, $field = 'header_image'): string
+    {
+        if (empty($this->$field)) {
+            return '';
         }
-        return $this->type . 's';
+
+        return Img::resetCrop()->crop($width, $height ?? $width)->url($this->$field);
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * If an entity has entity files
+     * @return bool
      */
-    public function relationships()
+    public function hasFiles(): bool
     {
-        return $this->hasMany('App\Models\Relation', 'owner_id', 'id');
+        return $this->type != 'menu_links';
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function targetRelationships()
-    {
-        return $this->hasMany('App\Models\Relation', 'target_id', 'id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function notes()
-    {
-        return $this->hasMany('App\Models\EntityNote', 'entity_id', 'id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function files()
-    {
-        return $this->hasMany('App\Models\EntityFile', 'entity_id', 'id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function events()
-    {
-        return $this->hasMany('App\Models\EntityEvent', 'entity_id', 'id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function logs()
-    {
-        return $this->hasMany('App\Models\EntityLog', 'entity_id', 'id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function permissions()
-    {
-        return $this->hasMany('App\Models\CampaignPermission', 'entity_id', 'id');
-    }
-
-    /**
-     * List of entities that mention this entity
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function mentions()
-    {
-        return $this->hasMany('App\Models\EntityMention', 'entity_id', 'id');
-    }
-
-    /**
-     * List of entities that mention this entity
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function targetMentions()
-    {
-        return $this->hasMany('App\Models\EntityMention', 'target_id', 'id');
-    }
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function targetMapPoints()
-    {
-        return $this->hasMany('App\Models\MapPoint', 'target_entity_id', 'id');
-    }
-
-    /**
-     * @param $query
+     * Touch a model (update the timestamps) without any observers/events
      * @return mixed
      */
-    public function scopeTop($query)
+    public function touchSilently()
     {
-        return $query
-            ->select('*', DB::raw('count(id) as cpt'))
-            ->groupBy('type')
-            ->orderBy('cpt', 'desc');
-    }
-
-    /**
-     * @param $query
-     * @return mixed
-     */
-    public function scopeRecentlyModified($query)
-    {
-        return $query
-            ->orderBy('updated_at', 'desc');
+        return static::withoutEvents(function() {
+            // Still logg who edited the entity
+            $this->updated_by = auth()->user()->id;
+            return $this->touch();
+        });
     }
 }

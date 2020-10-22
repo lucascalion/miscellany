@@ -26,11 +26,11 @@
         ],
         [
             'label' => trans('crud.fields.character'),
-            'field' => 'character.name',
+            'field' => 'diceRoll.character.name',
             'visible' => $campaign->enabled('characters'),
             'render' => function($model) {
                 if ($model->diceRoll->character) {
-                    return '<a href="' . route('characters.show', $model->diceRoll->character->id) . '" data-toggle="tooltip" title="' . $model->diceRoll->character->tooltip() . '">' . e($model->diceRoll->character->name) . '</a>';
+                    return $model->diceRoll->character->tooltipedLink();
                 }
             }
         ],

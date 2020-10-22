@@ -1,28 +1,33 @@
 @extends('layouts.app', [
     'title' => trans('campaigns.create.title'),
-    'description' => trans('campaigns.create.description'),
-    'breadcrumbs' => [
+    'breadcrumbs' => $start ? false : [
         ['url' => route('campaigns.index'), 'label' => trans('campaigns.index.title')],
         trans('crud.create')
-    ]
+    ],
 ])
 
+@section('fullpage-form')
+    {!! Form::open([
+        'route' => ($start ? 'start' : 'campaigns.store'),
+        'enctype' => 'multipart/form-data',
+        'method' => 'POST',
+        'data-shortcut' => '1',
+        'class' => 'entity-form',
+    ]) !!}
+@endsection
+
 @section('content')
-    <div class="row">
-        <div class="{{ $start ? "col-lg-8 col-md-10 col-sm-12" : "col-md-12" }}">
-            @include('partials.errors')
+    @include('partials.errors')
+    @include('campaigns.forms.' . ($start ? 'start' : 'standard'))
+@endsection
 
-            {!! Form::open([
-                'route' => ($start ? 'start' : 'campaigns.store'),
-                'enctype' => 'multipart/form-data',
-                'method' => 'POST',
-                'data-shortcut' => '1'
-            ]) !!}
-                @include('campaigns._form')
-            {!! Form::close() !!}
-
-        </div>
-    </div>
+@section('fullpage-form-end')
+    {!! Form::close() !!}
 @endsection
 
 @include('editors.editor')
+
+@section('scripts')
+    @parent
+    <script src="{{ mix('js/campaign.js') }}" defer></script>
+@endsection

@@ -5,10 +5,8 @@
  */
 require('./bootstrap');
 
-/**
- * Notifications: List and Count selector, and seconds for the timeout to refresh the list
- */
-var notificationList, notificationCount, notificationRefreshTimeout = 60 * 1000;
+import select2 from './components/select2.js';
+import deleteConfirm from './components/delete-confirm.js';
 
 $(document).ready(function() {
 
@@ -16,13 +14,19 @@ $(document).ready(function() {
     // for mobiles, namely the tooltip tool.
     window.kankaIsMobile = window.matchMedia("only screen and (max-width: 760px)");
     if (!window.kankaIsMobile.matches) {
-        $('[data-toggle="tooltip"]').tooltip();
+        initTooltips();
     }
 
-    $('[data-toggle="popover"]').popover();
+    $('[data-toggle="popover"]').popover({
+        sanitize: false,
+    });
+
 
     initSelect2();
+    initSpectrum();
     initCheckboxSwitch();
+    initCopyToClipboard();
+    initSidebar();
 
     // Open select2 dropdowns on focus. Don't add this in initSelect2 since we only need this
     // binded once.
@@ -40,6 +44,16 @@ $(document).ready(function() {
                 autoclose: true,
                 format: 'yyyy-mm-dd',
                 todayHighlight: true
+            });
+        });
+    }
+
+    if ($('.datetime-picker').length > 0) {
+        $.each($('.datetime-picker'), function (index) {
+            // instance, using default configuration.
+            $(this).datetimepicker({
+                sideBySide: true,
+                format: 'YYYY-MM-DD HH:mm:00'
             });
         });
     }
@@ -109,27 +123,7 @@ $(document).ready(function() {
 
 
     // Treeview for locations
-    var treeViewLoader = $('#locations-treeview');
-    if (treeViewLoader.length > 0) {
-        treeViewInit('locations');
-    }
-
-    // Treeview for tags
-    if ($('#tags-treeview').length > 0) {
-        treeViewInit('tags');
-    }
-    if ($('#quests-treeview').length > 0) {
-        treeViewInit('quests');
-    }
-    if ($('#organisations-treeview').length > 0) {
-        treeViewInit('organisations');
-    }
-    if ($('#families-treeview').length > 0) {
-        treeViewInit('families');
-    }
-    if ($('#races').length > 0) {
-        treeViewInit('races');
-    }
+    treeViewInit();
 
     manageTabs();
     manageDashboardNotifications();
@@ -144,48 +138,10 @@ $(document).ready(function() {
         });
     });*/
 
-    // Delete confirm dialog
-    $.each($('.delete-confirm'), function (index) {
-        $(this).click(function (e) {
-            var name = $(this).data('name');
-            var text = $(this).data('text');
-            var target = $(this).data('delete-target');
-            if (text) {
-                $('#delete-confirm-text').text(text);
-            } else {
-                $('#delete-confirm-name').text(name);
-            }
-
-            if (target) {
-                $('#delete-confirm-submit').data('target', target);
-            }
-        });
-    });
-
-    // Submit modal form
-    $.each($('#delete-confirm-submit'), function (index) {
-        $(this).click(function (e) {
-            var target = $(this).data('target');
-            if (target) {
-                $('#' + target).submit();
-            } else {
-                $('#delete-confirm-form').submit();
-            }
-        })
-    });
-
-    // Delete confirm dialog
-    $.each($('.click-confirm'), function (index) {
-        $(this).click(function (e) {
-            var name = $(this).data('message');
-            $('#click-confirm-text').text(name);
-            $('#click-confirm-url').attr('href', $(this).data('url'));
-        });
-    });
-
+    deleteConfirm();
     initTogglePasswordFields();
     initAjaxPagination();
-    initNotifications();
+    initTimelineToggle();
 
     /**
      * Whenever a modal or popover is shown, we'll need to re-bind various helpers we have.
@@ -197,10 +153,12 @@ $(document).ready(function() {
         initSelect2();
         initCheckboxSwitch();
         initAjaxPagination();
+        initTooltips();
+        initCategories();
+        initSpectrum();
 
         // Handle when opening the entity-creator ui
         entityCreatorUI();
-
     });
 });
 
@@ -215,50 +173,29 @@ function initCheckboxSwitch() {
  * Select2 is used for all the fancy dropdowns
  */
 function initSelect2() {
-    if ($('select.select2').length > 0) {
-        $.each($('select.select2'), function (index) {
-            // Check it isn't the select2-icon
-            $(this).select2({
-                //data: newOptions,
-                placeholder: $(this).data('placeholder'),
-                allowClear: true,
-                tags: $(this).is('[data-tags]'),
-                language: $(this).data('language'),
-                minimumInputLength: 0,
-                ajax: {
-                    quietMillis: 200,
-                    url: $(this).data('url'),
-                    dataType: 'json',
-                    data: function (params) {
-                        return {
-                            q: $.trim(params.term)
-                        };
-                    },
-                    processResults: function (data) {
-                        return {
-                            results: data
-                        };
-                    },
-                    cache: true
-                }
-            });
-        });
-    }
+    select2();
 }
+
 
 /**
  * Go through table trs to add on click support
  */
-function treeViewInit(element) {
-    var treeViewLoader = $('#' + element + '-treeview');
+function treeViewInit() {
+    var treeViewLoader = $('.list-treeview');
+    if (treeViewLoader.length === 0) {
+        return;
+    }
+
     var link = treeViewLoader.data('url');
-    $.each($('#' + element + ' > tbody > tr'), function(index) {
-        children = $(this).data('children');
+    $.each($('.table-nested > tbody > tr'), function(index) {
+        var children = $(this).data('children');
         if (parseInt(children) > 0) {
             $(this).addClass('tr-hover');
             $(this).on('click', function (e) {
+                let target = $(e.target);
                 // Don't trigger the click on the checkbox (used for bulk actions)
-                if (e.target.type !== 'checkbox') {
+                console.log('click tr', target);
+                if (e.target.type !== 'checkbox' && target.data('tree') !== 'escape') {
                     window.location = link + '?parent_id=' + $(this).data('id');
                 }
             });
@@ -285,8 +222,9 @@ function manageTabs() {
         e.preventDefault();
         var tabId = $(e.target).attr("href").substr(1);
         var dataToggle = $(e.target).attr('ajax-modal');
+        var nohash = $(e.target).data("nohash");
 
-        if (dataToggle && dataToggle == 'ajax-modal') {
+        if ((dataToggle && dataToggle == 'ajax-modal') || (nohash)) {
             // Modal? Don't do more.
             return true;
         }
@@ -354,18 +292,26 @@ function entityCreatorUI() {
     $('[data-toggle="entity-creator"]').on('click', function(e) {
         e.preventDefault();
 
-        var selection = $('#entity-creator-selection');
-        var loader = $('.entity-creator-loader');
+        var entityCreatorSelection = $('#entity-creator-selection');
+        var entityCreatorLoader = $('.entity-creator-loader');
+        var entityCreatorFormPanel = $('.entity-creator-form-panel');
 
-        selection.addClass('hidden');
-        loader.removeClass('hidden');
+        entityCreatorSelection.addClass('hidden');
+        entityCreatorLoader.removeClass('hidden');
 
         $.ajax($(this).data('url')).done(function (data) {
-            loader.addClass('hidden');
-            selection.html(data).removeClass('hidden');
+            entityCreatorLoader.addClass('hidden');
+            entityCreatorFormPanel.html(data).removeClass('hidden');
             initSelect2();
             initEntityCreatorDuplicateName();
             window.initCategories();
+
+            // Back button
+            $('#entity-creator-back').on('click', function(e) {
+                entityCreatorFormPanel.html('').addClass('hidden');
+                entityCreatorSelection.removeClass('hidden');
+                $('#entity-creator-form').hide();
+            });
 
             $('#entity-creator-form').on('submit', function(e) {
                 e.preventDefault();
@@ -383,10 +329,11 @@ function entityCreatorUI() {
                     context: this
                 }).done(function (result, textStatus, xhr) {
                     // New entity was created, let's follow that redirect
-                    console.log(result);
+                    //console.log(result);
 
+                    entityCreatorFormPanel.html('').addClass('hidden');
+                    entityCreatorSelection.removeClass('hidden');
                     $('#entity-creator-form').hide();
-
                     $('.entity-creator-success').html(result.message).show();
 
                 }).fail(function (data) {
@@ -400,14 +347,20 @@ function entityCreatorUI() {
 }
 
 function initEntityCreatorDuplicateName() {
-    $('#entity-creator-selection input[name="name"]').focusout(function(e) {
-        var entityCreatorDuplicateWarning = $('#entity-creator-selection .duplicate-entity-warning');
+    $('#entity-creator-form input[name="name"]').focusout(function(e) {
+        // Don't bother if the user didn't set any value
+        if (!$(this).val()) {
+            return;
+        }
+        var entityCreatorDuplicateWarning = $('#entity-creator-form .duplicate-entity-warning');
         entityCreatorDuplicateWarning.hide();
         // Check if an entity of the same type already exists, and warn when it does.
         $.ajax(
             $(this).data('live') + '?q=' + $(this).val() + '&type=' + $(this).data('type')
         ).done(function (res) {
             if (res.length > 0) {
+                let entities = Object.keys(res).map(function (k) { return '<a href="' + res[k].url + '">' + res[k].name + '</a>'}).join(', ');
+                $('#entity-creator-form #duplicate-entities').html(entities);
                 entityCreatorDuplicateWarning.fadeIn();
             } else {
                 entityCreatorDuplicateWarning.hide();
@@ -437,29 +390,91 @@ function initAjaxPagination() {
 }
 
 /**
- * Check if there are new notifiations for the user
+ * Handler for copying content to the clipboard
  */
-function initNotifications() {
-    notificationList = $('#header-notification-list');
-    notificationCount = $('#header-notification-count');
-    if (notificationList.length === 1) {
-        setTimeout(refreshNotificationList, notificationRefreshTimeout);
-    }
+function initCopyToClipboard() {
+    $('[data-clipboard]').click(function (e) {
+        e.preventDefault();
+        var $temp = $("<input>");
+        $("body").append($temp);
+        $temp.val($(this).data('clipboard')).select();
+        document.execCommand("copy");
+        $temp.remove();
+
+        var post = $(this).data('success');
+        if (post) {
+            $(post).fadeIn();
+            setTimeout(function() {
+                console.log('post', post);
+                $(post).fadeOut();
+            }, 3000);
+        }
+    });
 }
 
-function refreshNotificationList() {
-    console.log('refresh notification list');
-    $.ajax(notificationList.data('url'))
-        .done((result) => {
-            if (result.count > 0) {
-                notificationList.html(result.body);
-                notificationCount.html(result.count).show();
-            } else {
-                notificationCount.hide();
-            }
-            setTimeout(refreshNotificationList, notificationRefreshTimeout);
+/**
+ * Register the tooltip and tooltip-ajax helper
+ */
+function initTooltips() {
+    $('[data-toggle="tooltip"]').tooltip();
+    window.ajaxTooltip();
+}
+
+/**
+ * Initiate spectrum for the various fields
+ */
+function initSpectrum() {
+    if (!$.isFunction($.fn.spectrum)) {
+        return;
+    }
+    $(".spectrum").spectrum({
+        preferredFormat: "hex",
+        showInput: true,
+        showPalette: true,
+        allowEmpty: true
+    });
+}
+
+/**
+ *
+ */
+function initSidebar() {
+    let toggler = $('.sidebar-campaign .campaign-head .campaign-name');
+    if (toggler.length === 0) {
+        return;
+    }
+
+    let down = $('.sidebar-campaign .campaign-head .campaign-name .fa-caret-down');
+
+    toggler.on('click', function(e) {
+        e.preventDefault();
+        if (down.hasClass('flipped')) {
+            down.removeClass('flipped');
+        } else {
+            down.addClass('flipped');
         }
-    );
+    });
+}
+
+/**
+ * Timeline toggle support
+ */
+function initTimelineToggle() {
+    $('.timeline-toggle').on('click', function() {
+        let id = $(this).data('short');
+        $('#' + id + "-show").toggle();
+        $('#' + id + "-hide").toggle();
+    });
+
+    $('.timeline-era-reorder').on('click', function(e) {
+        e.preventDefault();
+        let eraId = $(this).data('era-id');
+
+        $('#era-items-' + eraId + '').sortable();
+
+        $(this).parent().hide();
+        $('#era-items-' + eraId + '-save-reorder').show();
+    });
 }
 
 // Helpers are injected directly in the window functions.
@@ -470,3 +485,4 @@ require('./crud.js');
 require('./calendar.js');
 require('./search.js');
 require('./tags.js');
+require('./notification');

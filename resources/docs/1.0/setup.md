@@ -22,13 +22,19 @@ When calling the API, add the following headers:
 
 ```json
     Authorization: Bearer user_token_here
-    Accept: application/json
+    Content-type: application/json
 ```
 
 <a name="endpoints"></a>
 ### Endpoints
 
-> {warning} Please note that all endpoints documented here need to be prefixed with `api/{{version}}/`. For example, if an endpoint is listed as `campaigns`, you should use `kanka.io/api/{{version}}/campaigns`.
+> {warning} Please note that all endpoints documented here need to be prefixed with `api/{{version}}/`. For example, if an endpoint is listed as `campaigns`, you should use `https://kanka.io/api/{{version}}/campaigns`.
 
---- 
+### Throttling
+
+The API is set up to allow a maximum of 30 requests per minute per client. When you exceed this limit, you will be greeted with a `429` error code.
+
+You can increase this limit to 90 requests per minute by becoming a [Subscriber](https://kanka.io/en-US/pricing).
+
+---
 Next up: [Profile](/docs/{{version}}/profile)

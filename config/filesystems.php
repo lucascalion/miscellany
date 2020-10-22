@@ -63,6 +63,28 @@ return [
             'bucket' => env('AWS_BUCKET'),
         ],
 
+        's3-assets' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_BUCKET_APP'),
+            'visibility' => 'public',
+            // We have to declare the url otherwise voyager gets confused
+            'url' => 'https://' . env('AWS_BUCKET_APP') . '.s3.amazonaws.com/'
+        ],
+
+        's3-images' => [
+            'driver' => 's3',
+            'key' => env('AWS_IMAGES_ACCESS_KEY_ID'),
+            'secret' => env('AWS_IMAGES_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_IMAGES_DEFAULT_REGION'),
+            'bucket' => env('AWS_IMAGES_BUCKET_APP'),
+            'visibility' => 'public',
+            // We have to declare the url otherwise voyager gets confused
+            'url' => 'https://images.kanka.io/'
+        ]
+
     ],
 
 ];

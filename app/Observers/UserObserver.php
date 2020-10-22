@@ -2,16 +2,14 @@
 
 namespace App\Observers;
 
+use App\Facades\UserCache;
+use App\Jobs\Emails\GoodbyeEmailJob;
+use App\Jobs\Emails\WelcomeEmailJob;
 use App\Models\CampaignUser;
-use App\Mail\UserDeleted;
-use App\Mail\UserRegistered;
-use App\Mail\WelcomeEmail;
-use App\Models\UserDashboardSetting;
 use App\Models\UserLog;
 use App\Services\ImageService;
 use App\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
@@ -37,6 +35,7 @@ class UserObserver
      */
     public function saved(User $user)
     {
+        UserCache::user($user)->clearName();
     }
 
     /**
@@ -62,16 +61,8 @@ class UserObserver
      */
     public function created(User $user)
     {
-        // Create dashboard settings
-        $dashboard = new UserDashboardSetting();
-        $dashboard->user_id = $user->id;
-        $dashboard->save();
-
-        // New user, send notification
-        //Mail::to('hello@kanka.io')->send(new UserRegistered($user));
-
-        // Send email to the new user too
-        Mail::to($user->email)->send(new WelcomeEmail($user));
+        WelcomeEmailJob::dispatch($user, app()->getLocale());
+        session()->put('user_registered', true);
     }
 
     /**
@@ -85,7 +76,9 @@ class UserObserver
         }
 
         // Send notification that an account has been removed
-        Mail::to('hello@kanka.io')->send(new UserDeleted($user));
+        //GoodbyeEmailJob::dispatch($user, app()->getLocale());
+
+        UserCache::user($user)->clearName()->clearCampaigns()->clearRoles();
     }
 
     /**
@@ -107,8 +100,5 @@ class UserObserver
         foreach ($user->logs as $log) {
             $log->delete();
         }
-
-        // Remove dashboard
-        $user->dashboardSetting->delete();
     }
 }

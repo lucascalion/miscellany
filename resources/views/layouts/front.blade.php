@@ -1,74 +1,131 @@
 <!doctype html>
-<html lang="{{ app()->getLocale() }}">
+<html lang="{{ app()->getLocale() }}" @if(app()->getLocale() == 'he') dir="rtl" @endif>
 <head>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-109130951-1"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'UA-109130951-1');
-    </script>
-
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="{{ trans('front.meta.description') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, shrink-to-fit=no">
     <meta name="author" content="{{ config('app.name') }}">
+    <meta name="description" content="{{ $metaDescription ?? __('front.home.seo.description') }}">
+    <meta name="keywords" content="{{  $metaKeywords ?? __('front.seo.keywords') }}">
 
-    <meta property="og:title" content="{{ $title ?? __('front.meta.title') }} - {{ config('app.name') }}" />
-    <meta property="og:site_name" content="{{ config('app.site_name') }}" />
+    <meta property="og:title" content="{{ $title ?? __('front.meta.title') }}@if (!isset($skipEnding)) - {{ config('app.name') }} @endif">
+    <meta property="og:site_name" content="{{ config('app.site_name') }}">
 @yield('og')
-    <title>{{ $title ?? trans('front.meta.title') }} - {{ config('app.name', 'Kanka') }}</title>
+    <title>{{ $title ?? __('front.meta.title') }} @if (!isset($skipEnding)) - {{ config('app.name', 'Kanka') }}@endif</title>
 
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
 
-    <link rel="icon" type="image/png" href="/favicon.ico">
+    <link rel="icon" type="image/png" href="/favicon.ico?v=3">
 
-    <!-- Bootstrap core CSS -->
-    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+@if (isset($englishCanonical) && $englishCanonical)
+    <link rel="canonical" href="{{ LaravelLocalization::localizeURL(null, 'en') }}" />
+@else
+    <link rel="canonical" href="{{ LaravelLocalization::localizeURL(null, null) }}" />
+    @foreach(LaravelLocalization::getSupportedLocales() as $localeCode => $properties)
+@if ($localeCode == app()->getLocale())
+@continue
+@endif
+    <link rel="alternate" href="{{ LaravelLocalization::localizeUrl(null, $localeCode) }}" hreflang="{{ $localeCode }}">
+@endforeach
+@endif
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="//maxcdn.bootstrapcdn.com">
+    <link rel="dns-prefetch" href="//code.jquery.com">
+    <link rel="dns-prefetch" href="//kit.fontawesome.com">
+
+    <link href="{{ mix('css/front.css') }}" rel="stylesheet">
+    @if(app()->getLocale() == 'he')
+        <link href="{{ mix('css/front-rtl.css') }}" rel="stylesheet">
+    @endif
+    @yield('styles')
 </head>
 
 <body id="page-top">
-<!-- Custom styles for this template -->
-<link href="/css/front/new-age.min.css" rel="stylesheet">
-<link href="{{ mix('css/front.css') }}" rel="stylesheet">
+@include('layouts._tracking-fallback')
 <noscript id="deferred-styles">
 </noscript>
 
 <!-- Navigation -->
+<div class="topbar d-none d-sm-block">
+    <div class="container">
+        <ul class="topbar-list">
+            @auth
+                <li>
+                    <a class="nav-link" href="{{ route('home') }}">{{ __('front.menu.dashboard') }}</a>
+                </li>
+            @else
+                <li class="login d-none d-sm-inline-block">
+                    <a href="{{ route('login') }}">
+                        {{ __('front.menu.login') }}
+                    </a>
+                </li>
+                @if(config('auth.register_enabled'))
+                <li class="d-none d-sm-inline-block">
+                    <a class="nav-link" href="{{ route('register') }}">{{ __('front.menu.register') }}</a>
+                </li>
+                @endif
+            @endauth
+            <li>
+                <a href="{{ config('social.discord') }}" target="discord" title="Discord" rel="noreferrer">
+                    <i class="fab fa-discord"></i>
+                </a>
+            </li>
+            <li>
+                <a href="{{ config('social.facebook') }}" target="facebook" title="Facebook" rel="noreferrer">
+                    <i class="fab fa-facebook"></i>
+                </a>
+            </li>
+            <li>
+                <a href="{{ config('social.instagram') }}" target="instagram" title="Instagram" rel="noreferrer">
+                    <i class="fab fa-instagram"></i>
+                </a>
+            </li>
+            <li>
+                <a href="{{ config('social.reddit') }}" target="reddit" title="Reddit" rel="noreferrer"><i class="fab fa-reddit"></i></a>
+            </li>
+        </ul>
+    </div>
+</div>
 <nav class="navbar navbar-expand-lg navbar-light fixed-top" id="mainNav">
     <div class="container">
-        <a class="navbar-brand js-scroll-trigger" href="{{ route('home') }}">{{ config('app.name', 'Laravel') }}</a>
+        <a class="navbar-brand" href="{{ route('home') }}">
+            <img class="d-none d-lg-block" @if(\App\Facades\Img::nowebp()) src="https://images.kanka.io/app/lYYwvb1TENQSosFKdgDCLd2oLdU=/228x77/src/images%2Flogos%2Ftext-white.png?webpfallback?webpfallback" @else src="https://images.kanka.io/app/lYYwvb1TENQSosFKdgDCLd2oLdU=/228x77/src/images%2Flogos%2Ftext-white.png?webpfallback" @endif title="Kanka logo text white" alt="kanka logo text white" />
+            <img class="d-xl-none d-lg-none" @if(\App\Facades\Img::nowebp()) src="https://images.kanka.io/app/G2bnfyER8xMuMzPX4LM0Phdrjew=/228x77/src/images%
+2Flogos%2Ftext-blue.png?webpfallback" @else src="https://images.kanka.io/app/G2bnfyER8xMuMzPX4LM0Phdrjew=/228x77/src/images%
+2Flogos%2Ftext-blue.png" @endif title="Kanka logo text blue" alt="Kanka logo text blue" />
+        </a>
+        @auth
+        @else
+            <a href="{{ route('login') }}" class="d-lg-none">
+                {{ __('front.menu.login') }}
+            </a>@if(config('auth.register_enabled'))
+            <a href="{{ route('register') }}" class="d-lg-none">
+                {{ __('front.menu.register') }}
+            </a>@endif
+        @endauth
         <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-            {{ trans('front.menu.title') }}
             <i class="fa fa-bars"></i>
         </button>
         <div class="collapse navbar-collapse" id="navbarResponsive">
             <ul class="navbar-nav ml-auto">
-                @foreach ($menus as $menu)
                 <li class="nav-item">
-                    <a class="nav-link js-scroll-trigger" href="#{{ $menu }}">{{ trans('front.menu.' . $menu) }}</a>
-                </li>
-                @endforeach
-                @auth
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('home') }}">{{ trans('front.menu.dashboard') }}</a>
-                    </li>
-                @else
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('login') }}">{{ trans('front.menu.login') }}</a>
+                    <a class="nav-link @if(!empty($active) && $active == 'features') nav-active @endif" href="{{ route("front.features") }}">{{ __('front.menu.features') }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ route('register') }}">{{ trans('front.menu.register') }}</a>
+                    <a class="nav-link @if(!empty($active) && $active == 'pricing') nav-active @endif" href="{{ route("front.pricing") }}">{{ __('front.menu.pricing') }}</a>
                 </li>
-                @endauth
+                <li class="nav-item">
+                    <a class="nav-link" href="https://blog.kanka.io" target="_blank">{{ __('front.menu.news') }}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @if(!empty($active) && $active == 'contact') nav-active @endif" href="{{ route("front.contact") }}">{{ __('front.menu.contact') }}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @if(!empty($active) && $active == 'about') nav-active @endif" href="{{ route("front.about") }}">{{ __('front.menu.about') }}</a>
 
                 <li class="nav-item dropdown">
                     <a href="#" class="nav-link dropdown-toggle" id="drop3" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
-                        <i class="fa fa-globe"></i>
                         {{ LaravelLocalization::getCurrentLocaleNative() }} <span class="caret"></span>
                     </a>
                     <ul class="dropdown-menu navbar-nar" aria-labelledby="drop3">
@@ -92,38 +149,18 @@
 @include('front.footer')
 
 <!-- Bootstrap core JavaScript -->
-<script src="/vendor/jquery/jquery.min.js"></script>
-<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script
+        src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+        integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs="
+        crossorigin="anonymous"></script>
 
-<!-- Plugin JavaScript -->
-<script src="/vendor/jquery-easing/jquery.easing.min.js" async></script>
+<!--<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>-->
+<script src="{{ mix('js/front.js') }}" async></script>
 
-<!-- Custom scripts for this template -->
-<script src="/js/front/new-age.min.js" async></script>
+<script src="https://kit.fontawesome.com/d7f0be4a8d.js" crossorigin="anonymous"></script>
 
-<script src="https://ajax.googleapis.com/ajax/libs/webfont/1.5.18/webfont.js"></script>
-<script>
-    WebFont.load({
-        google: {
-            families: ['Lato', 'Catamaran:100,200,300,400,500,600,700,800,900', 'Muli']
-        }
-    });
-    var loadDeferredStyles = function() {
-        var addStylesNode = document.getElementById("deferred-styles");
-        var replacement = document.createElement("div");
-        replacement.innerHTML = addStylesNode.textContent;
-        document.body.appendChild(replacement);
-        addStylesNode.parentElement.removeChild(addStylesNode);
-    };
-    var raf = requestAnimationFrame || mozRequestAnimationFrame ||
-        webkitRequestAnimationFrame || msRequestAnimationFrame;
-    if (raf) raf(function() { window.setTimeout(loadDeferredStyles, 0); });
-    else window.addEventListener('load', loadDeferredStyles);
-</script>
-
-<link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css" />
-<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
-<script src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js"></script>
+<link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css" media="print" onload="this.media='all'" />
+<script src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js" async></script>
 <script>
     window.addEventListener("load", function(){
         window.cookieconsent.initialise({
@@ -137,11 +174,41 @@
             },
             "theme": "classic",
             "content": {
-                "message": "{{ trans('front.cookie.message') }}",
-                "dismiss": "{{ trans('front.cookie.dismiss') }}",
-                "link": "{{ trans('front.cookie.link') }}"
+                "message": "{{ __('front.cookie.message') }}",
+                "dismiss": "{{ __('front.cookie.dismiss') }}",
+                "link": "{{ __('front.cookie.link') }}"
             }
         })});
 </script>
+<script>
+    function init() {
+        var vidDefer = document.getElementsByTagName('iframe');
+        for (var i=0; i<vidDefer.length; i++) {
+            if(vidDefer[i].getAttribute('data-src')) {
+                vidDefer[i].setAttribute('src',vidDefer[i].getAttribute('data-src'));
+            } } }
+    window.onload = init;
+</script>
+<!-- Async Bootstrap Loading - add this to your footer -->
+<script async>
+    var cb = function () {
+        var l = document.createElement('link');
+        l.rel = 'stylesheet';
+        l.href = 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css';
+        var h = document.getElementsByTagName('head')[0];
+        h.parentNode.insertBefore(l, h);
+    };
+    var raf = requestAnimationFrame || mozRequestAnimationFrame || webkitRequestAnimationFrame || msRequestAnimationFrame;
+    if (raf) raf(cb);
+    else window.addEventListener('load', cb);
+</script>
+<noscript>
+    <link rel="stylesheet"
+        href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous">
+</noscript>
+@include('layouts._tracking', ['frontLayout' => true, 'noads' => true])
+@yield('scripts')
 </body>
 </html>

@@ -3,13 +3,32 @@
 namespace App\Models;
 
 use App\Facades\CampaignLocalization;
+use App\Models\Concerns\SimpleSortableTrait;
 use App\Traits\CampaignTrait;
 use App\Traits\ExportableTrait;
 use App\Traits\VisibleTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Stevebauman\Purify\Facades\Purify;
 
+/**
+ * Class Character
+ * @package App\Models
+ * @property string $title
+ * @property string $age
+ * @property string $sex
+ * @property bool $is_dead
+ * @property Family $family
+ * @property Location $location
+ * @property Race $race
+ */
 class Character extends MiscModel
 {
+    use CampaignTrait,
+        VisibleTrait,
+        ExportableTrait,
+        SimpleSortableTrait,
+        SoftDeletes;
+
     //
     protected $fillable = [
         'name',
@@ -29,7 +48,6 @@ class Character extends MiscModel
         'is_personality_visible',
     ];
 
-
     /**
      * Fields that can be filtered on
      * @var array
@@ -44,7 +62,25 @@ class Character extends MiscModel
         'type',
         'is_dead',
         'is_private',
+        'tag_id',
         'race_id',
+        'tags',
+        'organisation_member',
+        'has_image',
+    ];
+
+    /**
+     * Fields that can be sorted on
+     * @var array
+     */
+    protected $sortableColumns = [
+        'title',
+        'family.name',
+        'location.name',
+        'race.name',
+        'age',
+        'sex',
+        'is_dead'
     ];
 
     /**
@@ -52,25 +88,7 @@ class Character extends MiscModel
      * @var array
      */
     protected $hidden = [
-        'traits',
-        'goals',
-        'fears',
-        'mannerisms',
-        'languages',
-        'free',
-        'height',
-        'weight',
-        'eye_colour',
-        'hair',
-        'skin',
     ];
-
-    /**
-     * Traits
-     */
-    use CampaignTrait;
-    use VisibleTrait;
-    use ExportableTrait;
 
     /**
      * Entity type
@@ -119,6 +137,8 @@ class Character extends MiscModel
         'is_personality_visible', // checkbox
     ];
 
+    protected $showAppearanceCache = null;
+
     /**
      * Performance with for datagrids
      * @param $query
@@ -126,7 +146,15 @@ class Character extends MiscModel
      */
     public function scopePreparedWith($query)
     {
-        return $query->with(['entity', 'location', 'location.entity', 'family', 'family.entity', 'race']);
+        return $query->with([
+            'entity',
+            'location',
+            'location.entity',
+            'family',
+            'family.entity',
+            'race',
+            'race.entity',
+        ]);
     }
 
     /**
@@ -162,18 +190,28 @@ class Character extends MiscModel
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function quests()
     {
-        return $this->hasManyThrough(
-            'App\Models\Quest',
-            'App\Models\QuestCharacter',
-            'character_id',
-            'id',
-            'id',
-            'quest_id'
-        );
+        return $this->belongsToMany('App\Models\Quest', 'quest_characters')
+            ->using('App\Models\Pivots\QuestCharacter')
+            ->withPivot('role', 'is_private');
+    }
+
+    /**
+     * @return mixed
+     */
+    public function relatedQuests()
+    {
+        $query = $this->quests()
+            ->with(['characters', 'locations', 'quests']);
+
+        if (!auth()->check() || !auth()->user()->isAdmin()) {
+            $query->where('quest_characters.is_private', false);
+        }
+
+        return $query;
     }
 
     /**
@@ -263,10 +301,10 @@ class Character extends MiscModel
      */
     public function menuItems($items = [])
     {
-        $campaign = $this->campaign;
+        $campaign = CampaignLocalization::getCampaign();
         $canEdit = auth()->check() && auth()->user()->can('update', $this);
 
-        $count = $this->items()->acl()->count();
+        $count = $this->items()->count();
         if ($campaign->enabled('items') && $count > 0) {
             $items['items'] = [
                 'name' => 'characters.show.tabs.items',
@@ -275,7 +313,7 @@ class Character extends MiscModel
             ];
         }
 
-        $count = $this->organisations()->acl()->organisationAcl()->has('organisation')->count();
+        $count = $this->organisations()->has('organisation')->count();
         if ($campaign->enabled('organisations') && ($count > 0 || $canEdit)) {
             $items['organisations'] = [
                 'name' => 'characters.show.tabs.organisations',
@@ -283,7 +321,7 @@ class Character extends MiscModel
                 'count' => $count
             ];
         }
-        $count = $this->journals()->acl()->count();
+        $count = $this->journals()->count();
         if ($campaign->enabled('journals') && $count > 0) {
             $items['journals'] = [
                 'name' => 'characters.show.tabs.journals',
@@ -291,7 +329,7 @@ class Character extends MiscModel
                 'count' => $count
             ];
         }
-        $questCount = $this->quests()->acl()->count() + $this->questGiver()->acl()->count();
+        $questCount = $this->relatedQuests()->count() + $this->questGiver()->count();
         if ($campaign->enabled('quests') && $questCount > 0) {
             $items['quests'] = [
                 'name' => 'characters.show.tabs.quests',
@@ -299,7 +337,7 @@ class Character extends MiscModel
                 'count' => $questCount
             ];
         }
-        $diceRollCount = $this->diceRolls()->acl()->count();
+        $diceRollCount = $this->diceRolls()->count();
         if ($campaign->enabled('dice_rolls') && $diceRollCount > 0) {
             $items['dice_rolls'] = [
                 'name' => 'characters.show.tabs.dice_rolls',
@@ -307,7 +345,7 @@ class Character extends MiscModel
                 'count' => $diceRollCount
             ];
         }
-        $conversationCount = $this->conversations()->acl()->count();
+        $conversationCount = $this->conversations()->count();
         if ($campaign->enabled('conversations') && $conversationCount > 0) {
             $items['conversations'] = [
                 'name' => 'characters.show.tabs.conversations',
@@ -326,12 +364,44 @@ class Character extends MiscModel
     {
         // e() isn't enough, remove tags too to avoid ><script injections.
         $str = $this->name;
+        if (!empty($this->family) && !CampaignLocalization::getCampaign()->tooltip_family) {
+            $str .= ' - ' . $this->family->name;
+        }
+        return e(strip_tags(trim($str))) . ($this->is_dead ? ' <i class=\'ra ra-skull\'></i>' : null);
+    }
+
+    /**
+     * Tooltip subtitle (character title)
+     * @return string
+     */
+    public function tooltipSubtitle(): string
+    {
         if (!empty($this->title)) {
-            $str .= ' ' . $this->title;
+            return e(strip_tags($this->title));
         }
-        if (!empty($this->family)) {
-            $str .= ' ' . $this->family->name;
+        return '';
+    }
+
+    /**
+     * Get the entity_type id from the entity_types table
+     * @return int
+     */
+    public function entityTypeId(): int
+    {
+        return (int) config('entities.ids.character');
+    }
+
+    /**
+     * Determine if the appearance tab should be shown
+     * @return bool
+     */
+    public function showAppearance(): bool
+    {
+        if ($this->showAppearanceCache === null) {
+            $this->showAppearanceCache = !empty($this->age) || !empty($this->sex) ||
+                $this->entity->elapsedEvents->count() > 0 ||
+                $this->characterTraits()->appearance()->count() > 0;
         }
-        return e(strip_tags(trim($str))) . ($this->is_dead ? ' <i class="ra ra-skull"></i>' : null);
+        return $this->showAppearanceCache;
     }
 }

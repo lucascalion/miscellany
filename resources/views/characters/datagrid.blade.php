@@ -18,7 +18,7 @@
             'visible' => $campaign->enabled('families'),
             'render' => function($model) {
                 if ($model->family) {
-                    return '<a href="' . route('families.show', $model->family->id) . '" data-toggle="tooltip" title="' . $model->family->tooltip() . '">' . e($model->family->name) . '</a>';
+                    return $model->family->tooltipedLink();
                 }
             }
         ],
@@ -32,14 +32,25 @@
             'visible' => $campaign->enabled('races'),
             'render' => function($model) {
                 if ($model->race) {
-                    return '<a href="' . route('races.show', $model->race_id) . '" data-toggle="tooltip" title="' . $model->race->tooltip() . '">' . e($model->race->name) . '</a>';
+                    return $model->race->tooltipedLink();
                 }
             }
         ],
         'type',
-        'age',
-        'sex',
-        'is_dead',
+        [
+            'label' => '<i class="fas fa-transgender-alt" title="' . __('characters.fields.sex') . '"></i>',
+            'field' => 'sex',
+        ],
+        [
+            'label' => '<i class="ra ra-skull" title="' . __('characters.fields.is_dead') . '"></i>',
+            'field' => 'is_dead',
+            'render' => function($model) {
+                if ($model->is_dead) {
+                    return '<i class="ra ra-skull" title="' . __('characters.fields.is_dead') . '"></i>';
+                }
+                return '';
+            }
+        ],
         [
             'type' => 'is_private',
         ]

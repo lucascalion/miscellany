@@ -1,13 +1,14 @@
 /**
  * Map
  */
+
 var mapModal, mapAdmin, locationInput, mapImage, mapImageOriginalWidth;
 var mapPositionX, mapPositionY;
 var mapZoomIn, mapZoomOut, mapZoomReset;
 var mapToggleShow, mapToggleHide;
 var mapZoomValue = 100, mapZoomIncrements = 0;
 var mapDraggable, mapIsMoving = false, mapPointIsMoving = false;
-var mapPointModalBody;
+var mapPointModalBody, mapPointModalLoading;
 var mapMouseX, mapMouseY;
 
 // V2
@@ -33,6 +34,7 @@ $(document).ready(function() {
     mapToggleShow = $('#map-toggle-show');
 
     mapPointModalBody = $('#map-point-body');
+    mapPointModalLoading = $('.modal-loading');
     mapDraggable = $('#draggable-map');
 
     mapAdminMode = $('#map-admin-mode');
@@ -174,7 +176,7 @@ function mapZoom(change) {
     mapZoomIn.removeAttr('disabled');
     mapZoomValue = newZoom;
 
-    magnifier = (mapZoomValue / 100);
+    var magnifier = (mapZoomValue / 100);
     mapImage.width(mapImageOriginalWidth * magnifier);
 
     if (change > 0) {
@@ -277,13 +279,15 @@ function loadMapPoint(element) {
 
     // Admin mode? Load the form modal
     if (mapAdminModeActivated) {
+        showLoadingModal();
+
         $.ajax({
             url: element.data('url-modal')
         }).done(function (result, textStatus, xhr) {
             if (result) {
-                mapPointModalBody.html(result);
+                mapPointModalLoading.hide();
+                mapPointModalBody.html(result).show();
                 initModalForm();
-                mapModal.modal();
             }
         }).fail(function (result, textStatus, xhr) {
             console.log('map point error', result);
@@ -306,7 +310,7 @@ function loadMapPoint(element) {
     element.addClass('point-focus');
 
     $.ajax(
-        element.data('url')
+        element.data('url-show')
     ).done(function(data) {
         mapPanelLoader.hide();
         mapPanelTarget.html(data);
@@ -314,10 +318,17 @@ function loadMapPoint(element) {
         // Closing the modal
         $('.entity-close').on('click', function(e) {
             //console.log('clicky');
-            mapPanel.addClass('hidden');
-            $('#location-map-main').removeClass('col-md-9 col-sm-8').addClass('col-md-12');
+            hideMapPointDetails();
         });
     });
+}
+
+/**
+ *
+ */
+function hideMapPointDetails() {
+    mapPanel.addClass('hidden');
+    $('#location-map-main').removeClass('col-md-9 col-sm-8').addClass('col-md-12');
 }
 
 /**
@@ -331,6 +342,7 @@ function initMapModeSwitch() {
         mapElement.addClass('map-admin-mode');
 
         activateMovePoints();
+        hideMapPointDetails();
     });
 
     mapViewMode.click(function(e) {
@@ -357,6 +369,8 @@ function initAddPoints() {
             return;
         }
 
+        showLoadingModal();
+
         var offset = $(this).offset();
         mapPositionX = e.pageX - offset.left - 25;
         mapPositionY = e.pageY - offset.top - 25;
@@ -370,7 +384,7 @@ function initAddPoints() {
         }
 
         // Need to adapt the map position to the magnifier to know where we really are.
-        magnifier = (mapZoomValue / 100);
+        var magnifier = (mapZoomValue / 100);
         mapPositionY = parseInt(mapPositionY) / magnifier;
         mapPositionX = parseInt(mapPositionX) / magnifier;
 
@@ -378,14 +392,23 @@ function initAddPoints() {
             url: $(this).data('url') + '?axis_y=' + parseInt(mapPositionY) + '&axis_x=' + parseInt(mapPositionX)
         }).done(function (result, textStatus, xhr) {
             if (result) {
-                mapPointModalBody.html(result);
+                mapPointModalLoading.hide();
+                mapPointModalBody.html(result).show();
                 initModalForm();
-                mapModal.modal();
             }
         }).fail(function (result, textStatus, xhr) {
             console.log('map point error', result);
         });
     });
+}
+
+/**
+ * Show the modal in a loading state
+ */
+function showLoadingModal() {
+    mapPointModalLoading.show();
+    mapPointModalBody.html('');
+    mapModal.modal();
 }
 
 /**
@@ -428,7 +451,7 @@ function addPointMove(point) {
             //console.log('start moving point');
             mapPointIsMoving = true;
 
-            target = $(event.target);
+            var target = $(event.target);
             target.addClass('point-moving');
         },
         stop: function (event, ui) {
@@ -440,7 +463,7 @@ function addPointMove(point) {
             mapPositionY = ui.position.top;
 
             // Recalculate position based on zoom
-            magnifier = (mapZoomValue / 100);
+            var magnifier = (mapZoomValue / 100);
             mapPositionX = mapPositionX / magnifier;
             mapPositionY = mapPositionY / magnifier;
 
@@ -535,15 +558,14 @@ function initModalForm() {
                 initPointClick();
 
                 // Make the new point movable and add tooltip
-                newPoint = $('#' + data.id);
+                var newPoint = $('#' + data.id);
                 addPointMove(newPoint);
 
-                magnifier = (mapZoomValue / 100);
+                var magnifier = (mapZoomValue / 100);
                 repositionPoint(newPoint, magnifier);
 
                 newPoint.tooltip();
             }
-
         }).fail(function (data) {
             console.log('fail', data);
             if (data.responseJSON.errors) {
@@ -553,34 +575,38 @@ function initModalForm() {
 
         e.preventDefault();
     });
+
+    $('[data-toggle="popover"]').popover({html:true});
 }
 
 /**
- *
+ * Register an event listener on map point delete button. Since this is in a popover,
+ * we need to register on the document listener rather than the element directly.
  */
 function initDeleteMapPoint() {
-    $('.map-point-delete').each(function() {
-        $(this).click(function(e) {
-            url = $(this).data('url');
-            e.preventDefault();
+    $(document).on('click', '.map-point-delete', function(e) {
+        var url = $(this).attr('href');
+        e.preventDefault();
 
-            $.post({
-                url: url,
-                dataType: 'json',
-                data: {
-                    '_method': 'DELETE'
-                },
-                context: this
-            }).done(function (result, textStatus, xhr) {
-                // Hide this
-                if (result.id) {
-                    $('#' + result.id).remove();
-                }
-                mapModal.modal('hide');
-            });
+        mapPointModalBody.hide();
+        mapPointModalLoading.show();
 
-            return false;
+        $.post({
+            url: url,
+            dataType: 'json',
+            data: {
+                '_method': 'DELETE'
+            },
+            context: this
+        }).done(function (result, textStatus, xhr) {
+            // Hide this
+            if (result.id) {
+                $('#' + result.id).remove();
+            }
+            mapModal.modal('hide');
         });
+
+        return false;
     });
 }
 
@@ -604,10 +630,10 @@ function buildErrors(data) {
  * Handle scroll
  */
 function initMapScroll() {
-    $(window).bind('wheel', function(event) {
-        if (event.ctrlKey == true) {
+    $(mapImage).bind('wheel', function(event) {
+        if (event.ctrlKey === true) {
             event.preventDefault();
-            //console.log('wheel', event.originalEvent.deltaY);
+            // console.log('wheel', event.originalEvent.deltaY);
             if (event.originalEvent.deltaY > 0) {
                 mapZoom(-10);
             } else {
@@ -629,7 +655,7 @@ function repositionPoint(point, magnifier) {
     point.css('height', (point.data('size')  * magnifier)+ 'px');
     //$(this).css('border-radius', (25 * magnifier)+ 'px');
 
-    fontSize = 24;
+    var fontSize = 24;
     if (point.data('size') === 10) {
         fontSize = 5;
     } else if (point.data('size') === 25) {
@@ -705,22 +731,6 @@ function formatState (state) {
  * @param state
  * @returns {jQuery|HTMLElement|*}
  */
-function formatColourState (state) {
-    if (state.id === 'none') {
-        return state.text;
-    }
-
-    var $state = $(
-        '<span><i class="fas fa-square-full" style="color: ' + state.id + ';"></i> ' + state.text + '</span>'
-    );
-    return $state;
-}
-
-/**
- * Shape state
- * @param state
- * @returns {jQuery|HTMLElement|*}
- */
 function formatShapeState (state) {
     if (state.id === 'none') {
         return state.text;
@@ -740,10 +750,11 @@ function initIconSelect() {
         templateSelection: formatState,
         language: $(this).data('language')
     });
-    $(".select2-colour").select2({
-        templateResult: formatColourState,
-        templateSelection: formatColourState,
-        language: $(this).data('language')
+    $(".spectrum").spectrum({
+        preferredFormat: "hex",
+        showInput: true,
+        showPalette: true,
+        allowEmpty:true
     });
     $(".select2-shape").select2({
         templateResult: formatShapeState,

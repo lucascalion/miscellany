@@ -9,7 +9,7 @@
 @section('content')
     @include('partials.errors')
 
-    <div class="box">
+    <div class="box box-solid">
         <div class="box-body">
             <table class="table table-hover">
                 <tbody>
@@ -34,4 +34,6 @@
             @endif
         </div>
     </div>
+
+    <input type="hidden" id="notification-clear" />
 @endsection

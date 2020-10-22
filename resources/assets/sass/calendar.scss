@@ -20,9 +20,13 @@
         clear: both;
       }
 
-      .calendar-season {
+      .calendar-season, .weather {
         width: 100%;
         display: block;
+      }
+
+      .weather {
+        background-color: #ddd;
       }
 
       .reminder-entity {
@@ -85,20 +89,32 @@
         visibility: visible;
       }
     }
+
+    tr.named_week {
+      td {
+        height: 1em;
+        font-style: italic;
+        background-color: #FFFDE2;
+      }
+    }
   }
 }
 
 .calendar-toolbar {
-  margin-bottom: 1em;
-  text-align: center;
-  padding: 10px;
+  padding: 10px 0;
 
   .calendar-center {
     display: inline-block;
+  }
 
-    h2 {
-      margin: 0;
-      float: left;
+  .calendar-current {
+    display: inline-block;
+    margin-left: 25px;
+    .month {
+      display: inline-block;
+      padding-top: 6px;
+      font-size: 1.2em;
+      margin-right: 5px;
     }
   }
 }

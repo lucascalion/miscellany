@@ -1,66 +1,82 @@
-<?php $campaign = CampaignLocalization::getCampaign(); ?>
+<?php
+/**
+ * @var \App\Models\Campaign $campaign
+ * @var \App\Models\MiscModel $miscModel
+ */
+$campaign = CampaignLocalization::getCampaign(); ?>
 <!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}">
+<html lang="{{ app()->getLocale() }}" @if(app()->getLocale() == 'he') dir="rtl" @endif>
 <head>
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-109130951-1"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'UA-109130951-1');
-    </script>
-
+@include('layouts._tracking')
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>{{ $title ?? '' }} - {{ config('app.name', 'Kanka') }}</title>
-    <!-- CSRF Token -->
+    <title>{!! $title ?? '' !!} - {{ config('app.name', 'Kanka') }}</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
     <meta property="og:title" content="{{ $title ?? '' }} - {{ config('app.name') }}" />
     <meta property="og:site_name" content="{{ config('app.site_name') }}" />
-@yield('og')
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
-    <!-- Ionicons -->
-    <link href="//code.ionicframework.com/ionicons/2.0.0/css/ionicons.min.css" rel="stylesheet" type="text/css" />
+@if (isset($canonical))
+    <link rel="canonical" href="{{ LaravelLocalization::localizeURL(null, $campaign->locale) }}" />
+@endif
+@foreach(LaravelLocalization::getSupportedLocales() as $localeCode => $properties)
+    <link rel="alternate" href="{{ LaravelLocalization::localizeUrl(null, $localeCode) }}" hreflang="{{ $localeCode }}">
+@endforeach
 
-    <link rel="icon" type="image/png" href="/favicon.ico">
-
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-    <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
-    <![endif]-->
+    @yield('og')
+    <link rel="icon" type="image/png" href="/favicon.ico?v=3">
 
     <!-- Styles -->
     <link href="{{ mix('css/bootstrap.css') }}" rel="stylesheet">
     <link href="{{ mix('css/vendor.css') }}" rel="stylesheet">
     <link href="{{ mix('css/app.css') }}" rel="stylesheet">
-    @yield('styles')
-    @if (auth()->check() && !empty(auth()->user()->theme))
+    <link href="{{ mix('css/freyja.css') }}" rel="stylesheet">
+@if(app()->getLocale() == 'he')
+    <link href="{{ mix('css/app-rtl.css') }}" rel="stylesheet">
+@endif
+@yield('styles')
+
+@if (request()->has('_theme') && in_array(request()->get('_theme'), ['dark', 'midnight', 'future', 'base']))
+    @if(request()->get('_theme') != 'base')
+    <link href="{{ mix('css/' . request()->get('_theme') . '.css') }}" rel="stylesheet">
+    @endif
+@else
+    @if (!empty($campaign) && $campaign->boosted() && !empty($campaign->theme))
+    @if ($campaign->theme_id !== 1)
+        <link href="{{ mix('css/' . $campaign->theme->name . '.css') }}" rel="stylesheet">
+    @endif
+    @elseif (auth()->check() && !empty(auth()->user()->theme))
         <link href="{{ mix('css/' . auth()->user()->theme . '.css') }}" rel="stylesheet">
     @endif
+@endif
+
+@if(!empty($campaign) && $campaign->boosted() && $campaign->hasPluginTheme())
+    <link href="{{ route('campaign_plugins.css', ['ts' => $campaign->updated_at->getTimestamp()]) }}" rel="stylesheet">
+@endif
+@if (!empty($campaign) && $campaign->boosted() && !empty($campaign->css))
+    <link href="{{ route('campaign.css', ['ts' => $campaign->updated_at->getTimestamp()]) }}" rel="stylesheet">
+@endif
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
 </head>
 {{-- Hide the sidebar if the there is no current campaign --}}
-<body class="skin-black sidebar-mini @if (!empty($campaign) || (auth()->check() && auth()->user()->hasCampaigns())) @else layout-top-nav @endif">
+<body class="skin-black sidebar-mini @if (!empty($campaign) || (auth()->check() && auth()->user()->hasCampaigns()) || (!empty($sidebar) && $sidebar == 'settings')) @else layout-top-nav @endif @if(isset($miscModel) && !empty($miscModel->entity)) kanka-entity-{{ $miscModel->entity->id }} kanka-entity-{{ $miscModel->getEntityType() }} @if(!empty($miscModel->type)) kanka-type-{{ \Illuminate\Support\Str::slug($miscModel->type) }}@endif @endif">
+@include('layouts._tracking-fallback')
     <div id="app" class="wrapper">
         <!-- Header -->
         @include('layouts.header')
 
         <!-- Sidebar -->
-        @include('layouts.sidebar')
+        @include('layouts.sidebars.' . ($sidebar ?? 'app'))
+
+        @yield('fullpage-form')
 
         <!-- Content Wrapper. Contains page content -->
-        <div class="content-wrapper">
+        <div class="content-wrapper" @if(isset($contentId)) id="{{ $contentId }}" @endif>
             <!-- Content Header (Page header) -->
             <section class="content-header">
                 @if (!isset($breadcrumbs) || $breadcrumbs !== false)
                 <ol class="breadcrumb">
                     @if ($campaign)
-                        <li><a href="{{ route('dashboard') }}"><i class="fa fa-dashboard"></i> {{ $campaign->name }}</a></li>
+                        <li><a href="{{ route('dashboard') }}"><i class="fa fa-globe"></i> {!! $campaign->name !!}</a></li>
                     @else
                         <li><a href="{{ route('home') }}"><i class="fa fa-dashboard"></i> {{ trans('dashboard.title') }}</a></li>
                     @endif
@@ -87,15 +103,18 @@
                     @endif
                 </ol>
                 @endif
-                <h1 class="hidden-xs">
-                    @yield('header-extra')
 
-                    {{ $title ?? "Page Title" }}
-                    <small>{{ $description ?? null }}</small>
-                    @if (!empty($headerExtra))
-                        {!! $headerExtra !!}
+                @if (!View::hasSection('entity-header'))
+                    @if (isset($mainTitle))
+                        @yield('header-extra')
+                    @else
+                        <h1>
+                            @yield('header-extra')
+                            {!! $title ?? "Page Title" !!}
+                            <small class="hidden-xs hidden-sm">{{ $description ?? null }}</small>
+                        </h1>
                     @endif
-                </h1>
+                @endif
             </section>
 
             <!-- Main content -->
@@ -111,9 +130,27 @@
                     </div>
                 @endif
                 @include('partials.success')
+
+@if(auth()->guest() && !empty(config('tracking.adsense')))
+                <!-- Side -->
+                <ins class="adsbygoogle"
+                     style="display:block"
+                     data-ad-client="ca-pub-1686281547359435"
+                     data-ad-slot="2711573107"
+                     data-ad-format="auto"></ins>
+                <script>
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+                <p class="text-center text-muted">{!! __('misc.ads.remove', ['login' => link_to_route('login', __('misc.ads.login'))]) !!}</p>
+@endif
+
+                @yield('entity-actions')
+                @yield('entity-header')
                 @yield('content')
             </section><!-- /.content -->
         </div><!-- /.content-wrapper -->
+
+        @yield('fullpage-form-end')
 
         <!-- Footer -->
         @include('layouts.footer')
@@ -129,7 +166,15 @@
                     <h4 class="modal-title" id="myModalLabel">{{ trans('crud.delete_modal.title') }}</h4>
                 </div>
                 <div class="modal-body">
-                    <p id="delete-confirm-text">{!! trans('crud.delete_modal.description', ['tag' => '<b><span id="delete-confirm-name"></span></b>']) !!}</p>
+                    <p id="delete-confirm-text">
+                        {!! trans('crud.delete_modal.description', ['tag' => '<b><span id="delete-confirm-name"></span></b>']) !!}
+                    </p>
+                    <div id="delete-confirm-mirror" class="form-group" style="display: none">
+                        <label>
+                            <input type="checkbox" id="delete-confirm-mirror-chexkbox" name="delete-mirror">
+                            {{ __('crud.delete_modal.mirrored') }}
+                        </label>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">{{ trans('crud.cancel') }}</button>
@@ -191,11 +236,14 @@
     <!-- Large Sized Modal -->
     <div class="modal fade" id="large-modal" role="dialog" aria-labelledby="deleteConfirmLabel">
         <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content"></div>
+            <div class="modal-content" id="large-modal-content"></div>
         </div>
     </div>
 
+    @yield('modals')
+
     <!-- Scripts -->
+    <script src="https://kit.fontawesome.com/d7f0be4a8d.js" crossorigin="anonymous"></script>
     <script src="{{ mix('js/app.js') }}" defer></script>
     <script src="/js/select2/i18n/{{ LaravelLocalization::getCurrentLocale() == 'en-US' ? 'en' : LaravelLocalization::getCurrentLocale() }}.js" defer></script>
     @yield('scripts')

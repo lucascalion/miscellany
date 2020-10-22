@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Models\Campaign;
 use App\Models\Conversation;
 use App\Http\Requests\StoreConversation as Request;
-use App\Http\Resources\Conversation as Resource;
-use App\Http\Resources\ConversationCollection as Collection;
+use App\Http\Resources\ConversationResource as Resource;
 
 class ConversationApiController extends ApiController
 {
@@ -18,10 +17,9 @@ class ConversationApiController extends ApiController
     public function index(Campaign $campaign)
     {
         $this->authorize('access', $campaign);
-        return new Collection($campaign
+        return Resource::collection($campaign
             ->conversations()
             ->with(['messages', 'participants'])
-            ->acl()
             ->lastSync(request()->get('lastSync'))
             ->paginate());
     }
@@ -47,8 +45,9 @@ class ConversationApiController extends ApiController
     public function store(Request $request, Campaign $campaign)
     {
         $this->authorize('access', $campaign);
-        $this->authorize('create', Tag::class);
-        $model = Tag::create($request->all());
+        $this->authorize('create', Conversation::class);
+        $model = Conversation::create($request->all());
+        $this->crudSave($model);
         return new Resource($model);
     }
 
@@ -63,6 +62,7 @@ class ConversationApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('update', $conversation);
         $conversation->update($request->all());
+        $this->crudSave($conversation);
 
         return new Resource($conversation);
     }

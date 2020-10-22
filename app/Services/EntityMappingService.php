@@ -8,10 +8,15 @@ use App\Models\EntityMention;
 use App\Models\EntityNote;
 use App\Models\MiscModel;
 
+use App\Traits\MentionTrait;
 use Exception;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 class EntityMappingService
 {
+    use MentionTrait;
+
     /**
      * If exceptions should be thrown. Probably not.
      * @var bool
@@ -23,32 +28,6 @@ class EntityMappingService
      * @var bool
      */
     public $verbose = false;
-
-    /**
-     * Map of urls to actual entity
-     * Todo: move this out of a static array
-     * @var array
-     */
-    protected $typeMapping = [
-        'campaign' => 'campaign',
-        'characters' => 'character',
-        'calendars' => 'calendar',
-        'conversations' => 'conversation',
-        'events' => 'event',
-        'families' => 'family',
-        'items' => 'item',
-        'journals' => 'journal',
-        'locations' => 'location',
-        'notes' => 'note',
-        'organisations' => 'organisation',
-        'quests' => 'quest',
-        'tags' => 'tag',
-        'sections' => 'tag',
-        'attribute_templates' => 'attribute_template',
-        'dice_rolls' => 'dice_roll',
-        'menu_links' => 'menu_link',
-        'races' => 'race',
-    ];
 
     /**
      * Set errors and verbose to silent
@@ -82,25 +61,17 @@ class EntityMappingService
                 continue;
             }
 
-            $singularType = array_get($this->typeMapping, $type, false);
-            if ($singularType === false) {
-                if ($this->throwExceptions) {
-                    dump($mentions);
-                    throw new Exception("Unknown type $type");
-                } else {
-                    continue;
-                }
-            }
+            $singularType = $type;
 
             // If we're mentioning a campaign
             if ($singularType == 'campaign') {
-                // Can't handle this with this version, because target_id is ment for entities.
+                // Can't handle this with this version, because target_id is meant for entities.
                 continue;
             }
 
             /** @var Entity $entity */
             $entity = Entity::where([
-                'type' => $singularType, 'entity_id' => $id, 'campaign_id' => $model->campaign_id
+                'type' => $singularType, 'id' => $id, 'campaign_id' => $model->campaign_id
             ])->first();
             if ($entity) {
                 //$this->log("- Mentions " . $entity->id);
@@ -166,6 +137,7 @@ class EntityMappingService
         } else {
             $mentions = $this->extract($model->entry);
         }
+
         foreach ($mentions as $data) {
             $type = $data['type'];
             $id = $data['id'];
@@ -176,14 +148,7 @@ class EntityMappingService
                 continue;
             }
 
-            $singularType = array_get($this->typeMapping, $type, false);
-            if ($singularType === false) {
-                if ($this->throwExceptions) {
-                    throw new Exception("Unknown type $type");
-                } else {
-                    continue;
-                }
-            }
+            $singularType = $type;
 
             // If we're targeting a campaign, no support for auto-updates
             if ($singularType == 'campaign') {
@@ -200,7 +165,7 @@ class EntityMappingService
 
             /** @var Entity $entity */
             $target = Entity::where([
-                'type' => $singularType, 'entity_id' => $id, 'campaign_id' => $campaignId
+                'type' => $singularType, 'id' => $id, 'campaign_id' => $campaignId
             ])->first();
             if ($target) {
                 //$this->log("- Mentions " . $model->id);
@@ -245,6 +210,7 @@ class EntityMappingService
     {
         // Let's figure out the new text we're going to inject
         $tooltip = $entity->tooltipWithName();
+
         $name = e($entity->name);
 
         $entityLink = !empty($url) ? $url : $entity->url();
@@ -262,11 +228,7 @@ class EntityMappingService
         $patternTooltip = '<a title="([^"]*)" href="' . $entityLinkSearch
             . '" data-toggle="tooltip"( data-html="true")?>(.*?)</a>';
 
-        $replace = '<a href=\"' . $entityLink . '\">' . $name . '</a>';
-        if (!empty($tooltip)) {
-            $replace = '<a title="' . $tooltip . '" href="' . $entityLink
-                . '" data-toggle="tooltip" data-html="true">' . $name . '</a>';
-        }
+        $replace = '[' . $entity->type . ':' . $entity->child->id . ']';
 
 //        dump($patternNoTooltip);
 //        dump($patternTooltip);
@@ -289,49 +251,7 @@ class EntityMappingService
         }
     }
 
-    /**
-     * Extract the mentions from a text
-     * @param String $entry
-     * @return mixed
-     */
-    protected function extract($text)
-    {
-        $data = [];
-        // Extract links from the entry to foreign
-        preg_match_all('`href="([^"]*)"(.*?)>(.*?)</a>`i', $text, $segments);
 
-        foreach ($segments[1] as $key => $url) {
-            // If it's an internal link, we want to "map" id
-            $domain = parse_url($url, PHP_URL_HOST);
-            if (!in_array($domain, ['kanka.io', 'kanka.loc', 'dev.kanka.io'])) {
-                continue;
-            }
-
-            $url = parse_url($url, PHP_URL_PATH);
-            $urlSegments = explode('/', $url);
-            $urlCount = count($urlSegments);
-            $type = $urlSegments[$urlCount - 2];
-            $id = $urlSegments[$urlCount - 1];
-
-            // If the type is an integer, we've probably got a link going to a subpage like map, so
-            // we need to fiddle a bit with the values.
-            if (is_numeric($type)) {
-                $type = $urlSegments[$urlCount - 3];
-                $id = $urlSegments[$urlCount - 2];
-            }
-
-            $name = $segments[2][$key];
-            $key = $type.'.' . $id;
-
-            $data[$key] = [
-                'type' => $type,
-                'id' => $id,
-                'name' => $name
-            ];
-        }
-
-        return $data;
-    }
 
     /**
      * @param string $message

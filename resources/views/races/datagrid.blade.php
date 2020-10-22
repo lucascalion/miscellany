@@ -17,7 +17,7 @@
             'visible' => $campaign->enabled('races'),
             'render' => function($model) {
                 if ($model->race) {
-                    return '<a href="' . route('races.show', $model->race_id) . '" data-toggle="tooltip" title="' . $model->race->tooltip() . '">' . e($model->race->name) . '</a>';
+                    return $model->race->tooltipedLink();
                 }
             }
         ],
@@ -25,7 +25,7 @@
             'label' => trans('races.fields.characters'),
             'visible' => $campaign->enabled('characters'),
             'render' => function($model) {
-                return $model->characters()->count();
+                return $model->characters->count();
             },
             'disableSort' => true,
         ],

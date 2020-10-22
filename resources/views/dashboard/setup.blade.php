@@ -4,9 +4,12 @@
     'breadcrumbs' => [
         trans('dashboard.setup.title')
     ],
-    'headerExtra' => '<a href="' . route('home') .'" class="pull-right text-md" title="'. trans('dashboard.setup.actions.back_to_dashboard') .'"><i class="fa fa-arrow-left"></i> ' . trans('dashboard.setup.actions.back_to_dashboard') . '</a>'
 
 ])
+
+@section('header-extra')
+    <a href="{{ route('home') }}" class="pull-right text-md" title="{{ __('dashboard.setup.actions.back_to_dashboard') }}"><i class="fa fa-arrow-left"></i> {{ __('dashboard.setup.actions.back_to_dashboard') }}</a>
+@endsection
 
 @section('content')
 
@@ -15,9 +18,12 @@
     <div class="campaign-dashboard-widgets">
         <div class="row" id="widgets" data-url="{{ route('dashboard.reorder') }}">
             @foreach ($widgets as $widget)
+                @if ($widget->entity && empty($widget->entity->child))
+                    @continue;
+                @endif
                 <?php /** @var \App\Models\CampaignDashboardWidget $widget */ ?>
                 <div class="col-md-{{ $widget->colSize() }} widget-draggable">
-                    <div class="widget widget-{{ $widget->widget }}"
+                    <div class="widget widget-{{ $widget->widget }} cover-background"
                          data-toggle="ajax-modal"
                          data-target="#edit-widget"
                          data-url="{{ route('campaign_dashboard_widgets.edit', $widget) }}"
@@ -29,8 +35,14 @@
                             <span class="widget-type">{{ __('dashboard.setup.widgets.' . $widget->widget) }}</span>
                             @if ($widget->entity)
                                 <div class="widget-entity">
-                                    {{ link_to($widget->entity->child->getLink(), $widget->entity->name) }}
+                                    {{ link_to($widget->entity->url(), $widget->entity->name) }}
                                 </div>
+                            @endif
+
+                            @if ($widget->widget == \App\Models\CampaignDashboardWidget::WIDGET_UNMENTIONED)
+                                @if (!empty($widget->conf('entity')))
+                                <h5>{{ __('entities.' . $widget->conf('entity')) }}</h5>
+                                @endif
                             @endif
 
                             @if ($widget->widget == \App\Models\CampaignDashboardWidget::WIDGET_RECENT)
@@ -39,6 +51,14 @@
                                 @elseif (!empty($widget->conf('singular')))
                                 <h5>{{ __('dashboard.widgets.recent.singular') }}</h5>
                                 @endif
+                            @endif
+
+                            @if (!empty($widget->tags))
+                                <div class="tags">
+                                    @foreach ($widget->tags as $tag)
+                                        {!! $tag->html() !!}
+                                    @endforeach
+                                </div>
                             @endif
                         </div>
                         <input type="hidden" name="widgets[]" value="{{ $widget->id }}" />
@@ -76,6 +96,12 @@
                         </div>
                         <div class="btn btn-block btn-default btn-lg" id="btn-widget-recent" data-url="{{ route('campaign_dashboard_widgets.create', ['widget' => 'recent']) }}">
                             <i class="fa fa-history"></i> {{ __('dashboard.setup.widgets.recent') }}
+                        </div>
+                        <div class="btn btn-block btn-default btn-lg" id="btn-widget-unmentioned" data-url="{{ route('campaign_dashboard_widgets.create', ['widget' => 'unmentioned']) }}">
+                            <i class="fa fa-question"></i> {{ __('dashboard.setup.widgets.unmentioned') }}
+                        </div>
+                        <div class="btn btn-block btn-default btn-lg" id="btn-widget-random" data-url="{{ route('campaign_dashboard_widgets.create', ['widget' => 'random']) }}">
+                            <i class="fas fa-dice-d20"></i> {{ __('dashboard.setup.widgets.random') }}
                         </div>
                     </div>
 

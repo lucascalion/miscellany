@@ -23,7 +23,9 @@ return [
         'name'                  => 'Nom',
     ],
     'hints'                 => [
-        'parent_attribute_template' => 'Ce modèle d\'attribut peut être l\'enfant d\'un autre modèle d\'attribut. Lorsqu\'un modèle d\'attribut est appliqué, celui-ci ainsi que tous ces descendants seront aussi appliqués.',
+        'automatic'                 => 'Attributs automatiquement appliqués depuis le modèle :link.',
+        'entity_type'               => 'Si défini, lors de la création d\'une nouvelle entité de ce type, ce modèle d\'attribut ainsi que ses parents seront automatiquement appliqués.',
+        'parent_attribute_template' => 'Ce modèle d\'attribut peut être l\'enfant d\'un autre modèle d\'attribut. Lorsqu\'un modèle d\'attribut est appliqué, celui-ci ainsi que tous ses descendants seront aussi appliqués.',
     ],
     'index'                 => [
         'add'           => 'Nouveau modèle d\'attribut',

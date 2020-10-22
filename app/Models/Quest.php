@@ -2,13 +2,38 @@
 
 namespace App\Models;
 
+use App\Facades\CampaignLocalization;
+use App\Models\Concerns\SimpleSortableTrait;
 use App\Traits\CalendarDateTrait;
 use App\Traits\CampaignTrait;
 use App\Traits\ExportableTrait;
 use App\Traits\VisibleTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * Class Quest
+ * @package App\Models
+ * @property integer $quest_id
+ * @property integer $character_id
+ * @property boolean $is_completed
+ * @property string $date
+ * @property Character $character
+ * @property Character[] $characters
+ * @property Location[] $locations
+ * @property Quest $quest
+ * @property Quest[] $quests
+ * @property Item[] $items
+ * @property Organisation[] $organisations
+ */
 class Quest extends MiscModel
 {
+    use CampaignTrait,
+        VisibleTrait,
+        ExportableTrait,
+        CalendarDateTrait,
+        SimpleSortableTrait,
+        SoftDeletes;
+
     /**
      * @var array
      */
@@ -22,6 +47,7 @@ class Quest extends MiscModel
         'is_private',
         'character_id',
         'is_completed',
+        'date',
 
         // calendar date
         'calendar_id',
@@ -43,11 +69,26 @@ class Quest extends MiscModel
     protected $filterableColumns = [
         'name',
         'type',
+        'date',
         'quest_id',
         'tag_id',
         'character_id',
         'is_completed',
         'is_private',
+        'tags',
+        'has_image',
+    ];
+
+    /**
+     * Fields that can be sorted on
+     * @var array
+     */
+    protected $sortableColumns = [
+        'date',
+        'character.name',
+        'is_completed',
+        'calendar_date',
+        'quest.name',
     ];
 
     /**
@@ -59,11 +100,6 @@ class Quest extends MiscModel
         'quest_id',
         'calendar_id'
     ];
-
-    /**
-     * Traits
-     */
-    use CampaignTrait, VisibleTrait, ExportableTrait, CalendarDateTrait;
 
     /**
      * Searchable fields
@@ -81,6 +117,24 @@ class Quest extends MiscModel
         'items',
         'organisations',
     ];
+
+    /**
+     * Performance with for datagrids
+     * @param $query
+     * @return mixed
+     */
+    public function scopePreparedWith($query)
+    {
+        return $query->with([
+            'entity',
+            'quests',
+            'locations',
+            'characters',
+            'organisations',
+            'quest',
+            'quest.entity',
+        ]);
+    }
 
     /**
      * Parent
@@ -176,34 +230,34 @@ class Quest extends MiscModel
      */
     public function menuItems($items = [])
     {
-        $campaign = $this->campaign;
+        $campaign = CampaignLocalization::getCampaign();
 
-        $count = $this->characters()->acl()->count();
         if ($campaign->enabled('characters')) {
+            $count = $this->characters()->with('character')->has('character')->count();
             $items['characters'] = [
                 'name' => 'quests.show.tabs.characters',
                 'route' => 'quests.characters',
                 'count' => $count
             ];
         }
-        $count = $this->locations()->acl()->count();
         if ($campaign->enabled('locations')) {
+            $count = $this->locations()->with('location')->has('location')->count();
             $items['locations'] = [
                 'name' => 'quests.show.tabs.locations',
                 'route' => 'quests.locations',
                 'count' => $count
             ];
         }
-        $count = $this->items()->acl()->count();
         if ($campaign->enabled('items')) {
+            $count = $this->items()->with('item')->has('item')->count();
             $items['items'] = [
                 'name' => 'quests.show.tabs.items',
                 'route' => 'quests.items',
                 'count' => $count
             ];
         }
-        $count = $this->organisations()->acl()->count();
         if ($campaign->enabled('organisations')) {
+            $count = $this->organisations()->with('organisation')->has('organisation')->count();
             $items['organisations'] = [
                 'name' => 'quests.show.tabs.organisations',
                 'route' => 'quests.organisations',
@@ -211,5 +265,14 @@ class Quest extends MiscModel
             ];
         }
         return parent::menuItems($items);
+    }
+
+    /**
+     * Get the entity_type id from the entity_types table
+     * @return int
+     */
+    public function entityTypeId(): int
+    {
+        return (int) config('entities.ids.quest');
     }
 }

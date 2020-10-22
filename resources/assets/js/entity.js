@@ -6,6 +6,13 @@ $(document).ready(function () {
     entityFileUi = $('.entity-file-ui');
     entityFileModal = $('#entity-modal');
 
+    // Allow ajax requests
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
     if (entityFileUi.length === 1) {
         entityFileUi.on('click', function(e) {
             openingEntityFileModal = true;
@@ -13,10 +20,13 @@ $(document).ready(function () {
                 initEntityFileModal();
                 registerDeleteBtn();
                 registerRenameBtn();
-                registerRenameField()
+                registerRenameField();
+                registerVisibilityChange();
             });
         });
     }
+
+    registerPrivacyToggle();
 });
 
 /**
@@ -42,12 +52,6 @@ function initEntityFileModal() {
     });
 
 
-    // Allow ajax requests
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
 
     $('#entity-file-upload').fileupload({
         dropZone: entityFileDrop,
@@ -126,7 +130,6 @@ function registerDeleteBtn() {
 function registerRenameBtn() {
     $('.entity-file-rename').each(function(i) {
         $(this).unbind('click').on('click', function(e) {
-            console.log('rename click');
             $(this).parent().children('a').hide();
             $(this).parent().children('input').val($(this).data('default')).show().focus();
             $(this).hide();
@@ -190,6 +193,46 @@ function registerRenameField() {
 }
 
 /**
+ * Change the visibility of an entity file
+ */
+function registerVisibilityChange()
+{
+    $('.entity-file-visibility').on('click', function(e) {
+        e.preventDefault();
+
+        var parent = $(this).parent().parent();
+        var target = parent.data('target');
+        var targetLoading = parent.data('target-loading');
+        $('#' + target).removeClass('fas far fa-lock fa-user-lock fa-eye entity-file-visibility-dropdown')
+            .addClass('hidden');
+
+        $('#' + targetLoading).removeClass('hidden');
+
+        // Ajax rename.
+        $.post({
+            url: $(this).data('url'),
+            data: {
+                '_method': 'PATCH',
+                'visibility': $(this).data('visibility'),
+                'csrf-token': $('.csrf-token').val()
+            },
+            datatype: 'JSON',
+            context: this
+        }).done(function (data) {
+            var parent = $(this).parent().parent();
+            var target = parent.data('target');
+            var targetLoading = parent.data('target-loading');
+            $('#' + target).removeClass('hidden');
+            $('#' + target).addClass($(this).data('icon') + ' entity-file-visibility-dropdown')
+                .prop('title', $(this).attr('title'));
+
+            $('#' + targetLoading).addClass('hidden');
+
+        });
+    });
+}
+
+/**
  *
  * @param data
  * @returns {string}
@@ -215,6 +258,7 @@ function replaceFileList(data) {
     registerDeleteBtn();
     registerRenameBtn();
     registerRenameField();
+    registerVisibilityChange();
 }
 
 /**
@@ -244,6 +288,35 @@ function refreshEntityFileList() {
             if (data) {
                 $(this).html(data);
             }
+        });
+    });
+}
+
+/**
+ * Toggle the privacy of an entity
+ */
+function registerPrivacyToggle() {
+    $('.entity-private-toggle').click(function() {
+        $(this).addClass('disabled');
+
+        let child = $(this).children('i.fa');
+        child.removeClass().addClass('fa fa-spin fa-spinner');
+
+        $.post({
+            url: $(this).data('url'),
+            data: {},
+            context: this
+        }).done(function (res) {
+            if (!res.success) {
+                return;
+            }
+
+            let child = $(this).children('i.fa');
+            let cssClass = res.status ? $(child).data('off') : $(child).data('on');
+            let title = res.status ? $(child).data('title-off') : $(child).data('title-on');
+            child.removeClass().addClass('fa').addClass('fa-' + cssClass).attr('title', title);
+
+            $(this).removeClass('disabled');
         });
     });
 }

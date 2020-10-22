@@ -6,6 +6,8 @@ use App\Models\Concerns\Paginatable;
 use App\Traits\VisibleTrait;
 use Illuminate\Database\Eloquent\Model;
 use DateTime;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class Attribute
@@ -15,6 +17,7 @@ use DateTime;
  * @property string $name
  * @property boolean $is_admin
  * @property boolean $is_public
+ * @property HasMany $permissions
  */
 class CampaignRole extends Model
 {
@@ -67,6 +70,16 @@ class CampaignRole extends Model
     }
 
     /**
+     * Get all roles except admin
+     * @param $query
+     * @return mixed
+     */
+    public function scopeWithoutAdmin($query)
+    {
+        return $query->where('is_admin', false);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function permissions()
@@ -108,5 +121,16 @@ class CampaignRole extends Model
                 $permission->delete();
             }
         }
+    }
+
+    /**
+     * @param Builder $builder
+     * @param string|null $search
+     * @return Builder
+     */
+    public function scopeSearch(Builder $builder, string $search = null)
+    {
+        return $builder
+            ->where('name', 'like', "%$search%");
     }
 }

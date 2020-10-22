@@ -8,9 +8,14 @@ return [
     'edit'          => [
         'success'   => 'A profilodat frissítettük.',
     ],
+    'editors'       => [
+        'default'       => 'Alapértelmezett (TinyMCE 4)',
+        'summernote'    => 'Summernote (Kísérleti)',
+    ],
     'fields'        => [
         'avatar'                    => 'Profilkép',
         'email'                     => 'Email',
+        'last_login_share'          => 'Engedélyezd a többi kampány tag számára, hogy láthassák, hogy mikor jelentkeztem be utoljára.',
         'name'                      => 'Név',
         'new_password'              => 'Új jelszó',
         'new_password_confirmation' => 'Új jelszó megerősítése',
@@ -18,6 +23,18 @@ return [
         'password'                  => 'Jelenlegi jelszó',
         'settings'                  => 'Beállítások',
         'theme'                     => 'Téma',
+    ],
+    'newsletter'    => [
+        'links'     => [
+            'community-vote'    => 'Közösségi szavazás',
+            'news'              => 'Hírek',
+        ],
+        'settings'  => [
+            'news'          => 'Hírek - értesíts, amikor vannak :news.',
+            'newsletter'    => 'Hírlevél - feliratkozás a Kanka hírlevelére.',
+            'votes'         => 'Közösségi szavazás - értesíts amint egy új :vote elérhető.',
+        ],
+        'title'     => 'Hírlevelek',
     ],
     'password'      => [
         'success'   => 'A jelszavadat frissítettük.',
@@ -41,11 +58,17 @@ return [
     ],
     'settings'      => [
         'fields'    => [
+            'advanced_mentions' => 'Haladó Említések',
             'date_format'       => 'Dátumformátum',
             'default_nested'    => 'Alapértelmezetten hierarchikus nézet',
+            'editor'            => 'Szövegszerkesztő',
             'pagination'        => 'Lapméret (elemek száma egy lapon)',
         ],
+        'helpers'   => [
+            'editor'    => 'Az alapértelmezett szerkesztő (TinyMCE 4) régi, jól működik desktop környezetben, de a mobil eszközökön nem. A Summernote egy újabb szerkesztő, amely minden eszközön egyaránt működik, de egyelőre még próbafázisban van.',
+        ],
         'hints'     => [
+            'advanced_mentions' => 'Kapcsold be, ha szeretnéd, hogy az említések minden esetben [entity:123] formában jelenjenek meg az entitás szerkesztése közben.',
             'default_nested'    => 'Kapcsold be, ha alapértelmezetten Hierarchikus Nézetben szeretnéd látni az entitásaidat (amikor lehetséges)',
         ],
         'success'   => 'A beállításokat megváltoztattuk.',

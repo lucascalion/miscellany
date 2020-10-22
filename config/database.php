@@ -41,6 +41,12 @@ return [
 
         'mysql' => [
             'driver' => 'mysql',
+            'read' => [
+                'host' => env('DB_HOST_RW', env('DB_HOST', '127.0.0.1')),
+            ],
+            'write' => [
+                'host' => env('DB_HOST_RW', env('DB_HOST', '127.0.0.1')),
+            ],
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'forge'),
@@ -108,12 +114,19 @@ return [
 
         'client' => 'predis',
 
+        // Used for the queue
         'default' => [
             'host' => env('REDIS_HOST', '127.0.0.1'),
             'password' => env('REDIS_PASSWORD', null),
             'port' => env('REDIS_PORT', 6379),
             'database' => 0,
         ],
+        'app_cache' => [
+            'host' => env('REDIS_HOST', '127.0.0.1'),
+            'password' => env('REDIS_PASSWORD', null),
+            'port' => env('REDIS_PORT', 6379),
+            'database' => 1,
+        ]
 
     ],
 

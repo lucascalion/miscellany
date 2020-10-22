@@ -2,19 +2,41 @@
 
 namespace App\Models;
 
+use App\Facades\CampaignLocalization;
 use App\Traits\CampaignTrait;
 use App\Traits\ExportableTrait;
 use App\Traits\VisibleTrait;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 /**
  * Class Calendar
  * @package App\Models
- * @var integer $campaign_id
- * @var string $date
- * @var string $name
+ *
+ * @property string $date
+ * @property integer $start_offset
+ * @property string $months
+ * @property string $years
+ * @property string $weekdays
+ * @property string $week_names
+ * @property string $month_aliases
+ * @property string $seasons
+ * @property string $moons
+ * @property string $reset
+ * @property int $calendar_id
+ *
+ * @property CalendarEvent[] $calendarEvents
+ * @property CalendarWeather[] $calendarWeather
+ * @property Calendar $calendar
  */
 class Calendar extends MiscModel
 {
+    use CampaignTrait,
+        VisibleTrait,
+        ExportableTrait,
+        SoftDeletes;
+
     /**
      * @var array
      */
@@ -24,6 +46,7 @@ class Calendar extends MiscModel
         'slug',
         'type',
         'entry',
+        'start_offset',
         'is_private',
         'parameters',
         'months',
@@ -34,6 +57,10 @@ class Calendar extends MiscModel
         'date',
         'suffix',
         'epochs',
+        'month_aliases',
+        'week_names',
+        'reset',
+        'is_incrementing',
 
         // Leap year
         'has_leap_year',
@@ -41,6 +68,8 @@ class Calendar extends MiscModel
         'leap_year_month', // At the end of month X
         'leap_year_offset', // every X years
         'leap_year_start', // X year is a leap year
+
+        'calendar_id',
     ];
 
     /**
@@ -77,7 +106,12 @@ class Calendar extends MiscModel
     /**
      * @var bool
      */
-    protected $loadedIntercalaries = false;
+    protected $loadedWeeks = false;
+
+    /**
+     * @var bool
+     */
+    protected $loadedMonthAliases = false;
 
     /**
      * Fields that can be filtered on
@@ -88,14 +122,10 @@ class Calendar extends MiscModel
         'type',
         'tag_id',
         'is_private',
+        'tags',
+        'has_image',
+        'calendar_id',
     ];
-
-    /**
-     * Traits
-     */
-    use CampaignTrait;
-    use VisibleTrait;
-    use ExportableTrait;
 
     /**
      * Entity type
@@ -108,6 +138,8 @@ class Calendar extends MiscModel
      * @var array
      */
     protected $searchableColumns  = ['name', 'entry', 'type'];
+
+    protected $cachedCurrentDate = false;
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -124,7 +156,7 @@ class Calendar extends MiscModel
     {
         return $this->hasManyThrough(
             'App\Models\Event',
-            'App\Models\EntityEvent',
+            EntityEvent::class,
             'calendar_id',
             'entity_id'
         );
@@ -135,7 +167,31 @@ class Calendar extends MiscModel
      */
     public function calendarEvents()
     {
-        return $this->hasMany('App\Models\EntityEvent', 'calendar_id');
+        return $this->hasMany(EntityEvent::class, 'calendar_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function calendarWeather()
+    {
+        return $this->hasMany(CalendarWeather::class, 'calendar_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function calendar()
+    {
+        return $this->belongsTo(Calendar::class);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function calendars()
+    {
+        return $this->hasMany(Calendar::class);
     }
 
     /**
@@ -144,7 +200,9 @@ class Calendar extends MiscModel
      */
     public function dashboardEvents($operator = '=', $take = 5, $recurring = false)
     {
-        return $this->calendarEvents()
+        $this->cacheCurrentDate();
+        $order = $operator == '<' ? 'DESC' : 'ASC';
+        $query = $this->calendarEvents()
             ->with(['entity', 'calendar'])
             ->entityAcl()
             ->where(function ($sub) use ($operator, $recurring) {
@@ -153,19 +211,29 @@ class Calendar extends MiscModel
                     $sub->orWhere(function ($subsub) {
                         $subsub
                             ->where('is_recurring', true)
-                            ->whereRaw("date(`date`) < '" . $this->date . "'")
+                            // We want recurring events that will start in the future, just in case. Limit it to +2
+                            // years to avoid performance drop
+                            ->where('year', '<=', Arr::get($this->cachedCurrentDate, 0, 1) + 2)
                             ->where(function ($datesub) {
                                 $datesub->whereNull('recurring_until')
                                     ->orWhereRaw("recurring_until >= '" . $this->currentDate('year') . "'");
                             });
                     });
                 } else {
-                    $sub->whereRaw("date(`date`) $operator '" . $this->date . "'");
+                    $sub->where('year', $operator, Arr::get($this->cachedCurrentDate, 0, 1));
+                    $sub->where('is_recurring', false);
+                    //$sub->whereRaw("date(`date`) $operator '" . $this->date . "'");
                 }
             })
-            ->take($take)
-            ->orderByRaw('date(`date`) ' . ($operator == '<' ? 'desc' : 'asc'))
-            ->get();
+            ->orderBy('year', $order)
+            ->orderBy('month', $order)
+            ->orderBy('day', $order);
+
+        if (!empty($take)) {
+            $query->take($take);
+        }
+
+        return $query->get();
     }
 
     /**
@@ -175,7 +243,10 @@ class Calendar extends MiscModel
     public function months()
     {
         if ($this->loadedMonths === false) {
-            $this->loadedMonths = json_decode(strip_tags($this->months), true);
+            $this->loadedMonths = [];
+            if (!empty($this->months)) {
+                $this->loadedMonths = json_decode(strip_tags($this->months), true);
+            }
         }
         return $this->loadedMonths;
     }
@@ -187,7 +258,10 @@ class Calendar extends MiscModel
     public function weekdays()
     {
         if ($this->loadedWeekdays === false) {
-            $this->loadedWeekdays = json_decode(strip_tags($this->weekdays), true);
+            $this->loadedWeekdays = [];
+            if (!empty($this->months)) {
+                $this->loadedWeekdays = json_decode(strip_tags($this->weekdays), true);
+            }
         }
         return $this->loadedWeekdays;
     }
@@ -199,7 +273,10 @@ class Calendar extends MiscModel
     public function years()
     {
         if ($this->loadedYears === false) {
-            $this->loadedYears = json_decode(strip_tags($this->years), true);
+            $this->loadedYears = [];
+            if (!empty($this->years)) {
+                $this->loadedYears = json_decode(strip_tags($this->years), true);
+            }
         }
         return $this->loadedYears;
     }
@@ -230,6 +307,30 @@ class Calendar extends MiscModel
     }
 
     /**
+     * Get the weeks
+     * @return null
+     */
+    public function weeks()
+    {
+        if ($this->loadedWeeks === false) {
+            $this->loadedWeeks = json_decode(empty($this->week_names) ? '[]' : strip_tags($this->week_names), true);
+        }
+        return $this->loadedWeeks;
+    }
+
+    /**
+     * Get the month aliases
+     * @return null
+     */
+    public function monthAliases()
+    {
+        if ($this->loadedMonthAliases === false) {
+            $this->loadedMonthAliases = json_decode(empty($this->month_aliases) ? '[]' : strip_tags($this->month_aliases), true);
+        }
+        return $this->loadedMonthAliases;
+    }
+
+    /**
      * Get the value of a parameter
      * @param $field
      * @return null
@@ -253,13 +354,19 @@ class Calendar extends MiscModel
      */
     public function currentDate($value)
     {
-        $data = explode('-', $this->date);
+        // If we have no date saved at all, skip this part. This happens when an entity was changed to the calendar
+        // type and most fields are missing.
+        if (empty($this->date)) {
+            return null;
+        }
+
+        $this->cacheCurrentDate();
         if ($value == 'year') {
-            return $data[0];
+            return $this->cachedCurrentDate[0] ?: 0;
         } elseif ($value == 'month') {
-            return $data[1];
+            return $this->cachedCurrentDate[1] ?: 1;
         } elseif ($value == 'date') {
-            return $data[2];
+            return $this->cachedCurrentDate[2] ?? 1;
         }
         return null;
     }
@@ -273,13 +380,15 @@ class Calendar extends MiscModel
         if (empty($date)) {
             $date = $this->date;
         }
-        $date = explode('-', $date);
+        $isNegativeYear = Str::startsWith($date, '-');
+        $date = explode('-', ltrim($date, '-'));
 
         // Replace month with real month, and year maybe
         $months = $this->months();
         $years = $this->years();
 
         try {
+            $date[0] = $isNegativeYear ? '-' . $date[0] : $date[0];
             return $date[2] . ' ' .
                 (isset($months[$date[1] - 1]) ? $months[$date[1] - 1]['name'] : $date[1]) . ', ' .
                 (isset($years[$date[0]]) ? $years[$date[0]] : $date[0]) . ' ' .
@@ -322,21 +431,31 @@ class Calendar extends MiscModel
      */
     public function addDay()
     {
-        list($year, $month, $day) = explode('-', $this->date);
+        $segments = explode('-', ltrim($this->date, '-'));
+        $year = ($this->date[0] == '-' ? '-' : null) . $segments[0];
+        $month = $segments[1] ?? 1;
+        $day = false;
 
-        $day++;
         // Day is longer than month max length?
         $months = $this->months();
-        if ($day > $months[$month-1]['length']) {
-            $day = 1;
-            $month++;
-            if ($month > count($months)) {
-                $month = 1;
-                $year++;
+
+        if (!empty($segments[2])) {
+            $day = $segments[2] + 1;
+            if ($day > $months[$month-1]['length']) {
+                $day = 1;
+                $month++;
             }
+        } else {
+            $month++;
         }
 
-        $this->date = $year . '-' . $month . '-' . $day;
+        // Reset month and increment year
+        if ($month > count($months)) {
+            $month = 1;
+            $year++;
+        }
+
+        $this->date = $year . '-' . $month . ($day !== false ? '-' . $day : null);
         return $this->save();
     }
 
@@ -374,10 +493,8 @@ class Calendar extends MiscModel
     /**
      * @return array
      */
-    public function menuItems($items = [])
+    public function menuItems($items = []): array
     {
-        $campaign = $this->campaign;
-
         $count = $this->calendarEvents()->entityAcl()->count();
         if ($count > 0) {
             $items['events'] = [
@@ -387,5 +504,31 @@ class Calendar extends MiscModel
             ];
         }
         return parent::menuItems($items);
+    }
+
+    /**
+     * Get the entity_type id from the entity_types table
+     * @return int
+     */
+    public function entityTypeId(): int
+    {
+        return (int) config('entities.ids.calendar');
+    }
+
+    /**
+     * Cache the current date explode method
+     */
+    protected function cacheCurrentDate(): void
+    {
+        if ($this->cachedCurrentDate !== false) {
+            return;
+        }
+
+        $date = ltrim($this->date, '-');
+        $this->cachedCurrentDate = explode('-', $date);
+
+        if (substr($this->date, 0, 1) == '-') {
+            $this->cachedCurrentDate[0] = -$this->cachedCurrentDate[0];
+        }
     }
 }

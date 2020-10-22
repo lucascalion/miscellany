@@ -14,7 +14,7 @@ use Illuminate\Http\Request;
 */
 
 Route::group([
-    'middleware' => ['auth:api', 'throttle:60,1'],
+    'middleware' => ['auth:api', 'throttle:rate_limit,1'],
     'namespace'  => 'Api\v1',
     'prefix'     => 'v1',
 ], function() {
@@ -22,7 +22,7 @@ Route::group([
 });
 
 Route::group([
-    'middleware' => ['auth:api', 'throttle:60,1'],
+    'middleware' => ['auth:api', 'throttle:rate_limit,1'],
     'namespace'  => 'Api\v1',
     'prefix'     => '1.0',
 ], function() {

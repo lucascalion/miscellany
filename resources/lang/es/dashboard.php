@@ -1,6 +1,10 @@
 <?php
 
 return [
+    'actions'           => [
+        'follow'    => 'Seguir',
+        'unfollow'  => 'Dejar de seguir',
+    ],
     'campaigns'         => [
         'manage'    => 'Gestionar campaña',
         'tabs'      => [
@@ -11,7 +15,8 @@ return [
     ],
     'description'       => 'Tu plaza creativa',
     'helpers'           => [
-        'setup' => 'Configura el tablero de tu campaña.',
+        'follow'    => 'Si sigues una campaña, esta aparecerá en el menú de cambio de campaña (arriba a la derecha) bajo tus campañas.',
+        'setup'     => 'Configura el tablero de la campaña',
     ],
     'latest_release'    => 'Publicación reciente',
     'notifications'     => [
@@ -43,16 +48,18 @@ return [
             'back_to_dashboard' => 'Volver al tablero',
             'edit'              => 'Editar widget',
         ],
-        'title'     => 'Configuración del tablero de campaña',
+        'title'     => 'Configurar el tablero de campaña',
         'widgets'   => [
-            'calendar'  => 'Calendario',
-            'preview'   => 'Previsualización de la entidad',
-            'recent'    => 'Reciente',
+            'calendar'      => 'Calendario',
+            'preview'       => 'Previsualización de la entidad',
+            'random'        => 'Entidad aleatoria',
+            'recent'        => 'Reciente',
+            'unmentioned'   => 'Entidades sin mención',
         ],
     ],
-    'title'             => 'Tablero',
+    'title'             => 'Tablero de',
     'welcome'           => [
-        'body'      => <<<'TEXT'
+        'body'  => <<<'TEXT'
 ¡Bienvenid@ a Kanka! Tu primera campaña ha sido creada y hemos incluido un par de entidades de ejemplo como inspiración (puedes borrarlas cuando quieras).
 
 Seguramente querrás ir empezando a crear algunas entidades propias, así que elige una categoría en el menú de la izquierda y da rienda suelta a tu imaginación. Puedes deshabilitar categorías innecesarias desde la configuración de la campaña: así las esconderás del menú.
@@ -64,10 +71,9 @@ Un par de consejos para empezar:
 - Si tienes preguntas, sugerencias o solo quieres charlar, únete a nosotros en :discord
 TEXT
 ,
-        'header'    => 'Bienvenida',
     ],
     'widgets'           => [
-        'calendar'  => [
+        'calendar'      => [
             'actions'           => [
                 'next'      => 'Cambiar fecha al día siguiente',
                 'previous'  => 'Cambiar fecha al día anterior',
@@ -76,18 +82,40 @@ TEXT
             'previous_events'   => 'Anterior',
             'upcoming_events'   => 'Próximo',
         ],
-        'create'    => [
+        'create'        => [
             'success'   => 'Widget añadido al tablero.',
         ],
-        'delete'    => [
+        'delete'        => [
             'success'   => 'Widget eliminado del tablero.',
         ],
-        'recent'    => [
-            'help'  => 'Solo muestra la previsualización de la última entidad actualizada.',
-            'title' => 'Modificado recientemente',
+        'fields'        => [
+            'width' => 'Anchura',
         ],
-        'update'    => [
-            'success'   => 'Widged modificado.',
+        'recent'        => [
+            'entity-header' => 'Usar la cabecera de la entidad como imagen',
+            'full'          => 'Completa',
+            'help'          => 'Solo muestra la previsualización de la última entidad actualizada.',
+            'helpers'       => [
+                'entity-header' => 'Si la entidad tiene una imagen de cabecera (funcionalidad de campañas mejoradas), puedes habilitar que este widget use dicha imagen en lugar de la imagen de la entidad.',
+                'full'          => 'Muestra toda la entidad por defecto en lugar de una previsualización.',
+            ],
+            'singular'      => 'Singular',
+            'tags'          => 'Filtra la lista de las entidades recientemente modificadas con etiquetas específicas.',
+            'title'         => 'Modificado recientemente',
+        ],
+        'unmentioned'   => [
+            'title' => 'Entidades no mencionadas',
+        ],
+        'update'        => [
+            'success'   => 'Widget modificado.',
+        ],
+        'widths'        => [
+            '0' => 'Auto',
+            '12'=> 'Completa (100%)',
+            '3' => 'Cuarto (25%)',
+            '4' => 'Tercio (33%)',
+            '6' => 'Mitad (50%)',
+            '8' => 'Dos tercios (66%)',
         ],
     ],
 ];

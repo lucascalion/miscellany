@@ -2,15 +2,22 @@
 
 namespace App\Models;
 
+use App\Facades\Mentions;
+use App\Models\Concerns\SimpleSortableTrait;
 use App\Traits\VisibleTrait;
 
-class QuestOrganisation extends MiscModel
+/**
+ * Class QuestOrganisation
+ * @package App\Models
+ * @property integer $organisation_id
+ * @property Organisation $organisation
+ * @property string $description
+ * @property string $role
+ * @property string $colour
+ * @property integer $impact
+ */
+class QuestOrganisation extends QuestElement
 {
-    /**
-     * Traits
-     */
-    use VisibleTrait;
-
     /**
      * ACL Trait config
      * Tell the ACL trait that we aren't looking on this model but on organisations.
@@ -26,15 +33,15 @@ class QuestOrganisation extends MiscModel
     /**
      * @var array
      */
-    protected $fillable = ['quest_id', 'organisation_id', 'description', 'is_private'];
-
-    /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function quest()
-    {
-        return $this->belongsTo('App\Models\Quest', 'quest_id');
-    }
+    protected $fillable = [
+        'quest_id',
+        'organisation_id',
+        'description',
+        'role',
+        'colour',
+        'impact',
+        'is_private'
+    ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

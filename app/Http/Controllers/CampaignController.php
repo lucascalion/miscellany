@@ -7,7 +7,9 @@ use App\Models\Campaign;
 use App\Http\Requests\StoreCampaign;
 use App\Services\CampaignService;
 use App\Services\EntityService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 
@@ -36,7 +38,7 @@ class CampaignController extends Controller
      */
     public function __construct(CampaignService $campaignService, EntityService $entityService)
     {
-        $this->middleware('auth', ['except' => ['show']]);
+        $this->middleware('auth', ['except' => ['show', 'css']]);
         $this->campaignService = $campaignService;
         $this->entityService = $entityService;
     }
@@ -158,5 +160,26 @@ class CampaignController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('campaign')->withErrors($e->getMessage());
         }
+    }
+
+    /**
+     * Get the campaign css
+     * @return Response
+     */
+    public function css()
+    {
+        $campaign = CampaignLocalization::getCampaign();
+        $css = null;
+        if ($campaign->boosted() && !empty($campaign->css)) {
+            $css = $campaign->css;
+        }
+
+        $response = \Illuminate\Support\Facades\Response::make($css);
+        $response->header('Content-Type', 'text/css');
+        $response->header('Expires', Carbon::now()->addMonth(1)->toDateTimeString());
+        $month = 2592000;
+        $response->header('Cache-Control', 'public, max_age=' . $month);
+
+        return $response;
     }
 }

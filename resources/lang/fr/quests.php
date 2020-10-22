@@ -37,6 +37,8 @@ return [
     'fields'        => [
         'character'     => 'Auteur',
         'characters'    => 'Personnages',
+        'copy_elements' => 'Copier les éléments de la quête',
+        'date'          => 'Date',
         'description'   => 'Description',
         'image'         => 'Image',
         'is_completed'  => 'Completée',
@@ -46,10 +48,11 @@ return [
         'organisations' => 'Organisations',
         'quest'         => 'Quête Parentale',
         'quests'        => 'Sous-quêtes',
+        'role'          => 'Rôle',
         'type'          => 'Type',
     ],
     'helpers'       => [
-        'nested'    => 'Ce mode de naviguation permet d\'afficher les quêtes de manière imbriquée. Les quêtes sans quête parent seront affichées par défaut. Les quêtes possédant des sous-quêtes peuvent être cliqués pour afficher ces enfants. Tu peux continuer à cliquer jusqu\'à ce qu\'il n\'y ait plus d\'enfants à voir.',
+        'nested'    => 'Ce mode de navigation permet d\'afficher les quêtes de manière imbriquée. Les quêtes sans quête parent seront affichées par défaut. Une quête possédant des sous-quêtes peut être cliquée pour afficher ses enfants. Tu peux continuer à cliquer jusqu\'à ce qu\'il n\'y ait plus d\'enfants à voir.',
     ],
     'hints'         => [
         'quests'    => 'Un réseau de quêtes liées peut être créé à l\'aide du champ Quête Parentale.',
@@ -121,8 +124,10 @@ return [
         'title'     => 'Organisations dans :name',
     ],
     'placeholders'  => [
+        'date'  => 'Date réelle de la quête',
         'name'  => 'Nom de la quête',
         'quest' => 'Quête Parentale',
+        'role'  => 'Le rôle de l\'entité dans la quête.',
         'type'  => 'Principale, side quest, personnage',
     ],
     'show'          => [

@@ -3,16 +3,17 @@
 namespace App\Policies;
 
 use App\Facades\Identity;
+use App\Facades\UserCache;
 use App\Traits\AdminPolicyTrait;
+use App\Traits\EnvTrait;
 use App\User;
 use App\Models\CampaignUser;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class CampaignUserPolicy
 {
-    use HandlesAuthorization;
-    use AdminPolicyTrait;
-    
+    use HandlesAuthorization, AdminPolicyTrait, EnvTrait;
+
     /**
      * Determine whether the user can view the campaignUser.
      *
@@ -43,11 +44,12 @@ class CampaignUserPolicy
      */
     public function update(User $user, CampaignUser $campaignUser)
     {
-        return $user->campaign->id == $campaignUser->campaign->id
-            && $this->isAdmin($user) && !$campaignUser->user->isAdmin() &&
-
+        return $user->campaign->id == $campaignUser->campaign->id &&
             // Don't allow updating if we are currently impersonating
-            !Identity::isImpersonating();
+            !Identity::isImpersonating()
+            && UserCache::user($user)->admin() && !UserCache::user($campaignUser->user)->admin() &&
+            !$this->shadow()
+        ;
     }
 
     /**
@@ -59,11 +61,12 @@ class CampaignUserPolicy
      */
     public function delete(User $user, CampaignUser $campaignUser)
     {
-        return $user->campaign->id == $campaignUser->campaign->id
-            && $this->isAdmin($user) && !$campaignUser->user->isAdmin() &&
-
+        return $user->campaign->id == $campaignUser->campaign->id &&
             // Don't allow deleting if we are currently impersonating
-            !Identity::isImpersonating();
+            !Identity::isImpersonating()
+            && UserCache::user($user)->admin() && !UserCache::user($campaignUser->user)->admin() &&
+            !$this->shadow()
+        ;
     }
 
     /**
@@ -75,10 +78,11 @@ class CampaignUserPolicy
      */
     public function switch(User $user, CampaignUser $campaignUser)
     {
-        return $user->campaign->id == $campaignUser->campaign->id
-            && $this->isAdmin($user) && !$campaignUser->user->isAdmin() &&
-
+        return $user->campaign->id == $campaignUser->campaign->id &&
             // Don't allow impersonating if we are already impersonating
-            !Identity::isImpersonating();
+            !Identity::isImpersonating()
+            && UserCache::user($user)->admin() && !UserCache::user($campaignUser->user)->admin() &&
+            !$this->shadow()
+        ;
     }
 }

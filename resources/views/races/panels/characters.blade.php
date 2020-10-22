@@ -1,50 +1,89 @@
-<div class="box box-flat">
-    <div class="box-body">
-        <h2 class="page-header with-border">
-            {{ trans('races.show.tabs.characters') }}
-        </h2>
+<?php
+/**
+ * @var \App\Models\Race $model
+ * @var \App\Models\Character $character
+ */
+$filters = [];
+$allMembers = true;
+if (!request()->has('all_members')) {
+    $filters['race_id'] = $model->id;
+    $allMembers = false;
+}
+$datagridSorter = new \App\Datagrids\Sorters\RaceCharacterSorter();
+$datagridSorter->request(request()->all());
 
-        <?php  $r = $model->characters()->acl()->orderBy('name', 'ASC')->with(['family'])->paginate(); ?>
-        <p class="export-{{ $r->count() === 0 ? 'visible export-hidden' : 'visible' }}">{{ trans('races.show.tabs.characters') }}</p>
-        <table id="characters" class="table table-hover {{ $r->count() === 0 ? 'export-hidden' : '' }}">
+?>
+<div class="box box-solid">
+    <div class="box-header with-border">
+        <h3 class="box-title">{{ __('races.show.tabs.characters') }}</h3>
+
+        <div class="box-tools pull-right">
+            @if (!$allMembers)
+                <a href="{{ route('races.show', [$model, 'all_members' => true]) }}" class="btn btn-default btn-sm">
+                    <i class="fa fa-filter"></i> {{ __('crud.filters.all') }} ({{ $model->allCharacters()->has('entity')->count() }})
+                </a>
+            @else
+                <a href="{{ route('races.show', $model) }}" class="btn btn-default btn-sm">
+                    <i class="fa fa-filter"></i> {{ __('crud.filters.direct') }} ({{ $model->characters()->has('entity')->count() }})
+                </a>
+            @endif
+        </div>
+    </div>
+    <div class="box-body">
+
+        <p class="help-block export-hidden">
+            {{ __('races.characters.helpers.' . ($allMembers ? 'all_' : null) . 'characters') }}
+        </p>
+
+        <div class="export-hidden">
+            @include('cruds.datagrids.sorters.simple-sorter')
+        </div>
+
+        <table id="characters" class="table table-hover">
             <tbody><tr>
                 <th class="avatar"><br /></th>
-                <th>{{ trans('characters.fields.name') }}</th>
+                <th>{{ __('characters.fields.name') }}</th>
                 @if ($campaign->enabled('locations'))
-                    <th>{{ trans('crud.fields.location') }}</th>
+                    <th>{{ __('crud.fields.location') }}</th>
                 @endif
                 @if ($campaign->enabled('families'))
-                    <th>{{ trans('characters.fields.family') }}</th>
+                    <th>{{ __('characters.fields.family') }}</th>
                 @endif
-                <th>{{ trans('characters.fields.age') }}</th>
                 <th>&nbsp;</th>
             </tr>
+
+<?php
+$r = $model->allCharacters()
+    ->has('entity')
+    ->with(['family', 'location', 'entity'])
+    ->filter($filters)
+    ->simpleSort($datagridSorter)
+    ->paginate(); ?>
             @foreach ($r as $character)
                 <tr>
                     <td>
-                        <a class="entity-image" style="background-image: url('{{ $character->getImageUrl(true) }}');" title="{{ $character->name }}" href="{{ route('characters.show', $character->id) }}"></a>
+                        <a class="entity-image" style="background-image: url('{{ $character->getImageUrl(40) }}');" title="{{ $character->name }}" href="{{ route('characters.show', $character->id) }}"></a>
                     </td>
                     <td>
-                        <a href="{{ route('characters.show', $character->id) }}" data-toggle="tooltip" title="{{ $character->tooltip() }}">{{ $character->name }}</a>
+                        {!! $character->tooltipedLink() !!}
                     </td>
                     @if ($campaign->enabled('locations'))
                         <td>
                             @if ($character->location)
-                                <a href="{{ route('locations.show', $character->location_id) }}" data-toggle="tooltip" title="{{ $character->location->tooltip() }}">{{ $character->location->name }}</a>
+                                {!! $character->location->tooltipedLink() !!}
                             @endif
                         </td>
                     @endif
                     @if ($campaign->enabled('families'))
                     <td>
                         @if ($character->family)
-                            <a href="{{ route('families.show', $character->family_id) }}" data-toggle="tooltip" title="{{ $character->family->tooltip() }}">{{ $character->family->name }}</a>
+                            {!! $character->family->tooltipedLink() !!}
                         @endif
                     </td>
                     @endif
-                    <td>{{ $character->age }}</td>
                     <td class="text-right">
-                        <a href="{{ route('characters.show', ['id' => $character->id]) }}" class="btn btn-xs btn-primary">
-                            <i class="fa fa-eye" aria-hidden="true"></i> {{ trans('crud.view') }}
+                        <a href="{{ route('characters.show', [$character]) }}" class="btn btn-xs btn-primary">
+                            <i class="fa fa-eye" aria-hidden="true"></i> {{ __('crud.view') }}
                         </a>
                     </td>
                 </tr>
@@ -52,6 +91,6 @@
             </tbody>
         </table>
 
-        {{ $r->links() }}
+        {{ $r->appends('all_members', request()->get('all_members'))->links() }}
     </div>
     </div>

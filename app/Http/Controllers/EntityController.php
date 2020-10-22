@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\TranslatableException;
+use App\Http\Requests\CopyEntityToCampaignRequest;
 use App\Http\Requests\CreateEntityRequest;
 use App\Http\Requests\MoveEntityRequest;
 use App\Models\Entity;
@@ -31,8 +32,48 @@ class EntityController extends Controller
      */
     public function move(Entity $entity)
     {
-        $entities = $this->entityService->labelledEntities(true, $entity->pluralType(), true);
+        $this->authorize('move', $entity->child);
+
+        $entities = $this->entityService->labelledEntities(true, [$entity->pluralType(), 'menu_links'], true);
         return view('cruds.move', ['entity' => $entity, 'entities' => $entities]);
+    }
+
+    /**
+     * @param Entity $entity
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function copyToCampaign(Entity $entity)
+    {
+        $this->authorize('view', $entity->child);
+
+        return view('cruds.copy_to_campaign', [
+            'entity' => $entity,
+            'campaigns' => Auth::user()->moveCampaignList(false)
+        ]);
+    }
+
+    /**
+     * @param CopyEntityToCampaignRequest $request
+     * @param Entity $entity
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function copyEntityToCampaign(CopyEntityToCampaignRequest $request, Entity $entity)
+    {
+        $this->authorize('view', $entity->child);
+
+        try {
+            $options = $request->only('campaign');
+            $options['copy'] = 'on';
+
+            $entity = $this->entityService->move($entity, $options);
+
+            return redirect()->route($entity->pluralType() . '.show', $entity->entity_id)
+                ->with('success', trans('crud.move.success_copy', ['name' => $entity->name]));
+        } catch (TranslatableException $ex) {
+            return redirect()->route($entity->pluralType() . '.show', $entity->entity_id)
+                ->with('error', trans($ex->getMessage(), ['name' => $entity->name]));
+        }
     }
 
     /**
@@ -47,13 +88,19 @@ class EntityController extends Controller
         $name = $realEntity->pluralType();
         $entity = $realEntity->pluralType();
         $exporting = true; // This can be used in views to know we are exporting
+        $datagridSorter = null;
 
         if (request()->has('html')) {
-            return view('cruds.export', compact('entity', 'name', 'entities', 'exporting'));
+            return view('cruds.export', compact(
+                'entity',
+                'name',
+                'entities',
+                'exporting'
+            ));
         }
 
         return $pdf
-            ->loadView('cruds.export', compact('entity', 'name', 'entities', 'exporting'))
+            ->loadView('cruds.export', compact('entity', 'name', 'entities', 'exporting', 'datagridSorter'))
             ->download('kanka ' . strip_tags($realEntity->name) . ' export.pdf');
     }
 
@@ -67,9 +114,13 @@ class EntityController extends Controller
         $this->authorize('move', $entity->child);
 
         try {
-            $entity = $this->entityService->move($entity, $request->only('target', 'campaign'));
+            $entity = $this->entityService->move($entity, $request->only('target', 'campaign', 'copy'));
 
             if ($entity->child->campaign_id != Auth::user()->campaign->id) {
+                if ($request->has('copy')) {
+                    return redirect()->route($entity->pluralType() . '.index')
+                        ->with('success', trans('crud.move.success_copy', ['name' => $entity->name]));
+                }
                 return redirect()->route($entity->pluralType() . '.index')
                 ->with('success', trans('crud.move.success', ['name' => $entity->name]));
             }
@@ -104,5 +155,19 @@ class EntityController extends Controller
         $this->authorize('view', $entity->child);
 
         return view('entities.components._files', compact('entity'));
+    }
+
+    /**
+     * @param Entity $entity
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function template(Entity $entity)
+    {
+        $entity = $this->entityService->toggleTemplate($entity);
+        return redirect()->back()
+            ->with(
+                'success',
+                __('entities/actions.templates.success.' . ($entity->is_template ? 'set' : 'unset'), ['name' => $entity->name])
+            );
     }
 }

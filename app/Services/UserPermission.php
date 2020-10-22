@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Facades\CampaignCache;
+use App\Facades\UserCache;
 use App\Models\CampaignPermission;
 use App\Models\CampaignRole;
 use App\User;
@@ -24,6 +26,12 @@ class UserPermission
      * @var array
      */
     protected $entityIds = [];
+
+    /**
+     * Array of Entity IDs the user can specifically not access
+     * @var array
+     */
+    protected $deniedEntityIds = [];
 
     /**
      * Array of Entity Types (journals, characters) the user can access
@@ -108,10 +116,20 @@ class UserPermission
      * List of unique entity ids the user has access to
      * @return array
      */
-    public function entityIds()
+    public function entityIds(): array
     {
         $this->loadPermissions();
         return $this->entityIds;
+    }
+
+    /**
+     * List of unique entity ids the user has access to
+     * @return array
+     */
+    public function deniedEntityIds(): array
+    {
+        $this->loadPermissions();
+        return $this->deniedEntityIds;
     }
 
     /**
@@ -139,12 +157,13 @@ class UserPermission
         $this->entityTypes = [];
         $this->userCampaignOwner = false;
         $this->reload = false;
+        $campaign = \App\Facades\CampaignLocalization::getCampaign();
 
         // Have a user? Get their roles in this campaign.
         $roles = 0;
         if ($this->user) {
             /** @var CampaignRole $role */
-            foreach ($this->user->campaignRoles as $role) {
+            foreach (UserCache::user($this->user)->roles()->where('campaign_id', $campaign->id) as $role) {
                 // If one of the roles is an admin, we don't need to figure any more stuff, we're good.
                 $roles++;
                 if ($role->is_admin) {
@@ -157,8 +176,18 @@ class UserPermission
             // If we have a user, they might have individual entity permissions
             foreach (CampaignPermission::where('user_id', $this->user->id)->get() as $permission) {
                 /** @var $permission CampaignPermission */
-                if (!in_array($permission->entity_id, $this->entityIds)) {
-                    $this->entityIds[] = $permission->entity_id;
+                // If the permission set is negative, we need to add it to the denied ones too, in case a role of
+                // the user has access to this entity.
+                if ($permission->access) {
+                    if (!in_array($permission->entity_id, $this->entityIds)) {
+                        $this->entityIds[] = $permission->entity_id;
+                    }
+                    // If the user was denied through a role but has access through a direct permissions, still allow them
+                    if (($key = array_search($permission->entity_id, $this->deniedEntityIds)) !== false) {
+                        unset($this->deniedEntityIds[$key]);
+                    }
+                } elseif (!$permission->access && !in_array($permission->entity_id, $this->deniedEntityIds)) {
+                    $this->deniedEntityIds[] = $permission->entity_id;
                 }
             }
         }
@@ -169,7 +198,7 @@ class UserPermission
             $campaign = \App\Facades\CampaignLocalization::getCampaign();
 
             // Go and get the Public role
-            $publicRole = $campaign->roles()->where('is_public', true)->first();
+            $publicRole = CampaignCache::campaign($campaign)->roles()->where('is_public', true)->first();
             if ($publicRole) {
                 $this->parseRole($publicRole);
             }
@@ -179,7 +208,7 @@ class UserPermission
     }
 
     /**
-     * Load the permissions of a roal into the service
+     * Load the permissions of a role into the service
      * @param CampaignRole $role
      */
     protected function parseRole(CampaignRole $role)
@@ -198,9 +227,12 @@ class UserPermission
                 if (!in_array($type, $this->entityTypes)) {
                     $this->entityTypes[] = $type;
                 }
-            } elseif (!in_array($permission->entity_id, $this->entityIds)) {
+            } elseif ($permission->access && !in_array($permission->entity_id, $this->entityIds)) {
                 // This permission targets an entity directly
                 $this->entityIds[] = $permission->entity_id;
+            } elseif (!$permission->access && !in_array($permission->entity_id, $this->deniedEntityIds)) {
+                // This permission targets an entity directly
+                $this->deniedEntityIds[] = $permission->entity_id;
             }
         }
     }

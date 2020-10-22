@@ -1,15 +1,12 @@
 
 <div class="row">
     <div class="col-md-6">
-        <div class="form-group required">
-            <label>{{ trans('quests.fields.name') }}</label>
-            {!! Form::text('name', $formService->prefill('name', $source), ['placeholder' => trans('quests.placeholders.name'), 'class' => 'form-control', 'maxlength' => 191]) !!}
-        </div>
+        @include('cruds.fields.name', ['trans' => 'quests'])
         @include('cruds.fields.type', ['base' => \App\Models\Quest::class, 'trans' => 'quests'])
         <div class="form-group">
             {!! Form::select2(
                 'quest_id',
-                (isset($model) && $model->quest ? $model->quest : $formService->prefillSelect('quest', $source)),
+                (isset($model) && $model->quest ? $model->quest : FormCopy::field('quest')->select(true, \App\Models\Quest::class)),
                 App\Models\Quest::class,
                 true,
                 'quests.fields.quest',
@@ -17,14 +14,23 @@
                 'quests.placeholders.quest'
             ) !!}
         </div>
-        @include('cruds.fields.character')
+        @include('cruds.fields.character', ['label' => 'quests.fields.character'])
 
         @include('cruds.fields.tags')
-        @include('cruds.fields.attribute_template')
+
+        <div class="form-group">
+            <label>{{ trans('quests.fields.date') }}</label>
+            <div class="input-group">
+                <div class="input-group-addon">
+                    <i class="fa fa-calendar"></i>
+                </div>
+                {!! Form::text('date', FormCopy::field('date')->string(), ['placeholder' => trans('quests.placeholders.date'), 'id' => 'date', 'class' => 'form-control date-picker', 'autocomplete' => 'off']) !!}
+            </div>
+        </div>
 
         <div class="form-group">
             {!! Form::hidden('is_completed', 0) !!}
-            <label>{!! Form::checkbox('is_completed', 1, (!empty($model) ? $model->is_completed : (!empty($source) ? $formService->prefill('is_completed', $source) : 0))) !!}
+            <label>{!! Form::checkbox('is_completed', 1, (!empty($model) ? $model->is_completed : (!empty($source) ? FormCopy::field('is_completed')->boolean() : 0))) !!}
                 {{ trans('quests.fields.is_completed') }}
             </label>
         </div>

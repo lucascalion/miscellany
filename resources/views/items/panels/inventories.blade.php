@@ -1,4 +1,4 @@
-<div class="box box-flat">
+<div class="box box-solid">
     <div class="box-body">
         <h2 class="page-header with-border">
             {{ trans('items.show.tabs.inventories') }}
@@ -14,12 +14,13 @@
                 <th>&nbsp;</th>
             </tr>
             @foreach ($r as $inventory)
+                @if ($inventory->entity->child)
                 <tr>
                     <td>
-                        <a class="entity-image" style="background-image: url('{{ $inventory->entity->child->getImageUrl(true) }}');" title="{{ $inventory->entity->name }}" href="{{ $inventory->entity->url() }}"></a>
+                        <a class="entity-image" style="background-image: url('{{ $inventory->entity->child->getImageUrl(40) }}');" title="{{ $inventory->entity->name }}" href="{{ $inventory->entity->url() }}"></a>
                     </td>
                     <td>
-                        <a href="{{ $inventory->entity->url() }}" data-toggle="tooltip" title="{{ $inventory->entity->child->tooltipWithName() }}" data-html="true">{{ $inventory->entity->name }}</a>
+                        {!! $inventory->entity->tooltipedLink() !!}
                     </td>
                     <td class="hidden-sm">{{ $inventory->amount }}</td>
                     <td class="hidden-sm">{{ $inventory->position }}</td>
@@ -29,6 +30,7 @@
                         </a>
                     </td>
                 </tr>
+                @endif
             @endforeach
             </tbody>
         </table>

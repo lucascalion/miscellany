@@ -15,7 +15,7 @@ class LayoutController extends Controller
      */
     public function __construct()
     {
-        $this->middleware(['auth', 'identity']);
+        $this->middleware(['auth', 'identity', 'shadow']);
     }
 
     /**
@@ -33,7 +33,7 @@ class LayoutController extends Controller
     public function update(StoreSettingsLayout $request)
     {
         Auth::user()
-            ->saveSettings($request->only(['editor', 'default_nested']))
+            ->saveSettings($request->only(['editor', 'default_nested', 'advanced_mentions', 'new_entity_workflow']))
             ->update($request->only(['theme', 'default_pagination', 'date_format']));
 
         return redirect()

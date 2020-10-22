@@ -8,9 +8,14 @@ return [
     'edit'          => [
         'success'   => 'Profile updated',
     ],
+    'editors'       => [
+        'default'       => 'Default (TinyMCE 4)',
+        'summernote'    => 'Summernote (Experimental)',
+    ],
     'fields'        => [
         'avatar'                    => 'Avatar',
         'email'                     => 'Email',
+        'last_login_share'          => 'Share with other campaign members when I last logged in.',
         'name'                      => 'Name',
         'new_password'              => 'New Password',
         'new_password_confirmation' => 'New Password Confirmation',
@@ -18,6 +23,18 @@ return [
         'password'                  => 'Current password',
         'settings'                  => 'Settings',
         'theme'                     => 'Theme',
+    ],
+    'newsletter'    => [
+        'links'     => [
+            'community-vote'    => 'Community Vote',
+            'news'              => 'News',
+        ],
+        'settings'  => [
+            'news'          => 'News - be notified when there\'s :news.',
+            'newsletter'    => 'Newsletter - receive the Kanka newsletter.',
+            'votes'         => 'Community Votes - be notified as soon as a new :vote is available.',
+        ],
+        'title'     => 'Newsletters',
     ],
     'password'      => [
         'success'   => 'Password updated',
@@ -41,12 +58,20 @@ return [
     ],
     'settings'      => [
         'fields'    => [
-            'date_format'       => 'Date Formatting',
-            'default_nested'    => 'Nested Views as Default',
-            'pagination'        => 'Pagination (elements per page)',
+            'advanced_mentions'     => 'Advanced Mentions',
+            'date_format'           => 'Date Formatting',
+            'default_nested'        => 'Nested Views as Default',
+            'editor'                => 'Text Editor',
+            'new_entity_workflow'   => 'New Entity Workflow',
+            'pagination'            => 'Pagination (elements per page)',
+        ],
+        'helpers'   => [
+            'editor'    => 'The default editor (TinyMCE 4) is old but works well on desktop, but doesn\'t work on mobile. Summernote is a newer editor that works on all devices but we are still trying it out.',
         ],
         'hints'     => [
-            'default_nested'    => 'Activate this option if you wish for the default lists to be Nested by default (when available).',
+            'advanced_mentions'     => 'If activated, mentions will always render as [entity:123] when editing an entity.',
+            'default_nested'        => 'Activate this option if you wish for the default lists to be Nested by default (when available).',
+            'new_entity_workflow'   => 'When creating a new entity, the default workflow is to go to the list of entities. You can change this to view the newly created entity instead.',
         ],
         'success'   => 'Settings changed.',
     ],
@@ -60,4 +85,8 @@ return [
         ],
     ],
     'title'         => 'Update your profile',
+    'workflows'     => [
+        'created'   => 'Go to created entity',
+        'default'   => 'List of entities',
+    ],
 ];

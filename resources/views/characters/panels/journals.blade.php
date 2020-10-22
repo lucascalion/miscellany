@@ -1,11 +1,13 @@
 @inject('dateRenderer', App\Renderers\DateRenderer)
-<div class="box box-flat">
+<div class="box box-solid">
     <div class="box-body">
-        <h2 class="page-header with-border">
+        <h2 class="page-header ">
             {{ trans('characters.show.tabs.journals') }}
         </h2>
 
-        <?php  $r = $model->journals()->acl()->orderBy('name', 'ASC')->with([])->paginate(); ?>
+        <?php  $r = $model->journals()->orderBy('name', 'ASC')->with([
+            'entity', 'entity.tags'
+        ])->paginate(); ?>
         <table id="character-journals" class="table table-hover {{ $r->count() === 0 ? 'export-hidden' : '' }}">
             <tbody><tr>
                 <th class="avatar"><br /></th>
@@ -18,16 +20,16 @@
             @foreach ($r as $journal)
                 <tr>
                     <td>
-                        <a class="entity-image" style="background-image: url('{{ $journal->getImageUrl(true) }}');" title="{{ $journal->name }}" href="{{ route('journals.show', $journal->id) }}"></a>
+                        <a class="entity-image" style="background-image: url('{{ $journal->getImageUrl(40) }}');" title="{{ $journal->name }}" href="{{ route('journals.show', $journal->id) }}"></a>
                     </td>
                     <td>
-                        <a href="{{ route('journals.show', $journal->id) }}" data-toggle="tooltip" title="{{ $journal->tooltip() }}">{{ $journal->name }}</a>
+                        {!! $journal->tooltipedLink() !!}
                     </td>
                     <td class="visible-sm">{{ $journal->type }}</td>
                     <td class="visible-sm">{{ $dateRenderer->render($journal->date) }}</td>
                     <td>{{ $dateRenderer->render($journal->getDate()) }}</td>
                     <td class="text-right">
-                        <a href="{{ route('journals.show', ['id' => $journal->id]) }}" class="btn btn-xs btn-primary">
+                        <a href="{{ route('journals.show', [$journal]) }}" class="btn btn-xs btn-primary">
                             <i class="fa fa-eye" aria-hidden="true"></i> <span class="visible-sm">{{ trans('crud.view') }}</span>
                         </a>
                     </td>

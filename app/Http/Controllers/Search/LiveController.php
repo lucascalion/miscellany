@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Search;
 
 use App\Facades\CampaignLocalization;
 use App\Http\Controllers\Controller;
+use App\Models\Tag;
 use App\Services\SearchService;
 use Illuminate\Http\Request;
 use Response;
@@ -32,12 +33,14 @@ class LiveController extends Controller
         $term = trim($request->q);
         $type = trim($request->type);
         $campaign = CampaignLocalization::getCampaign();
+        $new = request()->has('new');
 
         return Response::json(
             $this->search
                 ->term($term)
                 ->type($type)
                 ->campaign($campaign)
+                ->new($new)
                 ->full()
                 ->find()
         );
@@ -57,7 +60,7 @@ class LiveController extends Controller
             $this->search
                 ->term($term)
                 ->campaign($campaign)
-                ->exclude(['calendars', 'tags'])
+                ->exclude(['calendar', 'tag', 'map', 'timeline'])
                 ->find()
         );
     }
@@ -77,6 +80,34 @@ class LiveController extends Controller
                 ->term($term)
                 ->campaign($campaign)
                 ->exclude(['menu_link'])
+                ->find()
+        );
+    }
+
+
+    /**
+     * Filter on entities which have multiple tags
+     * @param Request $request
+     * @return mixed
+     */
+    public function tagChildren(Request $request)
+    {
+        $term = trim($request->q);
+        $campaign = CampaignLocalization::getCampaign();
+
+        $exclude = [];
+        if ($request->has('exclude')) {
+            /** @var Tag $tag */
+            $tag = Tag::findOrFail($request->get('exclude'));
+            $exclude = $tag->entities->pluck('id')->toArray();
+        }
+
+        return Response::json(
+            $this->search
+                ->term($term)
+                ->campaign($campaign)
+                ->exclude(['tag'])
+                ->excludeIds($exclude)
                 ->find()
         );
     }

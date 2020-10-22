@@ -185,7 +185,6 @@ return [
         Sofa\Eloquence\BaseServiceProvider::class,
         Stevebauman\Purify\PurifyServiceProvider::class,
         Laravel\Socialite\SocialiteServiceProvider::class,
-        Sentry\SentryLaravel\SentryLaravelServiceProvider::class,
         Intervention\Image\ImageServiceProvider::class,
         Mcamara\LaravelLocalization\LaravelLocalizationServiceProvider::class,
         //Ilestis\LaravelElasticEmail\LaravelElasticEmailServiceProvider::class,
@@ -193,7 +192,6 @@ return [
         Vsch\TranslationManager\TranslationServiceProvider::class,
         Barryvdh\DomPDF\ServiceProvider::class,
         RichanFongdasen\EloquentBlameable\ServiceProvider::class,
-        Chumper\Zipper\ZipperServiceProvider::class,
 
         /*
          * Application Service Providers...
@@ -207,7 +205,13 @@ return [
         App\Providers\MacroServiceProvider::class,
         App\Providers\CampaignLocalizationServiceProvider::class,
         App\Providers\EntityPermissionServiceProvider::class,
+        App\Providers\MentionsServiceProvider::class,
         App\Providers\UserPermissionServiceProvider::class,
+        App\Providers\BreadcrumbServiceProvider::class,
+        App\Providers\CacheServiceProvider::class,
+        App\Providers\ImgServiceProvider::class,
+        App\Providers\AttributesServiceProvider::class,
+        \App\Providers\DashboardServiceProvider::class,
     ],
 
     /*
@@ -271,7 +275,15 @@ return [
         // Custom
         'CampaignLocalization' => App\Facades\CampaignLocalization::class,
         'EntityPermission' => App\Facades\EntityPermission::class,
+        'Mentions' => App\Facades\Mentions::class,
         'UserPermission' => App\Facades\UserPermission::class,
+        'Breadcrumb' => App\Facades\Breadcrumb::class,
+        'FormCopy' => App\Facades\FormCopy::class,
+        'EntityCache' => App\Facades\EntityCache::class,
+        'CampaignCache' => App\Facades\CampaignCache::class,
+        'UserCache' => App\Facades\UserCache::class,
+        'Img' => App\Facades\Img::class,
+        'Attributes' => App\Facades\Attributes::class,
     ],
 
 ];

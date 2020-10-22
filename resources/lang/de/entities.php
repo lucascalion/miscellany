@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'abilities'             => 'Fähigkeiten',
+    'ability'               => 'Fähigkeit',
     'attribute_template'    => 'Attributvorlage',
     'attribute_templates'   => 'Attributsvorlagen',
     'calendar'              => 'Kalender',
@@ -12,6 +14,8 @@ return [
     'conversation'          => 'Unterhaltung',
     'conversations'         => 'Unterhaltungen',
     'creator'               => [
+        'back'      => 'Zurück zur Auswahl',
+        'duplicate' => 'Es gibt andere Objekte dieses Typs mit demselben Namen.',
         'error'     => 'Es gab einen Fehler mit deinen Eingaben. Bitte überprüfe sie erneut.',
         'helper'    => 'Wähle einen Objekttyp zum Erstellen. Wenn keine Objekte erscheinen, bedeutet das, dass dir die Berechtigung fehlt jede Art von Objekten in dieser Kampagne zu erstellen.',
         'success'   => 'Neues Objekt \':link\' erstellt.',
@@ -29,6 +33,8 @@ return [
     'journals'              => 'Logbücher',
     'location'              => 'Ort',
     'locations'             => 'Orte',
+    'map'                   => 'Karte',
+    'maps'                  => 'Karten',
     'menu_link'             => 'Menü Link',
     'menu_links'            => 'Menü Links',
     'note'                  => 'Notiz',
@@ -41,4 +47,6 @@ return [
     'races'                 => 'Rassen',
     'tag'                   => 'Tag',
     'tags'                  => 'Tags',
+    'timeline'              => 'Zeitstrahl',
+    'timelines'             => 'Zeitstrahlen',
 ];

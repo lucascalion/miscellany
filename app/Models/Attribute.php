@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Facades\Mentions;
 use App\Models\Concerns\Paginatable;
+use App\Models\Scopes\Starred;
 use App\Traits\OrderableTrait;
 use App\Traits\VisibleTrait;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +14,7 @@ use DateTime;
  * Class Attribute
  * @package App\Models
  *
+ * @property integer $id
  * @property integer $entity_id
  * @property string $name
  * @property string $value
@@ -19,12 +22,15 @@ use DateTime;
  * @property integer $origin_attribute_id
  * @property integer $default_order
  * @property boolean $is_private
+ * @property boolean $is_star
+ * @property string $api_key
  */
 class Attribute extends Model
 {
     const TYPE_BLOCK = 'block';
     const TYPE_CHECKBOX = 'checkbox';
     const TYPE_TEXT = 'text';
+    const TYPE_SECTION = 'section';
 
     /**
      * @var array
@@ -37,6 +43,8 @@ class Attribute extends Model
         'default_order',
         'type',
         'origin_attribute_id',
+        'api_key',
+        'is_star',
     ];
 
     /**
@@ -48,9 +56,7 @@ class Attribute extends Model
     /**
      * Traits
      */
-    use VisibleTrait;
-    use OrderableTrait;
-    use Paginatable;
+    use VisibleTrait, OrderableTrait, Paginatable, Starred;
 
     /**
      * Searchable fields
@@ -79,7 +85,7 @@ class Attribute extends Model
     /**
      * @return bool
      */
-    public function isBlock()
+    public function isBlock(): bool
     {
         return $this->type == self::TYPE_BLOCK;
     }
@@ -87,7 +93,7 @@ class Attribute extends Model
     /**
      * @return bool
      */
-    public function isCheckbox()
+    public function isCheckbox(): bool
     {
         return $this->type == self::TYPE_CHECKBOX;
     }
@@ -95,9 +101,28 @@ class Attribute extends Model
     /**
      * @return bool
      */
-    public function isText()
+    public function isText(): bool
     {
         return $this->type == self::TYPE_TEXT;
+    }
+
+    /**
+     * @return string
+     */
+    public function mappedValue(): string
+    {
+        if ($this->type == self::TYPE_SECTION) {
+            return $this->name;
+        }
+        return Mentions::mapAttribute($this);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSection(): bool
+    {
+        return $this->type == self::TYPE_SECTION;
     }
 
     /**
@@ -109,5 +134,15 @@ class Attribute extends Model
         $new = $this->replicate(['entity_id']);
         $new->entity_id = $target->id;
         return $new->save();
+    }
+
+    /**
+     * @param $query
+     * @param int $star
+     * @return mixed
+     */
+    public function scopeOrdered($query, $order = 'asc')
+    {
+        return $query->orderBy('default_order', $order);
     }
 }

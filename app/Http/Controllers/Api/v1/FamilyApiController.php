@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Api\v1;
 use App\Models\Campaign;
 use App\Models\Family;
 use App\Http\Requests\StoreFamily as Request;
-use App\Http\Resources\Family as Resource;
-use App\Http\Resources\FamilyCollection as Collection;
+use App\Http\Resources\FamilyResource as Resource;
 
 class FamilyApiController extends ApiController
 {
@@ -18,11 +17,10 @@ class FamilyApiController extends ApiController
     public function index(Campaign $campaign)
     {
         $this->authorize('access', $campaign);
-        return new Collection($campaign
+        return Resource::collection($campaign
             ->families()
             ->with(['entity', 'entity.tags', 'entity.notes', 'entity.files',
                 'entity.events', 'entity.relationships', 'entity.attributes'])
-            ->acl()
             ->lastSync(request()->get('lastSync'))
             ->paginate());
     }
@@ -50,6 +48,7 @@ class FamilyApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('create', Family::class);
         $model = Family::create($request->all());
+        $this->crudSave($model);
         return new Resource($model);
     }
 
@@ -64,6 +63,7 @@ class FamilyApiController extends ApiController
         $this->authorize('access', $campaign);
         $this->authorize('update', $family);
         $family->update($request->all());
+        $this->crudSave($family);
 
         return new Resource($family);
     }
